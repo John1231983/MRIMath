@@ -68,7 +68,7 @@ testing, segments2 = load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Image
 
 emailHandler = EmailHandler()
 
-model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + datetime.year + "_" + datetime.month + "_" + datetime.day
+model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + str(datetime.year) + "_" + str(datetime.month) + "_" + str(datetime.day)
 if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
