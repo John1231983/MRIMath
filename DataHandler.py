@@ -24,12 +24,11 @@ class DataHandler:
                 directory = os.fsencode(training_directory + '/Patient_(00' + str(j)  + ')_data/')
             elif j < 100:
                 directory = os.fsencode(training_directory + '/Patient_(0' + str(j)  + ')_data/')
-
             else:
                 directory = os.fsencode(training_directory + '/Patient_(' + str(j)  + ')_data/')
-            for file in os.listdir(directory + b'/Original_Img_Data'):
-                img = self.get_im(directory+b'/Original_Img_Data/'+file)
-                X_train.append(img)
+        for file in os.listdir(directory + b'/Original_Img_Data'):
+            img = self.get_im(directory+b'/Original_Img_Data/'+file)
+            X_train.append(img)
         segment_directory = os.fsencode(directory + b'Segmented_Img_Data')
         for dir in os.listdir(segment_directory):
             for file in os.listdir(segment_directory+b'/'+dir):
