@@ -42,7 +42,8 @@ def load_data(training_directory, start, finish):
    
 F = 3
 S = 2 
-W, H = 240
+W = 240
+H = 240
 input_img = Input(shape=(W, H, 1))  
 
 
