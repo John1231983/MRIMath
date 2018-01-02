@@ -29,10 +29,10 @@ class DataHandler:
             for file in os.listdir(directory + b'/Original_Img_Data'):
                 img = self.get_im(directory+b'/Original_Img_Data/'+file)
                 X_train.append(img)
-        segment_directory = os.fsencode(directory + b'Segmented_Img_Data')
-        for dir in os.listdir(segment_directory):
-            for file in os.listdir(segment_directory+b'/'+dir):
-                ind = file[4:5]
-                segments[int(ind.decode())-1].append(self.get_im(segment_directory+b'/'+dir+b'/'+file));
+            segment_directory = os.fsencode(directory + b'Segmented_Img_Data')
+            for dir in os.listdir(segment_directory):
+                for file in os.listdir(segment_directory+b'/'+dir):
+                    ind = file[4:5]
+                    segments[int(ind.decode())-1].append(self.get_im(segment_directory+b'/'+dir+b'/'+file));
 
         return X_train, segments
