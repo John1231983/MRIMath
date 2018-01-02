@@ -8,36 +8,10 @@ from EmailHandler import EmailHandler
 from datetime import datetime
 from keras.utils.training_utils import multi_gpu_model
 import tensorflow as tf
+from DataHandler import DataHandler
 
 
-def get_im(path):
-    path=path.decode()
-    img = cv2.imread(path,0)
-    return img
 
-def load_data(training_directory, start, finish):
-    X_train = []
-    segments = [[] for _ in range(8)]
-    print('Reading images')
-    for j in range(start,finish):
-        print('Reading Patient ' + str(j))
-        if j < 10:
-            directory = os.fsencode(training_directory + '/Patient_(00' + str(j)  + ')_data/')
-        elif j < 100:
-            directory = os.fsencode(training_directory + '/Patient_(0' + str(j)  + ')_data/')
-
-        else:
-            directory = os.fsencode(training_directory + '/Patient_(' + str(j)  + ')_data/')
-        for file in os.listdir(directory + b'/Original_Img_Data'):
-            img = get_im(directory+b'/Original_Img_Data/'+file)
-            X_train.append(img)
-        segment_directory = os.fsencode(directory + b'Segmented_Img_Data')
-        for dir in os.listdir(segment_directory):
-            for file in os.listdir(segment_directory+b'/'+dir):
-                ind = file[4:5]
-                segments[int(ind.decode())-1].append(get_im(segment_directory+b'/'+dir+b'/'+file));
-
-    return X_train, segments
    
    
 F = 3
@@ -62,11 +36,13 @@ x = Conv2D(95, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(125, (F, F), activation='relu', padding='same')(x)
 decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 
-training, segments = load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 107)
-
-testing, segments2 = load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Images',135,175)
 
 emailHandler = EmailHandler()
+dataHandler = DataHandler()
+
+training, segments = dataHandler.load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 107)
+
+testing, segments2 = dataHandler.load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Images',135,175)
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + str(datetime.year) + "_" + str(datetime.month) + "_" + str(datetime.day)
 if not os.path.exists(model_directory):
