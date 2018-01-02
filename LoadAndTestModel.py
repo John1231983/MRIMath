@@ -19,9 +19,9 @@ def get_im(path):
     return img
 
 training_directory = '/media/daniel/ExtraDrive1/Patient_Data_Images';
-segment_number = 1;
+segment_number = 7;
 k = 1;
-model = load_model('/media/daniel/ExtraDrive1/model_' + str(segment_number) + '_seg2.h5')
+model = load_model('/home/daniel/eclipse-workspace/MRIMath/Models/model_' + str(segment_number) + '_2.h5' )
 #X_test = []
 
 for j in range(11,20):
@@ -36,7 +36,7 @@ for j in range(11,20):
         for file in os.listdir(directory + b'/Original_Img_Data'):
             seg_directory = os.fsencode(training_directory + '/Patient_(0' + str(j)  + ')_data/Segmented_Img_Data/img_'+str(k))
             img = get_im(directory+b'/Original_Img_Data/'+file)
-            seg_img = get_im(seg_directory+b'/seg_1.png')
+            seg_img = get_im(seg_directory+b'/seg_6.png')
             X_seg = np.array(seg_img)
             print(seg_directory)
             X_seg = X_seg.reshape(1,240,240,1)
