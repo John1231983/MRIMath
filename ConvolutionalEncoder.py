@@ -40,7 +40,7 @@ decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 emailHandler = EmailHandler()
 dataHandler = DataHandler()
 
-training, segments = dataHandler.load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 106)
+training, segments = dataHandler.load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 90)
 
 testing, segments2 = dataHandler.load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Images',135,175)
 
