@@ -54,7 +54,7 @@ if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 G = 4
-num_epochs = 40
+num_epochs = 50
 segmentation_bank = [[] for _ in range(8)]
 for i in range(0,8):
     print('Training network: ' + str(i))
@@ -79,6 +79,8 @@ for i in range(0,8):
             batch_size=32*G,
             shuffle=True,
             validation_data=(testing, segments2[i]))
+    segmentation_bank[i].set_weights(parallel_segmentation_bank.get_weights())
+    print('Saving model ' + str(i) + ' to disk!')
     segmentation_bank[i].save(model_directory + '/model_' + str(i) +'.h5')
     emailHandler.connectToServer()
     emailHandler.prepareMessage("Network Training Finished!", "Finished training network " + str(i) + " at " + str(datetime.now()));
