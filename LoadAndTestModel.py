@@ -21,22 +21,24 @@ def get_im(path):
 training_directory = '/media/daniel/ExtraDrive1/Patient_Data_Images';
 segment_number = 0;
 k = 1;
-model = load_model('/home/daniel/eclipse-workspace/MRIMath/Models/2017_01_01/model_' + str(segment_number) + '.h5' )
+model = load_model('/home/daniel/eclipse-workspace/MRIMath/Models/2018_01_02/model_' + str(segment_number) + '.h5' )
 #X_test = []
 
-for j in range(50,60):
+for j in range(1,10):
         print('Reading Patient ' + str(j))
         if j < 10:
+            patient = '/Patient_(00' + str(j)  + ')_data/'
             directory = os.fsencode(training_directory + '/Patient_(00' + str(j)  + ')_data/')
         elif j < 100 and j>10:
+            patient = '/Patient_(0' + str(j)  + ')_data/'
             directory = os.fsencode(training_directory + '/Patient_(0' + str(j)  + ')_data/')
-
         else:
+            patient = '/Patient_(' + str(j)  + ')_data/'
             directory = os.fsencode(training_directory + '/Patient_(' + str(j)  + ')_data/')
         for file in os.listdir(directory + b'/Original_Img_Data'):
-            seg_directory = os.fsencode(training_directory + '/Patient_(0' + str(j)  + ')_data/Segmented_Img_Data/img_'+str(k))
+            seg_directory = os.fsencode(training_directory + patient + 'Segmented_Img_Data/img_'+str(k))
             img = get_im(directory+b'/Original_Img_Data/'+file)
-            seg_img = get_im(seg_directory+b'/seg_1.png')
+            seg_img = get_im(seg_directory+b'/seg_' + str(segment_number+1).encode('ascii') + b'.png')
             X_seg = np.array(seg_img)
             print(seg_directory)
             X_seg = X_seg.reshape(1,240,240,1)

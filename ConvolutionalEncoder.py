@@ -3,22 +3,14 @@ from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D
 from keras.models import Model
 import numpy as np
 import os
-import cv2
 from EmailHandler import EmailHandler
 from datetime import datetime
 from keras.utils.training_utils import multi_gpu_model
 import tensorflow as tf
 from DataHandler import DataHandler
 
-
-
 now = datetime.now()
 date_string = now.strftime('%Y_%m_%d')
-
-
-
-
-   
    
 F = 3
 S = 2 
@@ -26,17 +18,22 @@ W = 240
 H = 240
 input_img = Input(shape=(W, H, 1))  
 
-
-x = Conv2D(105, (F, F), activation='relu', padding='same')(input_img)
-x = Conv2D(75, (F, F), activation='relu', padding='same')(x)
-x = Conv2D(45, (F, F), activation='relu', padding='same')(x)
-x = Conv2D(15, (F, F), activation='relu', padding='same')(x)
+x = Conv2D(200, (F, F), activation='relu', padding='same')(input_img)
+x = Conv2D(175, (F, F), activation='relu', padding='same')(x)
+x = Conv2D(150, (F, F), activation='relu', padding='same')(x)
+x = MaxPooling2D((S, S), padding='same')(x)
+x = Conv2D(100, (F, F), activation='relu', padding='same')(x)
+x = Conv2D(50, (F, F), activation='relu', padding='same')(x)
+x = Conv2D(25, (F, F), activation='relu', padding='same')(x)
 encoded = MaxPooling2D((S, S), padding='same')(x)
 x = UpSampling2D((S, S))(encoded)
-x = Conv2D(15, (F, F), activation='relu', padding='same')(x)
-x = Conv2D(45, (F, F), activation='relu', padding='same')(x)
-x = Conv2D(75, (F, F), activation='relu', padding='same')(x)
-x = Conv2D(105, (F, F), activation='relu', padding='same')(x)
+x = Conv2D(25, (F, F), activation='relu', padding='same')(x)
+x = Conv2D(50, (F, F), activation='relu', padding='same')(x)
+x = Conv2D(100, (F, F), activation='relu', padding='same')(x)
+x = UpSampling2D((S, S))(x)
+x = Conv2D(150, (F, F), activation='relu', padding='same')(x)
+x = Conv2D(175, (F, F), activation='relu', padding='same')(x)
+x = Conv2D(200, (F, F), activation='relu', padding='same')(x)
 decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 
 
