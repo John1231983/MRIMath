@@ -19,7 +19,7 @@ class DataHandler:
         segments = [[] for _ in range(8)]
         print('Reading images')
         for j in range(start,finish):
-            print('Reading Patient ' + str(j))
+            save_img = True
             if j < 10:
                 directory = os.fsencode(training_directory + '/Patient_(00' + str(j)  + ')_data/')
             elif j < 100:
@@ -30,12 +30,15 @@ class DataHandler:
                 img = self.get_im(directory+b'/Original_Img_Data/'+file)
                 height, width = img.shape
                 if height != 240 or width != 240:
-                    break
+                    save_img = False
+                    return
                 X_train.append(img)
-            segment_directory = os.fsencode(directory + b'Segmented_Img_Data')
-            for dir in os.listdir(segment_directory):
-                for file in os.listdir(segment_directory+b'/'+dir):
-                    ind = file[4:5]
-                    segments[int(ind.decode())-1].append(self.get_im(segment_directory+b'/'+dir+b'/'+file));
+            if(save_img):
+                print('Reading Patient ' + str(j))
+                segment_directory = os.fsencode(directory + b'Segmented_Img_Data')
+                for dir in os.listdir(segment_directory):
+                    for file in os.listdir(segment_directory+b'/'+dir):
+                        ind = file[4:5]
+                        segments[int(ind.decode())-1].append(self.get_im(segment_directory+b'/'+dir+b'/'+file));
 
         return X_train, segments
