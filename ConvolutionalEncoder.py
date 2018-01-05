@@ -18,22 +18,22 @@ W = 240
 H = 240
 input_img = Input(shape=(W, H, 1))  
 
-x = Conv2D(150, (F, F), activation='relu', padding='same')(input_img)
-x = Conv2D(125, (F, F), activation='relu', padding='same')(x)
+x = Conv2D(125, (F, F), activation='relu', padding='same')(input_img)
 x = Conv2D(100, (F, F), activation='relu', padding='same')(x)
-x = MaxPooling2D((S, S), padding='same')(x)
 x = Conv2D(75, (F, F), activation='relu', padding='same')(x)
+x = MaxPooling2D((S, S), padding='same')(x)
 x = Conv2D(50, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(25, (F, F), activation='relu', padding='same')(x)
+x = Conv2D(10, (F, F), activation='relu', padding='same')(x)
 encoded = MaxPooling2D((S, S), padding='same')(x)
 x = UpSampling2D((S, S))(encoded)
+x = Conv2D(10, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(25, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(50, (F, F), activation='relu', padding='same')(x)
-x = Conv2D(75, (F, F), activation='relu', padding='same')(x)
 x = UpSampling2D((S, S))(x)
+x = Conv2D(75, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(100, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(125, (F, F), activation='relu', padding='same')(x)
-x = Conv2D(150, (F, F), activation='relu', padding='same')(x)
 decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 
 
