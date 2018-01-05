@@ -28,7 +28,7 @@ class DataHandler:
                 directory = os.fsencode(training_directory + '/Patient_(' + str(j)  + ')_data/')
             for file in os.listdir(directory + b'/Original_Img_Data'):
                 img = self.get_im(directory+b'/Original_Img_Data/'+file)
-                height, width, channels = img.shape
+                height, width = img.shape
                 if height != 240 or width != 240:
                     break
                 X_train.append(img)
