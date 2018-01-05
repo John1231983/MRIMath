@@ -19,7 +19,7 @@ class DataHandler:
         segments = [[] for _ in range(8)]
         print('Reading images')
         for j in range(start,finish):
-            if((j>0 and j < 107) or j > 130):
+            if((j>0 and j < 107) or j > 135):
                 print('Reading Patient ' + str(j))
                 if j < 10:
                     directory = os.fsencode(training_directory + '/Patient_(00' + str(j)  + ')_data/')
