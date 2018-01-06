@@ -51,7 +51,7 @@ class DataHandler:
         training = training.astype('float32') / 255;
         segments = np.array(segment_data);
         print(segments.shape)
-        segments = segments.reshape(n_imgs,self.W,self.H,1)
+        #segments = segments.reshape(n_imgs,self.W,self.H,1)
         return training, segments
         
         
