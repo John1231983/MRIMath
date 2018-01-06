@@ -70,7 +70,7 @@ for i in range(0,8):
     segmentation_bank[i].save(model_directory + '/model_' + str(i) +'.h5')
     emailHandler.connectToServer()
     message = "Finished training network " + str(i) + " at " + str(datetime.now())
-    message += "\n Total training time: " + strftime(timer.getElapsedTime())
+    message += "\n Total training time: " + str(timer.getElapsedTime())
     message += "\n\n " + segmentation_bank[i].summary()
     emailHandler.prepareMessage("Network Training Finished!", message);
     emailHandler.sendMessage("Danny")
