@@ -57,11 +57,14 @@ for i in range(0,8):
     parallel_segmentation_bank = multi_gpu_model(segmentation_bank[i], G)
     parallel_segmentation_bank.compile(optimizer='nadam', loss='mean_squared_error')
     timer.startTimer()
-    parallel_segmentation_bank.fit(training, segments[:,:,:,1],
+    
+    train_segment = segments[:,:,:,1]
+    test_segment = segments2[:,:,:,1]
+    parallel_segmentation_bank.fit(training, train_segment,
             epochs=num_epochs,
             batch_size=32*G,
             shuffle=True,
-            validation_data=(testing, segments2[i]))
+            validation_data=(testing, test_segment))
     timer.stopTimer()
     segmentation_bank[i].set_weights(parallel_segmentation_bank.get_weights())
     print('Saving model ' + str(i) + ' to disk!')
