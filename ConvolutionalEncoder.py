@@ -20,7 +20,6 @@ H = 240
 input_img = Input(shape=(W, H, 1))  
 
 x = Conv2D(120, (F, F), activation='relu', padding='same')(input_img)
-x = Conv2D(100, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(80, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(60, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(40, (F, F), activation='relu', padding='same')(x)
@@ -31,7 +30,6 @@ x = Conv2D(20, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(40, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(60, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(80, (F, F), activation='relu', padding='same')(x)
-x = Conv2D(100, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(120, (F, F), activation='relu', padding='same')(x)
 decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 
