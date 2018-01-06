@@ -37,9 +37,9 @@ emailHandler = EmailHandler()
 dataHandler = DataHandler()
 timer = TimerModule()
 
-training, segments = dataHandler.load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
-validation, segments2 = dataHandler.load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,176)
-testing, segments3 = dataHandler.load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Images',176,192)
+training, segments = dataHandler.load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 4)
+validation, segments2 = dataHandler.load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,152)
+testing, segments3 = dataHandler.load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Images',176,177)
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
 if not os.path.exists(model_directory):
