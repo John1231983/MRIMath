@@ -7,6 +7,9 @@ Created on Jan 1, 2018
 import os
 import cv2
 import numpy as np
+from io import StringIO
+import sys
+
 
 class DataHandler:
     
@@ -51,5 +54,7 @@ class DataHandler:
         segments = np.array(segment_data);
         segments = segments.reshape(n_imgs,self.W,self.H,8)
         return training, segments
+    
+
         
         
