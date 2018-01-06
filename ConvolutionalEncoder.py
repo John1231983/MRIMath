@@ -52,7 +52,7 @@ num_epochs = 1
 segmentation_bank = [[] for _ in range(8)]
 for i in range(0,8):
     print('Training network: ' + str(i))
-    segments[i] = segments[i][:,:,:,1]
+    print(segments[i].shape)
     with tf.device('/cpu:0'):
         segmentation_bank[i] = Model(input_img, decoded)
     parallel_segmentation_bank = multi_gpu_model(segmentation_bank[i], G)
