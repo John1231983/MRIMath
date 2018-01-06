@@ -56,10 +56,9 @@ for i in range(0,8):
         segmentation_bank[i] = Model(input_img, decoded)
     parallel_segmentation_bank = multi_gpu_model(segmentation_bank[i], G)
     parallel_segmentation_bank.compile(optimizer='nadam', loss='mean_squared_error')
+    train_segment = segments[:,:,:,i:i+1]
+    test_segment = segments2[:,:,:,i:i+1]
     timer.startTimer()
-    
-    train_segment = segments[:,:,:,0:1]
-    test_segment = segments2[:,:,:,0:1]
     parallel_segmentation_bank.fit(training, train_segment,
             epochs=num_epochs,
             batch_size=32*G,
