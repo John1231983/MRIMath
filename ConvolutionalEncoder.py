@@ -58,8 +58,8 @@ for i in range(0,8):
     parallel_segmentation_bank.compile(optimizer='nadam', loss='mean_squared_error')
     timer.startTimer()
     
-    train_segment = segments[:,:,:,1]
-    test_segment = segments2[:,:,:,1]
+    train_segment = segments[:,:,:,0:1]
+    test_segment = segments2[:,:,:,0:1]
     parallel_segmentation_bank.fit(training, train_segment,
             epochs=num_epochs,
             batch_size=32*G,
