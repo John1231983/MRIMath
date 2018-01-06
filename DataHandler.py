@@ -40,6 +40,7 @@ class DataHandler:
                         ind = file[4:5]
                         segment_data[int(ind.decode())-1].append(self.getImage(segment_directory+b'/'+dir+b'/'+file));
         training, segments = self.preprocessForNetwork(X_train, segment_data)
+        print(segments.shape)
         return training, segments
     
     def preprocessForNetwork(self, training_data, segment_data):
