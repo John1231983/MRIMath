@@ -8,6 +8,7 @@ from datetime import datetime
 from keras.utils.training_utils import multi_gpu_model
 import tensorflow as tf
 from DataHandler import DataHandler
+from TimerModule import TimerModule
 
 now = datetime.now()
 date_string = now.strftime('%Y_%m_%d')
@@ -36,10 +37,11 @@ decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 
 emailHandler = EmailHandler()
 dataHandler = DataHandler()
+timer = TimerModule()
 
 training, segments = dataHandler.load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
-
-testing, segments2 = dataHandler.load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,192)
+validation, segments2 = dataHandler.load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,176)
+testing, segments3 = dataHandler.load_data('/coe_data/MRIMath/MS_Research/Patient_Data_Images',176,192)
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
 if not os.path.exists(model_directory):
@@ -56,8 +58,8 @@ for i in range(0,8):
     training = training.astype('float32') / 255;
     segments[i] = np.array(segments[i]);
     segments[i] = segments[i].reshape(n_imgs,W,H,1)
-    n_imgs2 = len(testing)
-    testing = np.array(testing)
+    n_imgs2 = len(validation)
+    testing = np.array(validation)
     testing =testing.reshape(n_imgs2,W,H,1)
     testing= testing.astype('float32') / 255;
     segments2[i] = np.array(segments2[i]);
@@ -66,16 +68,24 @@ for i in range(0,8):
         segmentation_bank[i] = Model(input_img, decoded)
     parallel_segmentation_bank = multi_gpu_model(segmentation_bank[i], G)
     parallel_segmentation_bank.compile(optimizer='nadam', loss='mean_squared_error')
+    timer.startTimer()
     parallel_segmentation_bank.fit(training, segments[i],
             epochs=num_epochs,
             batch_size=32*G,
             shuffle=True,
-            validation_data=(testing, segments2[i]))
+            validation_data=(validation, segments2[i]))
+    timer.stopTimer()
     segmentation_bank[i].set_weights(parallel_segmentation_bank.get_weights())
     print('Saving model ' + str(i) + ' to disk!')
     segmentation_bank[i].save(model_directory + '/model_' + str(i) +'.h5')
     emailHandler.connectToServer()
-    emailHandler.prepareMessage("Network Training Finished!", "Finished training network " + str(i) + " at " + str(datetime.now()));
+    message = "Finished training network " + str(i) + " at " + str(datetime.now())
+    message += "\n Total training time: " + timer.getElapsedTime()
+    message += "\n\n " + segmentation_bank[i].summary()
+    score = segmentation_bank[i].evaluate(testing, segments3, verbose=0)
+    message += "\n\n Test score:" +  score[0]
+    message += "\n Test accuracy:" +  score[1]
+    emailHandler.prepareMessage("Network Training Finished!", message);
     emailHandler.sendMessage("Danny")
     emailHandler.finish()
 
