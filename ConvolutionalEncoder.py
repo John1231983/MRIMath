@@ -40,7 +40,7 @@ decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 emailHandler = EmailHandler()
 timer = TimerModule()
 
-training, segments = dataHandler.loadData('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 4)
+training, segments = dataHandler.loadData('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 3)
 testing, segments2 = dataHandler.loadData('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,152)
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
@@ -72,7 +72,7 @@ for i in range(0,8):
     message = "Finished training network " + str(i) + " at " + str(datetime.now())
     message += "\n Total training time: " + str(timer.getElapsedTime())
     message += "\n\n " + str(segmentation_bank[i].to_json())
-    segmentation_bank[i].summary(print_fn=lambda x: message.append(x + '\n'))
+    segmentation_bank[i].summary(print_fn=lambda x: message.add(x + '\n'))
     emailHandler.prepareMessage("Network Training Finished!", message);
     emailHandler.sendMessage("Danny")
     emailHandler.finish()
