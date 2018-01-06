@@ -44,8 +44,10 @@ class DataHandler:
     
     def preprocessForNetwork(self, training_data, segment_data):
         n_imgs = len(training_data)
+        print(str(n_imgs))
         training = np.array(training_data)
-        training =training.reshape(n_imgs,self.W,self.H,1)
+        print(training.shape)
+        training = training.reshape(n_imgs,self.W,self.H,1)
         training = training.astype('float32') / 255;
         segments = np.array(segment_data);
         segments = segments.reshape(n_imgs,self.W,self.H,1)
