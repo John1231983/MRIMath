@@ -38,7 +38,7 @@ class DataHandler:
                 for dir in os.listdir(segment_directory):
                     for file in os.listdir(segment_directory+b'/'+dir):
                         ind = file[4:5]
-                        segments[int(ind.decode())-1].append(self.get_im(segment_directory+b'/'+dir+b'/'+file));
+                        segments[int(ind.decode())-1].append(self.getImage(segment_directory+b'/'+dir+b'/'+file));
         training, segment_data = self.preprocessForNetwork(X_train, segments)
         return training, segment_data
     
