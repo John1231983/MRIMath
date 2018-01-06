@@ -72,7 +72,7 @@ for i in range(0,8):
     message = "Finished training network " + str(i) + " at " + str(datetime.now())
     message += "\n Total training time: " + str(timer.getElapsedTime())
     message += "\n\n " + str(segmentation_bank[i].to_json())
-    segmentation_bank[i].summary(print_fn=lambda x: message.add(x + '\n'))
+    segmentation_bank[i].summary(print_fn=lambda x: ''.join(message, x+ '\n'))
     emailHandler.prepareMessage("Network Training Finished!", message);
     emailHandler.sendMessage("Danny")
     emailHandler.finish()
