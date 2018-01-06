@@ -20,7 +20,7 @@ class DataHandler:
 
     def loadData(self, training_directory, start, finish):
         X_train = []
-        segments = [[] for _ in range(8)]
+        segment_data = [[] for _ in range(8)]
         print('Reading images')
         for j in range(start,finish):
             if((j>0 and j < 107) or j > 135):
@@ -38,9 +38,9 @@ class DataHandler:
                 for dir in os.listdir(segment_directory):
                     for file in os.listdir(segment_directory+b'/'+dir):
                         ind = file[4:5]
-                        segments[int(ind.decode())-1].append(self.getImage(segment_directory+b'/'+dir+b'/'+file));
-        training, segment_data = self.preprocessForNetwork(X_train, segments)
-        return training, segment_data
+                        segment_data[int(ind.decode())-1].append(self.getImage(segment_directory+b'/'+dir+b'/'+file));
+        training, segments = self.preprocessForNetwork(X_train, segment_data)
+        return training, segments
     
     def preprocessForNetwork(self, training_data, segment_data):
         n_imgs = len(training_data)
