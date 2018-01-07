@@ -8,7 +8,10 @@ import os
 import cv2
 import numpy as np
 import multiprocessing
-from joblib import Parallel, delayed
+from multiprocessing.dummy import Pool as ThreadPool 
+from functools import partial
+
+
 
 
 class DataHandler:
@@ -36,8 +39,12 @@ class DataHandler:
         segment_data = [[] for _ in range(8)]
         print('Reading images')
         num_cores = multiprocessing.cpu_count()
-        Parallel(n_jobs=num_cores)(delayed(self.loadIndividualImage(training_directory, i, X_train, segment_data) for i in range(start, finish)))
-    
+        pool = ThreadPool(num_cores) 
+        X_train, segment_data = pool.map(partial(self.loadIndividualImage, training_directory=training_directory, X_train=X_train, segment_data=segment_data), range(start, finish))
+        training, segments = self.preprocessForNetwork(X_train, segment_data)
+
+        return training, segments
+        
     def loadIndividualImage(self, training_directory, j, X_train, segment_data):
             if((j>0 and j < 107) or j > 135):
                 print('Reading Patient ' + str(j))
