@@ -10,6 +10,9 @@ from DataHandler import DataHandler
 from TimerModule import TimerModule
 from keras.callbacks import CSVLogger
 
+import multiprocessing
+from joblib import Parallel, delayed
+
 now = datetime.now()
 date_string = now.strftime('%Y_%m_%d')
 
@@ -17,6 +20,7 @@ date_string = now.strftime('%Y_%m_%d')
 dataHandler = DataHandler()
 emailHandler = EmailHandler()
 timer = TimerModule()
+num_cores = multiprocessing.cpu_count()
 
 F = 3
 S = 2 
@@ -37,7 +41,8 @@ decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 emailHandler = EmailHandler()
 timer = TimerModule()
 
-training, segments = dataHandler.loadData('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
+training, segments = Parallel(n_jobs=num_cores)(delayed(dataHandler.loadData)('/coe_data/MRIMath/MS_Research/Patient_Data_Images',i) for i in range(151))
+#training, segments = dataHandler.loadData('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
 testing, segments2 = dataHandler.loadData('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,192)
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string

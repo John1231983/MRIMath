@@ -7,14 +7,13 @@ Created on Jan 1, 2018
 import os
 import cv2
 import numpy as np
-from io import StringIO
-import sys
 
 
 class DataHandler:
     
     W = 240
     H = 240
+
 
     def getImage(self, path):
         path=path.decode()
