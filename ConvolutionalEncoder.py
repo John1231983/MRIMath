@@ -10,12 +10,6 @@ from DataHandler import DataHandler
 from TimerModule import TimerModule
 from keras.callbacks import CSVLogger
 
-import multiprocessing
-from joblib import Parallel, delayed
-
-
-
-
 now = datetime.now()
 date_string = now.strftime('%Y_%m_%d')
 
@@ -42,18 +36,10 @@ decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 
 emailHandler = EmailHandler()
 timer = TimerModule()
-num_cores = multiprocessing.cpu_count()
 
+training, segments = dataHandler.loadDataSequential('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
+testing, segments2 = dataHandler.loadDataSequential('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,192)
 
-training = []
-segments = [[] for _ in range(8)]
-testing = []
-segments2 = [[] for _ in range(8)]
-
-training, segments = Parallel(n_jobs=num_cores)(delayed(dataHandler.loadIndividualImage)('/coe_data/MRIMath/MS_Research/Patient_Data_Images',i, training, segments) for i in range(1,5))
-#testing, segments2 = Parallel(n_jobs=num_cores)(delayed(dataHandler.loadIndividualImage)('/coe_data/MRIMath/MS_Research/Patient_Data_Images',i, testing, segments2) for i in range(151,155))
-training, segments = dataHandler.preprocessForNetwork(training, segments)
-testing, segments2 = dataHandler.preprocessForNetwork(testing, segments2)
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
 if not os.path.exists(model_directory):
     os.makedirs(model_directory)
