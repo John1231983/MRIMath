@@ -8,6 +8,7 @@ from keras.utils.training_utils import multi_gpu_model
 import tensorflow as tf
 from DataHandler import DataHandler
 from TimerModule import TimerModule
+import numpy as np
 
 now = datetime.now()
 date_string = now.strftime('%Y_%m_%d')
@@ -57,15 +58,22 @@ for i in range(0,8):
     train_segment = segments[:,:,:,i:i+1]
     test_segment = segments2[:,:,:,i:i+1]
     timer.startTimer()
-    parallel_segmentation_bank.fit(training, train_segment,
+    callbacks = parallel_segmentation_bank.fit(training, train_segment,
             epochs=num_epochs,
             batch_size=32*G,
             shuffle=True,
             validation_data=(testing, test_segment))
     timer.stopTimer()
+    
+    loss_history = callbacks.history["loss"]
+    
+    numpy_loss_history = np.array(loss_history)
+    np.savetxt(model_directory + '/model_' +str(i) + "_loss_history.txt", numpy_loss_history, delimiter=",")
+    
     segmentation_bank[i].set_weights(parallel_segmentation_bank.get_weights())
     print('Saving model ' + str(i) + ' to disk!')
     segmentation_bank[i].save(model_directory + '/model_' + str(i) +'.h5')
+    
     emailHandler.connectToServer()
     message = "Finished training network " + str(i) + " at " + str(datetime.now()) + '\n'
     filename = 'model_'+str(i) +"_"+ "info.txt"
