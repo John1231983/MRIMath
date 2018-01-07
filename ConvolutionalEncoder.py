@@ -69,7 +69,7 @@ for i in range(0,8):
     print('Saving model ' + str(i) + ' to disk!')
     segmentation_bank[i].save(model_directory + '/model_' + str(i) +'.h5')
     emailHandler.connectToServer()
-    message = "Finished training network " + str(i) + " at " + str(datetime.now() + '\n')
+    message = "Finished training network " + str(i) + " at " + str(datetime.now()) + '\n'
     summary = []
     segmentation_bank[i].summary(print_fn=lambda x: summary.append(x + '\n'))
     message += ''.join(summary)
