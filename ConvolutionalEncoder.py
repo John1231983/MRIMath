@@ -47,7 +47,7 @@ if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 G = 4
-num_epochs = 1
+num_epochs = 50
 segmentation_bank = [[] for _ in range(8)]
 for i in range(0,8):
     
