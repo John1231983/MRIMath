@@ -48,12 +48,14 @@ class EmailHandler:
         self.body = ''
         self.server.quit()
         
-    def attachFile(self, file, filename):
-        
+    def attachFile(self, file):
         attachment = open(file.name, "rb")
         part = MIMEBase('application', 'octet-stream')
         part.set_payload((attachment).read())
         encoders.encode_base64(part)
+        ind = file.name(file.name.rfind('/'))
+        filename = file.name[ind:]
+                        
         part.add_header('Content-Disposition', "attachment; filename= %s" % filename)
         self.msg.attach(part)
         

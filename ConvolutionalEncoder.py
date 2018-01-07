@@ -76,13 +76,14 @@ for i in range(0,8):
     
     emailHandler.connectToServer()
     message = "Finished training network " + str(i) + " at " + str(datetime.now()) + '\n'
-    filename = 'model_'+str(i) +"_"+ "info.txt"
-    file = open(model_directory + '/' + filename,"w") 
-    segmentation_bank[i].summary(print_fn=lambda x: file.write(x + '\n'))
+    model_info_filename = 'model_'+str(i) +"_"+ "info.txt"
+    model_info_file = open(model_directory + '/' + model_info_filename,"w") 
+    segmentation_bank[i].summary(print_fn=lambda x: model_info_file.write(x + '\n'))
     message += "\n Total training time: " + str(timer.getElapsedTime())
     emailHandler.prepareMessage(date_string + " MRIMath Update: Network Training Finished!", message);
-    file.close()
-    emailHandler.attachFile(file, filename)
+    model_info_file.close()
+    emailHandler.attachFile(model_info_file)
+    #emailHandler.attachFile()
     emailHandler.sendMessage("Danny")
     emailHandler.finish()
 
