@@ -54,7 +54,7 @@ for i in range(0,8):
     model_info_filename = 'model_'+str(i) +"_"+ "info.txt"
     model_info_file = open(model_directory + '/' + model_info_filename,"w") 
     log_info_filename = 'model_' + str(i) + '_log.csv'
-    log_info = open(model_directory + '/' + log_info_filename)
+    log_info = open(model_directory + '/' + log_info_filename, "w")
     
     print('Training network: ' + str(i))
     csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=';')
