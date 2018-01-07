@@ -41,6 +41,7 @@ class EmailHandler:
         self.body = self.body + "\n\n" + "Regards,\nMr. HPC"
         self.msg.attach(MIMEText(self.body, 'plain'))
         self.server.sendmail(self.addr, self.addressBook.get(recipient), self.msg.as_string())
+        self.body = ''
     
     def finish(self):
         self.server.quit()

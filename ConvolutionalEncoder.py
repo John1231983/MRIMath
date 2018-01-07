@@ -70,8 +70,9 @@ for i in range(0,8):
     segmentation_bank[i].save(model_directory + '/model_' + str(i) +'.h5')
     emailHandler.connectToServer()
     message = "Finished training network " + str(i) + " at " + str(datetime.now())
-    message += "\n Total training time: " + str(timer.getElapsedTime())
-    segmentation_bank[i].summary(print_fn=lambda x: message.join(x + '\n'))
+    message.split(" ")
+    segmentation_bank[i].summary(print_fn=lambda x: message.append(x + '\n'))
+    message.append("\n Total training time: " + str(timer.getElapsedTime()))
     emailHandler.prepareMessage("MRIMath: Network Training Finished!", message);
     emailHandler.sendMessage("Danny")
     emailHandler.finish()
