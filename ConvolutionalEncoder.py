@@ -8,7 +8,7 @@ from keras.utils.training_utils import multi_gpu_model
 import tensorflow as tf
 from DataHandler import DataHandler
 from TimerModule import TimerModule
-import logging
+from keras.callbacks import CSVLogger
 
 now = datetime.now()
 date_string = now.strftime('%Y_%m_%d')
@@ -51,14 +51,8 @@ num_epochs = 1
 segmentation_bank = [[] for _ in range(8)]
 for i in range(0,8):
     
-    log = logging.getLogger('tensorflow')
-    log.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh = logging.FileHandler(model_directory + '/model_' + str(i) + '/debug_log.log')
-    fh.setLevel(logging.DEBUG)
-    fh.setFormatter(formatter)
-    log.addHandler(fh)
     print('Training network: ' + str(i))
+    csv_logger = CSVLogger(model_directory + '/model_' + str(i) + '_log.csv', append=True, separator=';')
     with tf.device('/cpu:0'):
         segmentation_bank[i] = Model(input_img, decoded)
     parallel_segmentation_bank = multi_gpu_model(segmentation_bank[i], G)
@@ -70,7 +64,8 @@ for i in range(0,8):
             epochs=num_epochs,
             batch_size=32*G,
             shuffle=True,
-            validation_data=(testing, test_segment))
+            validation_data=(testing, test_segment),
+            callbacks=[csv_logger])
     timer.stopTimer()
     
     
