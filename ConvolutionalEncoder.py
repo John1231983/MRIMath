@@ -68,11 +68,12 @@ for i in range(0,8):
     segmentation_bank[i].save(model_directory + '/model_' + str(i) +'.h5')
     emailHandler.connectToServer()
     message = "Finished training network " + str(i) + " at " + str(datetime.now()) + '\n'
-    file = open(model_directory + '/model_'+str(i) +"_"+ "info.txt","w") 
+    filename = 'model_'+str(i) +"_"+ "info.txt"
+    file = open(model_directory + '/' + filename,"w") 
     segmentation_bank[i].summary(print_fn=lambda x: file.write(x + '\n'))
     message += "\n Total training time: " + str(timer.getElapsedTime())
     emailHandler.prepareMessage(date_string + " MRIMath Update: Network Training Finished!", message);
-    emailHandler.attachFile(file)
+    emailHandler.attachFile(file, filename)
     file.close()
     emailHandler.sendMessage("Danny")
     emailHandler.finish()

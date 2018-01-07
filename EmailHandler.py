@@ -8,6 +8,8 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
+from email import encoders
+
 
 class EmailHandler:
     addr = "mrimathnotifier@gmail.com"
@@ -46,10 +48,14 @@ class EmailHandler:
         self.body = ''
         self.server.quit()
         
-    def attachFile(self, file):
-        attachment = MIMEText(file.read())
-        attachment.add_header('Content-Disposition', 'attachment', filename=file.name)           
-        self.msg.attach(attachment)
+    def attachFile(self, file, filename):
+        
+        attachment = open(file.name, "rb")
+        part = MIMEBase('application', 'octet-stream')
+        part.set_payload((attachment).read())
+        encoders.encode_base64(part)
+        part.add_header('Content-Disposition', "attachment; filename= %s" % filename)
+        self.msg.attach(part)
         
         #part = MIMEBase('application', "octet-stream")
         #part.set_payload(open(file, "rb").read())
