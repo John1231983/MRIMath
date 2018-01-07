@@ -87,7 +87,7 @@ for i in range(0,8):
     emailHandler.prepareMessage(date_string + " MRIMath Update: Network Training Finished!", message);
     model_info_file.close()
     emailHandler.attachFile(model_info_file, model_info_filename)
-    emailHandler.attachFile(log_info_filename, log_info)
+    emailHandler.attachFile(log_info, log_info_filename)
     emailHandler.sendMessage("Danny")
     emailHandler.finish()
 
