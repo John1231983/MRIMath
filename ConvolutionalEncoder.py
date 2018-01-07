@@ -50,8 +50,8 @@ segments = [[] for _ in range(8)]
 testing = []
 segments2 = [[] for _ in range(8)]
 
-Parallel(n_jobs=num_cores)(delayed(dataHandler.loadIndividualImage)('/coe_data/MRIMath/MS_Research/Patient_Data_Images',i, training, segments) for i in range(1,5))
-Parallel(n_jobs=num_cores)(delayed(dataHandler.loadIndividualImage)('/coe_data/MRIMath/MS_Research/Patient_Data_Images',i, testing, segments2) for i in range(151,152))
+training, segments = Parallel(n_jobs=num_cores)(delayed(dataHandler.loadIndividualImage)('/coe_data/MRIMath/MS_Research/Patient_Data_Images',i, training, segments) for i in range(1,5))
+testing, segments2 = Parallel(n_jobs=num_cores)(delayed(dataHandler.loadIndividualImage)('/coe_data/MRIMath/MS_Research/Patient_Data_Images',i, testing, segments2) for i in range(151,152))
 training, segments = dataHandler.preprocessForNetwork(training, segments)
 testing, segments2 = dataHandler.preprocessForNetwork(testing, segments2)
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string

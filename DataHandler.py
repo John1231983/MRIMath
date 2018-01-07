@@ -50,9 +50,9 @@ class DataHandler:
                 for file in os.listdir(segment_directory+b'/'+dir):
                     ind = file[4:5]
                     mri_segment_data[int(ind.decode())-1].append(self.getImage(segment_directory+b'/'+dir+b'/'+file))
-        
+        return mri_images, mri_segment_data
+    
     def getMRIData(self):
-        print(len(self.mri_images))
         return self.preprocessForNetwork(self.mri_images, self.mri_segment_data)
     
     def clearMRIData(self):
