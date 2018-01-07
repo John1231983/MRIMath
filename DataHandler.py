@@ -26,15 +26,6 @@ class DataHandler:
         img = cv2.imread(path,0)
         return img
 
-    def loadDataSequential(self, training_directory, start, finish):
-        X_train = []
-        segment_data = [[] for _ in range(8)]
-        print('Reading images')
-        for j in range(start,finish):
-            self.loadIndividualImage(training_directory, j, X_train, segment_data)
-        training, segments = self.preprocessForNetwork(X_train, segment_data)
-        return training, segments
-    
     def loadDataParallel(self, training_directory, start, finish):
         X_train = []
         segment_data = [[] for _ in range(8)]
@@ -61,8 +52,12 @@ class DataHandler:
                     self.mri_segment_data[int(ind.decode())-1].append(self.getImage(segment_directory+b'/'+dir+b'/'+file))
     
     def getMRIData(self):
-        return self.mri_images, self.mri_segment_data
+        return self.preprocessForNetwork(self.mri_images, self.mri_segment_data)
     
+    def clearMRIData(self):
+        self.mri_images = []
+        self.mri_segment_data = [[] for _ in range(8)]
+
     def preprocessForNetwork(self, training_data, segment_data):
         n_imgs = len(training_data)
         training = np.array(training_data)
