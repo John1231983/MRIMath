@@ -72,7 +72,7 @@ for i in range(0,8):
     message = "Finished training network " + str(i) + " at " + str(datetime.now())
     summary = []
     segmentation_bank[i].summary(print_fn=lambda x: summary.append(x + '\n'))
-    message += summary
+    message += str(summary)
     message += "\n Total training time: " + str(timer.getElapsedTime())
     emailHandler.prepareMessage(date_string + " MRIMath Update: Network Training Finished!", message);
     emailHandler.sendMessage("Danny")
