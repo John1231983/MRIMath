@@ -73,8 +73,8 @@ for i in range(0,8):
     segmentation_bank[i].summary(print_fn=lambda x: file.write(x + '\n'))
     message += "\n Total training time: " + str(timer.getElapsedTime())
     emailHandler.prepareMessage(date_string + " MRIMath Update: Network Training Finished!", message);
-    emailHandler.attachFile(file, filename)
     file.close()
+    emailHandler.attachFile(file, filename)
     emailHandler.sendMessage("Danny")
     emailHandler.finish()
 
