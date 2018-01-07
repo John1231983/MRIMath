@@ -11,7 +11,6 @@ from TimerModule import TimerModule
 from keras.callbacks import CSVLogger
 
 import multiprocessing
-from joblib import Parallel, delayed
 
 now = datetime.now()
 date_string = now.strftime('%Y_%m_%d')

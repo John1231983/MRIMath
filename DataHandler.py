@@ -9,7 +9,6 @@ import cv2
 import numpy as np
 import multiprocessing
 from joblib import Parallel, delayed
-from LoadAndTestModel import training_directory
 
 
 class DataHandler:
