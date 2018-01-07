@@ -48,7 +48,7 @@ Parallel(n_jobs=num_cores)(delayed(dataHandler.loadIndividualImage)('/coe_data/M
 training, segments = dataHandler.getMRIData()
 print(training.shape)
 dataHandler.clearMRIData()
-Parallel(n_jobs=num_cores)(delayed(dataHandler.loadIndividualImage)('/coe_data/MRIMath/MS_Research/Patient_Data_Images',i) for i in range(151,192))
+Parallel(n_jobs=num_cores)(delayed(dataHandler.loadIndividualImage)('/coe_data/MRIMath/MS_Research/Patient_Data_Images',i) for i in range(151,152))
 testing, segments2 = dataHandler.getMRIData()
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
