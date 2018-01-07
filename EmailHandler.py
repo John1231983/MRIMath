@@ -47,7 +47,7 @@ class EmailHandler:
         self.server.quit()
         
     def attachFile(self, file):
-        attachment = MIMEText(file)
+        attachment = MIMEText(file.read())
         attachment.add_header('Content-Disposition', 'attachment', filename=file.name)           
         self.msg.attach(attachment)
 
