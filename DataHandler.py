@@ -45,7 +45,7 @@ class DataHandler:
 
         return training, segments
         
-    def loadIndividualImage(self, training_directory, j, X_train, segment_data):
+    def loadIndividualImage(self, j, training_directory, X_train, segment_data):
             if((j>0 and j < 107) or j > 135):
                 print('Reading Patient ' + str(j))
                 if j < 10:
