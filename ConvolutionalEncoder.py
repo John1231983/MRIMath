@@ -48,6 +48,7 @@ if not os.path.exists(model_directory):
     
 G = 4
 num_epochs = 50
+batchSize = 32
 segmentation_bank = [[] for _ in range(8)]
 for i in range(0,8):
     
@@ -67,13 +68,11 @@ for i in range(0,8):
     timer.startTimer()
     parallel_segmentation_bank.fit(training, train_segment,
             epochs=num_epochs,
-            batch_size=32*G,
+            batch_size=batchSize*G,
             shuffle=True,
             validation_data=(testing, test_segment),
             callbacks=[csv_logger])
     timer.stopTimer()
-    
-    
     
     segmentation_bank[i].set_weights(parallel_segmentation_bank.get_weights())
     print('Saving model ' + str(i) + ' to disk!')
@@ -81,6 +80,7 @@ for i in range(0,8):
     
     emailHandler.connectToServer()
     message = "Finished training network " + str(i) + " at " + str(datetime.now()) + '\n'
+    message += "The network was trained for " + str(num_epochs) + " epochs with a batch size of " + str(batchSize) + '\n'
     
     segmentation_bank[i].summary(print_fn=lambda x: model_info_file.write(x + '\n'))
     message += "\n Total training time: " + str(timer.getElapsedTime())
