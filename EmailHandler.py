@@ -4,7 +4,6 @@ Created on Dec 27, 2017
 @author: daniel
 '''
 
-import file
 import smtplib 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText

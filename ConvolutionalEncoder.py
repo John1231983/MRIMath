@@ -1,7 +1,6 @@
 
 from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D
 from keras.models import Model
-import numpy as np
 import os
 from EmailHandler import EmailHandler
 from datetime import datetime
@@ -9,7 +8,6 @@ from keras.utils.training_utils import multi_gpu_model
 import tensorflow as tf
 from DataHandler import DataHandler
 from TimerModule import TimerModule
-from time import strftime
 
 now = datetime.now()
 date_string = now.strftime('%Y_%m_%d')
