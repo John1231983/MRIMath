@@ -4,10 +4,11 @@ Created on Dec 27, 2017
 @author: daniel
 '''
 
-
+import file
 import smtplib 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
 
 class EmailHandler:
     addr = "mrimathnotifier@gmail.com"
@@ -45,3 +46,11 @@ class EmailHandler:
     
     def finish(self):
         self.server.quit()
+        
+    def attachFile(self, file):
+        attachment = MIMEText(file)
+        self.msg.attach(attachment)
+        #part = MIMEBase('application', "octet-stream")
+        #part.set_payload(open(file, "rb").read())
+        #self.msg.attach(part)
+
