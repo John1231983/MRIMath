@@ -48,7 +48,9 @@ class EmailHandler:
         
     def attachFile(self, file):
         attachment = MIMEText(file)
+        attachment.add_header('Content-Disposition', 'attachment', filename=file.name)           
         self.msg.attach(attachment)
+
         #part = MIMEBase('application', "octet-stream")
         #part.set_payload(open(file, "rb").read())
         #self.msg.attach(part)
