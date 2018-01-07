@@ -70,10 +70,10 @@ for i in range(0,8):
     message = "Finished training network " + str(i) + " at " + str(datetime.now()) + '\n'
     file = open(model_directory + '/model_'+str(i) +"_"+ "info.txt","w") 
     segmentation_bank[i].summary(print_fn=lambda x: file.write(x + '\n'))
-    file.close()
     message += "\n Total training time: " + str(timer.getElapsedTime())
     emailHandler.prepareMessage(date_string + " MRIMath Update: Network Training Finished!", message);
     emailHandler.attachFile(file)
+    file.close()
     emailHandler.sendMessage("Danny")
     emailHandler.finish()
 

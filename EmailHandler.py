@@ -41,16 +41,16 @@ class EmailHandler:
         self.body = self.body + "\n\n" + "Regards,\nMr. HPC"
         self.msg.attach(MIMEText(self.body, 'plain'))
         self.server.sendmail(self.addr, self.addressBook.get(recipient), self.msg.as_string())
-        self.body = ''
     
     def finish(self):
+        self.body = ''
         self.server.quit()
         
     def attachFile(self, file):
         attachment = MIMEText(file.read())
         attachment.add_header('Content-Disposition', 'attachment', filename=file.name)           
         self.msg.attach(attachment)
-
+        
         #part = MIMEBase('application', "octet-stream")
         #part.set_payload(open(file, "rb").read())
         #self.msg.attach(part)
