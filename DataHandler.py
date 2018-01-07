@@ -45,8 +45,8 @@ class DataHandler:
             for file in os.listdir(directory + b'/Original_Img_Data'):
                 img = self.getImage(directory+b'/Original_Img_Data/'+file)
                 self.mri_images.append(img)
-                print("Appending!")
-                print(len(self.mri_images))
+                #print("Appending!")
+                #print(len(self.mri_images))
             segment_directory = os.fsencode(directory + b'Segmented_Img_Data')
             for dir in os.listdir(segment_directory):
                 for file in os.listdir(segment_directory+b'/'+dir):
