@@ -8,7 +8,7 @@ from keras.utils.training_utils import multi_gpu_model
 import tensorflow as tf
 from DataHandler import DataHandler
 from TimerModule import TimerModule
-import numpy as np
+import logging
 
 now = datetime.now()
 date_string = now.strftime('%Y_%m_%d')
@@ -50,6 +50,14 @@ G = 4
 num_epochs = 1
 segmentation_bank = [[] for _ in range(8)]
 for i in range(0,8):
+    
+    log = logging.getLogger('tensorflow')
+    log.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh = logging.FileHandler(model_directory + '/model_' + str(i) + '/debug_log.log')
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(formatter)
+    log.addHandler(fh)
     print('Training network: ' + str(i))
     with tf.device('/cpu:0'):
         segmentation_bank[i] = Model(input_img, decoded)
@@ -58,17 +66,14 @@ for i in range(0,8):
     train_segment = segments[:,:,:,i:i+1]
     test_segment = segments2[:,:,:,i:i+1]
     timer.startTimer()
-    callbacks = parallel_segmentation_bank.fit(training, train_segment,
+    parallel_segmentation_bank.fit(training, train_segment,
             epochs=num_epochs,
             batch_size=32*G,
             shuffle=True,
             validation_data=(testing, test_segment))
     timer.stopTimer()
     
-    loss_history = callbacks.history["loss"]
     
-    numpy_loss_history = np.array(loss_history)
-    np.savetxt(model_directory + '/model_' +str(i) + "_loss_history.txt", numpy_loss_history, delimiter=",")
     
     segmentation_bank[i].set_weights(parallel_segmentation_bank.get_weights())
     print('Saving model ' + str(i) + ' to disk!')
