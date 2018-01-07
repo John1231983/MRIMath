@@ -21,7 +21,7 @@ def get_im(path):
 training_directory = '/media/daniel/ExtraDrive1/Patient_Data_Images';
 segment_number = 0;
 k = 1;
-model = load_model('/home/daniel/eclipse-workspace/MRIMath/Models/2018_01_02/model_' + str(segment_number) + '.h5' )
+model = load_model('/home/daniel/eclipse-workspace/MRIMath/Models/2018_01_06/model_' + str(segment_number) + '.h5' )
 #X_test = []
 
 for j in range(1,10):

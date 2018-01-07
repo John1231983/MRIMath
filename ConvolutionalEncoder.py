@@ -26,10 +26,8 @@ x = Conv2D(120, (F, F), activation='relu', padding='same')(input_img)
 x = Conv2D(80, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(60, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(40, (F, F), activation='relu', padding='same')(x)
-x = Conv2D(20, (F, F), activation='relu', padding='same')(x)
 encoded = MaxPooling2D((S, S), padding='same')(x)
 x = UpSampling2D((S, S))(encoded)
-x = Conv2D(20, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(40, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(60, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(80, (F, F), activation='relu', padding='same')(x)
@@ -52,13 +50,17 @@ batchSize = 32
 segmentation_bank = [[] for _ in range(8)]
 for i in range(0,8):
     
+    specific_model_directory = model_directory + '/' + 'Model ' + str(i)
+    if not os.path.exists(specific_model_directory):
+        os.makedirs(specific_model_directory)
+    
     model_info_filename = 'model_'+str(i) +"_"+ "info.txt"
-    model_info_file = open(model_directory + '/' + model_info_filename,"w") 
-    log_info_filename = 'model_' + str(i) + 'loss_log.csv'
-    log_info = open(model_directory + '/' + log_info_filename, "w")
+    model_info_file = open(specific_model_directory + '/' + model_info_filename,"w") 
+    log_info_filename = 'model_' + str(i) + '_loss_log.csv'
+    log_info = open(specific_model_directory + '/' + log_info_filename, "w")
     
     print('Training network: ' + str(i))
-    csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=';')
+    csv_logger = CSVLogger(specific_model_directory + '/' + log_info_filename, append=True, separator=';')
     with tf.device('/cpu:0'):
         segmentation_bank[i] = Model(input_img, decoded)
     parallel_segmentation_bank = multi_gpu_model(segmentation_bank[i], G)
@@ -76,11 +78,12 @@ for i in range(0,8):
     
     segmentation_bank[i].set_weights(parallel_segmentation_bank.get_weights())
     print('Saving model ' + str(i) + ' to disk!')
-    segmentation_bank[i].save(model_directory + '/model_' + str(i) +'.h5')
+    segmentation_bank[i].save(specific_model_directory + '/model_' + str(i) +'.h5')
     
     emailHandler.connectToServer()
     message = "Finished training network " + str(i) + " at " + str(datetime.now()) + '\n'
     message += "The network was trained for " + str(num_epochs) + " epochs with a batch size of " + str(batchSize) + '\n'
+    message += "The model was saved to " + specific_model_directory + '\n'
     
     segmentation_bank[i].summary(print_fn=lambda x: model_info_file.write(x + '\n'))
     message += "\n Total training time: " + str(timer.getElapsedTime())

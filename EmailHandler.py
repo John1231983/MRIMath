@@ -46,6 +46,7 @@ class EmailHandler:
     
     def finish(self):
         self.body = ''
+        self.msg['To'] = ''
         self.msg.set_payload([])
         self.server.quit()
         
