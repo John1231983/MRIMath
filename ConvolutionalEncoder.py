@@ -47,7 +47,7 @@ num_cores = multiprocessing.cpu_count()
 Parallel(n_jobs=num_cores)(delayed(dataHandler.loadIndividualImage)('/coe_data/MRIMath/MS_Research/Patient_Data_Images',i) for i in range(1,5))
 training, segments = dataHandler.getMRIData()
 print(training.shape)
-dataHandler.clearMRIData()
+#dataHandler.clearMRIData()
 Parallel(n_jobs=num_cores)(delayed(dataHandler.loadIndividualImage)('/coe_data/MRIMath/MS_Research/Patient_Data_Images',i) for i in range(151,152))
 testing, segments2 = dataHandler.getMRIData()
 
