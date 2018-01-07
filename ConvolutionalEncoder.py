@@ -41,7 +41,7 @@ decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 emailHandler = EmailHandler()
 timer = TimerModule()
 
-training, segments = Parallel(n_jobs=num_cores)(delayed(dataHandler.loadData)('/coe_data/MRIMath/MS_Research/Patient_Data_Images',i) for i in range(151))
+training, segments = Parallel(n_jobs=num_cores)(delayed(dataHandler.loadData)('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1,151))
 #training, segments = dataHandler.loadData('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
 testing, segments2 = dataHandler.loadData('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,192)
 
