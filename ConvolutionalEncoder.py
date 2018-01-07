@@ -12,6 +12,8 @@ from keras.callbacks import CSVLogger
 
 import multiprocessing
 
+
+
 now = datetime.now()
 date_string = now.strftime('%Y_%m_%d')
 
