@@ -33,7 +33,7 @@ class DataHandler:
         num_cores = multiprocessing.cpu_count()
         Parallel(n_jobs=num_cores)(delayed(self.loadIndividualImage(training_directory, i, X_train, segment_data) for i in range(start, finish)))
     
-    def loadIndividualImage(self, training_directory, j):
+    def loadIndividualImage(self, training_directory, j, mri_images, mri_segment_data):
         if((j>0 and j < 107) or j > 135):
             print('Reading Patient ' + str(j))
             if j < 10:
@@ -44,15 +44,13 @@ class DataHandler:
                 directory = os.fsencode(training_directory + '/Patient_(' + str(j)  + ')_data/')
             for file in os.listdir(directory + b'/Original_Img_Data'):
                 img = self.getImage(directory+b'/Original_Img_Data/'+file)
-                self.mri_images.append(img)
-                #print("Appending!")
-                #print(len(self.mri_images))
+                mri_images.append(img)
             segment_directory = os.fsencode(directory + b'Segmented_Img_Data')
             for dir in os.listdir(segment_directory):
                 for file in os.listdir(segment_directory+b'/'+dir):
                     ind = file[4:5]
-                    self.mri_segment_data[int(ind.decode())-1].append(self.getImage(segment_directory+b'/'+dir+b'/'+file))
-    
+                    mri_segment_data[int(ind.decode())-1].append(self.getImage(segment_directory+b'/'+dir+b'/'+file))
+        
     def getMRIData(self):
         print(len(self.mri_images))
         return self.preprocessForNetwork(self.mri_images, self.mri_segment_data)
