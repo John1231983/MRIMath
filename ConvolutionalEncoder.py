@@ -51,8 +51,13 @@ num_epochs = 1
 segmentation_bank = [[] for _ in range(8)]
 for i in range(0,8):
     
+    model_info_filename = 'model_'+str(i) +"_"+ "info.txt"
+    model_info_file = open(model_directory + '/' + model_info_filename,"w") 
+    log_info_filename = 'model_' + str(i) + '_log.csv'
+    log_info = open(model_directory + '/' + log_info_filename)
+    
     print('Training network: ' + str(i))
-    csv_logger = CSVLogger(model_directory + '/model_' + str(i) + '_log.csv', append=True, separator=';')
+    csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=';')
     with tf.device('/cpu:0'):
         segmentation_bank[i] = Model(input_img, decoded)
     parallel_segmentation_bank = multi_gpu_model(segmentation_bank[i], G)
@@ -76,14 +81,13 @@ for i in range(0,8):
     
     emailHandler.connectToServer()
     message = "Finished training network " + str(i) + " at " + str(datetime.now()) + '\n'
-    model_info_filename = 'model_'+str(i) +"_"+ "info.txt"
-    model_info_file = open(model_directory + '/' + model_info_filename,"w") 
+    
     segmentation_bank[i].summary(print_fn=lambda x: model_info_file.write(x + '\n'))
     message += "\n Total training time: " + str(timer.getElapsedTime())
     emailHandler.prepareMessage(date_string + " MRIMath Update: Network Training Finished!", message);
     model_info_file.close()
-    emailHandler.attachFile(model_info_file)
-    #emailHandler.attachFile()
+    emailHandler.attachFile(model_info_file, model_info_filename)
+    emailHandler.attachFile(log_info_filename, log_info)
     emailHandler.sendMessage("Danny")
     emailHandler.finish()
 
