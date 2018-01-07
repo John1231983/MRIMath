@@ -39,8 +39,8 @@ decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 emailHandler = EmailHandler()
 timer = TimerModule()
 
-training, segments = dataHandler.loadData('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 3)
-testing, segments2 = dataHandler.loadData('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,152)
+training, segments = dataHandler.loadData('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
+testing, segments2 = dataHandler.loadData('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,192)
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
 if not os.path.exists(model_directory):
@@ -53,7 +53,7 @@ for i in range(0,8):
     
     model_info_filename = 'model_'+str(i) +"_"+ "info.txt"
     model_info_file = open(model_directory + '/' + model_info_filename,"w") 
-    log_info_filename = 'model_' + str(i) + '_log.csv'
+    log_info_filename = 'model_' + str(i) + 'loss_log.csv'
     log_info = open(model_directory + '/' + log_info_filename, "w")
     
     print('Training network: ' + str(i))
