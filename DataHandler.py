@@ -7,6 +7,9 @@ Created on Jan 1, 2018
 import os
 import cv2
 import numpy as np
+import multiprocessing
+from joblib import Parallel, delayed
+from LoadAndTestModel import training_directory
 
 
 class DataHandler:
@@ -20,11 +23,23 @@ class DataHandler:
         img = cv2.imread(path,0)
         return img
 
-    def loadData(self, training_directory, start, finish):
+    def loadDataSequential(self, training_directory, start, finish):
         X_train = []
         segment_data = [[] for _ in range(8)]
         print('Reading images')
         for j in range(start,finish):
+            self.loadIndividualImage(training_directory, j, X_train, segment_data)
+        training, segments = self.preprocessForNetwork(X_train, segment_data)
+        return training, segments
+    
+    def loadDataParallel(self, training_directory, start, finish):
+        X_train = []
+        segment_data = [[] for _ in range(8)]
+        print('Reading images')
+        num_cores = multiprocessing.cpu_count()
+        Parallel(n_jobs=num_cores)(delayed(self.loadIndividualImage(training_directory, i, X_train, segment_data) for i in range(start, finish)))
+    
+    def loadIndividualImage(self, training_directory, j, X_train, segment_data):
             if((j>0 and j < 107) or j > 135):
                 print('Reading Patient ' + str(j))
                 if j < 10:
@@ -40,10 +55,8 @@ class DataHandler:
                 for dir in os.listdir(segment_directory):
                     for file in os.listdir(segment_directory+b'/'+dir):
                         ind = file[4:5]
-                        segment_data[int(ind.decode())-1].append(self.getImage(segment_directory+b'/'+dir+b'/'+file));
-        training, segments = self.preprocessForNetwork(X_train, segment_data)
-        return training, segments
-    
+                        segment_data[int(ind.decode())-1].append(self.getImage(segment_directory+b'/'+dir+b'/'+file))
+        
     def preprocessForNetwork(self, training_data, segment_data):
         n_imgs = len(training_data)
         training = np.array(training_data)
