@@ -58,8 +58,7 @@ batchSize = 32
 segmentation_bank = [[] for _ in range(8)]
 for i in range(0,8):
     
-    rows, cols = training.shape
-    print(str(rows))
+    print(training.shape)
     specific_model_directory = model_directory + '/' + 'Model ' + str(i)
     if not os.path.exists(specific_model_directory):
         os.makedirs(specific_model_directory)
