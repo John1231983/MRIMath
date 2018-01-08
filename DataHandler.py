@@ -30,7 +30,7 @@ class DataHandler:
         segment_data = [[] for _ in range(8)]
         print('Reading images')
         for j in range(start,finish):
-            self.loadIndividualImage(training_directory, j, X_train, segment_data)
+            self.loadIndividualImage(j, training_directory, X_train, segment_data)
         training, segments = self.preprocessForNetwork(X_train, segment_data)
         return training, segments
     
