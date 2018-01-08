@@ -9,10 +9,16 @@ import tensorflow as tf
 from DataHandler import DataHandler
 from TimerModule import TimerModule
 from keras.callbacks import CSVLogger
+from tensorflow.python.client import device_lib
+
+
+
+def getAvailableGPUs():
+    local_device_protos = device_lib.list_local_devices()
+    return [x.name for x in local_device_protos if x.device_type == 'GPU']
 
 now = datetime.now()
 date_string = now.strftime('%Y_%m_%d')
-
 
 dataHandler = DataHandler()
 emailHandler = EmailHandler()
@@ -46,7 +52,7 @@ model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
 if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
-G = 4
+G = getAvailableGPUs()
 num_epochs = 50
 batchSize = 32
 segmentation_bank = [[] for _ in range(8)]
@@ -61,23 +67,37 @@ for i in range(0,8):
     log_info_filename = 'model_' + str(i) + '_loss_log.csv'
     log_info = open(specific_model_directory + '/' + log_info_filename, "w")
     
-    print('Training network: ' + str(i))
-    csv_logger = CSVLogger(specific_model_directory + '/' + log_info_filename, append=True, separator=';')
-    with tf.device('/cpu:0'):
-        segmentation_bank[i] = Model(input_img, decoded)
-    parallel_segmentation_bank = multi_gpu_model(segmentation_bank[i], G)
-    parallel_segmentation_bank.compile(optimizer='nadam', loss='mean_squared_error')
     train_segment = segments[:,:,:,i:i+1]
     test_segment = segments2[:,:,:,i:i+1]
-    timer.startTimer()
-    parallel_segmentation_bank.fit(training, train_segment,
-            epochs=num_epochs,
-            batch_size=batchSize*G,
-            shuffle=True,
-            validation_data=(testing, test_segment),
-            callbacks=[csv_logger])
-    timer.stopTimer()
     
+    print('Training network: ' + str(i))
+    csv_logger = CSVLogger(specific_model_directory + '/' + log_info_filename, append=True, separator=';')
+    if G > 1:
+        with tf.device('/cpu:0'):
+            segmentation_bank[i] = Model(input_img, decoded)
+        parallel_segmentation_bank = multi_gpu_model(segmentation_bank[i], G)
+        parallel_segmentation_bank.compile(optimizer='nadam', loss='mean_squared_error')
+        timer.startTimer()
+        parallel_segmentation_bank.fit(training, train_segment,
+                epochs=num_epochs,
+                batch_size=batchSize*G,
+                shuffle=True,
+                validation_data=(testing, test_segment),
+                callbacks=[csv_logger])
+        timer.stopTimer()
+        
+    else:
+        segmentation_bank[i] = Model(input_img, decoded)
+        segmentation_bank[i].compile(optimizer='nadam', loss='mean_squared_error')
+        timer.startTimer()
+        segmentation_bank[i].fit(training, train_segment,
+                epochs=num_epochs,
+                batch_size=batchSize*G,
+                shuffle=True,
+                validation_data=(testing, test_segment),
+                callbacks=[csv_logger])
+        timer.stopTimer()
+            
     segmentation_bank[i].set_weights(parallel_segmentation_bank.get_weights())
     print('Saving model ' + str(i) + ' to disk!')
     segmentation_bank[i].save(specific_model_directory + '/model_' + str(i) +'.h5')

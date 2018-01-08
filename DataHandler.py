@@ -42,7 +42,8 @@ class DataHandler:
         pool = ThreadPool(num_cores) 
         pool.map(partial(self.loadIndividualImage, training_directory=training_directory, X_train=X_train, segment_data=segment_data), range(start, finish))
         training, segments = self.preprocessForNetwork(X_train, segment_data)
-
+        pool.close() 
+        pool.join()
         return training, segments
         
     def loadIndividualImage(self, j, training_directory, X_train, segment_data):
