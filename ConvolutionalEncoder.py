@@ -89,7 +89,7 @@ for i in range(0,8):
         
     else:
         segmentation_bank[i] = Model(input_img, decoded)
-        segmentation_bank[i].compile(optimizer='nadam', loss='mean_squared_error')
+        segmentation_bank[i].compile(optimizer='adam', loss='mean_squared_error')
         timer.startTimer()
         segmentation_bank[i].fit(training, train_segment,
                 epochs=num_epochs,
