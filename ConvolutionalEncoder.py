@@ -43,10 +43,10 @@ decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 emailHandler = EmailHandler()
 timer = TimerModule()
 
-training, segments = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
+training, segments = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 5)
 
 #training, segments = dataHandler.loadDataSequential('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
-testing, segments2 = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,192)
+testing, segments2 = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,153)
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
 if not os.path.exists(model_directory):
@@ -58,6 +58,8 @@ batchSize = 32
 segmentation_bank = [[] for _ in range(8)]
 for i in range(0,8):
     
+    rows, cols = training.shape
+    print(str(rows))
     specific_model_directory = model_directory + '/' + 'Model ' + str(i)
     if not os.path.exists(specific_model_directory):
         os.makedirs(specific_model_directory)
