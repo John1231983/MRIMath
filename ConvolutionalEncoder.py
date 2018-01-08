@@ -28,7 +28,7 @@ F = 3
 S = 2 
 input_img = Input(shape=(dataHandler.W, dataHandler.H, 1))  
 
-x = Conv2D(100, (F, F), activation='relu', padding='same')(input_img)
+x = Conv2D(120, (F, F), activation='relu', padding='same')(input_img)
 x = Conv2D(80, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(60, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(40, (F, F), activation='relu', padding='same')(x)
@@ -37,13 +37,13 @@ x = UpSampling2D((S, S))(encoded)
 x = Conv2D(40, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(60, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(80, (F, F), activation='relu', padding='same')(x)
-x = Conv2D(100, (F, F), activation='relu', padding='same')(x)
+x = Conv2D(120, (F, F), activation='relu', padding='same')(x)
 decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 
 emailHandler = EmailHandler()
 timer = TimerModule()
 
-training, segments = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 10)
+training, segments = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
 
 #training, segments = dataHandler.loadDataSequential('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
 testing, segments2 = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,192)

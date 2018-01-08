@@ -66,6 +66,7 @@ class DataHandler:
                         ind = file[4:5]
                         segment_data[int(ind.decode())-1].append(self.getImage(segment_directory+b'/'+dir+b'/'+file))
                 self.lock.release()
+        
     def preprocessForNetwork(self, training_data, segment_data):
         n_imgs = len(training_data)
         training = np.array(training_data)
