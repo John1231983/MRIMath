@@ -43,7 +43,7 @@ decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 emailHandler = EmailHandler()
 timer = TimerModule()
 
-training, segments = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 5)
+training, segments = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 3)
 
 #training, segments = dataHandler.loadDataSequential('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
 testing, segments2 = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,153)
@@ -53,11 +53,10 @@ if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 G = getAvailableGPUs()
-num_epochs = 50
+num_epochs = 1
 batchSize = 32
 segmentation_bank = [[] for _ in range(8)]
 for i in range(0,8):
-    print('The network was trained on ' + str(training.shape[0]) + ' images \n')
 
     specific_model_directory = model_directory + '/' + 'Model ' + str(i)
     if not os.path.exists(specific_model_directory):
