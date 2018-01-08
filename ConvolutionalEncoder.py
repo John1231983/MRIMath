@@ -72,6 +72,7 @@ for i in range(0,8):
     
     print('Training network: ' + str(i))
     csv_logger = CSVLogger(specific_model_directory + '/' + log_info_filename, append=True, separator=';')
+    print('Using ' + str(G) + ' GPUs to train the network!')
     if G > 1:
         with tf.device('/cpu:0'):
             segmentation_bank[i] = Model(input_img, decoded)
