@@ -57,8 +57,8 @@ num_epochs = 50
 batchSize = 32
 segmentation_bank = [[] for _ in range(8)]
 for i in range(0,8):
-    
-    print(training.shape)
+    print('The network was trained on ' + str(training.shape[0]) + ' images \n')
+
     specific_model_directory = model_directory + '/' + 'Model ' + str(i)
     if not os.path.exists(specific_model_directory):
         os.makedirs(specific_model_directory)
@@ -106,6 +106,7 @@ for i in range(0,8):
     
     emailHandler.connectToServer()
     message = "Finished training network " + str(i) + " at " + str(datetime.now()) + '\n'
+    message += 'The network was trained on ' + str(training.shape[0]) + ' images \n'
     message += "The network was trained for " + str(num_epochs) + " epochs with a batch size of " + str(batchSize) + '\n'
     message += "The model was saved to " + specific_model_directory + '\n'
     
