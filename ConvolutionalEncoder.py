@@ -15,7 +15,7 @@ from tensorflow.python.client import device_lib
 
 def getAvailableGPUs():
     local_device_protos = device_lib.list_local_devices()
-    return [x.name for x in local_device_protos if x.device_type == 'GPU']
+    return len([x.name for x in local_device_protos if x.device_type == 'GPU'])
 
 now = datetime.now()
 date_string = now.strftime('%Y_%m_%d')
