@@ -43,10 +43,10 @@ decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 emailHandler = EmailHandler()
 timer = TimerModule()
 
-training, segments = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 10)
+training, segments = dataHandler.loadDataSequential('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 10)
 
 #training, segments = dataHandler.loadDataSequential('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
-testing, segments2 = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,192)
+testing, segments2 = dataHandler.loadDataSequential('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,192)
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
 if not os.path.exists(model_directory):
