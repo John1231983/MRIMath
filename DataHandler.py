@@ -40,10 +40,9 @@ class DataHandler:
         print('Reading images')
         num_cores = multiprocessing.cpu_count()
         pool = ThreadPool(num_cores) 
-        for img, segment in pool.map(partial(self.loadIndividualImage, training_directory=training_directory, X_train=X_train, segment_data=segment_data), range(start, finish), chunksize=1):
-            X_train.append(img)
-            segment_data.append(segment)
+        pool.map(partial(self.loadIndividualImage, training_directory=training_directory, X_train=X_train, segment_data=segment_data), range(start, finish))
         training, segments = self.preprocessForNetwork(X_train, segment_data)
+
         return training, segments
         
     def loadIndividualImage(self, j, training_directory, X_train, segment_data):
