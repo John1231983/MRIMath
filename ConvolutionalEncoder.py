@@ -43,10 +43,10 @@ decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 emailHandler = EmailHandler()
 timer = TimerModule()
 
-training, segments = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 3)
+training, segments = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
 
 #training, segments = dataHandler.loadDataSequential('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
-testing, segments2 = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,153)
+testing, segments2 = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,192)
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
 if not os.path.exists(model_directory):
@@ -104,9 +104,10 @@ for i in range(0,8):
     segmentation_bank[i].save(specific_model_directory + '/model_' + str(i) +'.h5')
     
     emailHandler.connectToServer()
-    message = "Finished training network " + str(i) + " at " + str(datetime.now()) + '\n'
-    message += 'The network was trained on ' + str(training.shape[0]) + ' images \n'
-    message += "The network was trained for " + str(num_epochs) + " epochs with a batch size of " + str(batchSize) + '\n'
+    message = "Finished training network " + str(i) + " at " + str(datetime.now()) + '\n\n'
+    message += 'The network was trained on ' + str(training.shape[0]) + ' images \n\n'
+    message += 'The network was validated on ' + str(testing.shape[0]) + ' images \n\n'
+    message += "The network was trained for " + str(num_epochs) + " epochs with a batch size of " + str(batchSize) + '\n\n'
     message += "The model was saved to " + specific_model_directory + '\n'
     
     segmentation_bank[i].summary(print_fn=lambda x: model_info_file.write(x + '\n'))
@@ -116,6 +117,7 @@ for i in range(0,8):
     emailHandler.attachFile(model_info_file, model_info_filename)
     emailHandler.attachFile(log_info, log_info_filename)
     emailHandler.sendMessage("Danny")
+    emailHandler.sendMessage("Dr. Bouaynaya")
     emailHandler.finish()
 
 

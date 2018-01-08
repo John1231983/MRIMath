@@ -40,13 +40,14 @@ class EmailHandler:
     def sendMessage(self, recipient):
         self.msg['To'] = self.addressBook.get(recipient)
         self.body = "Hello " + recipient + ",\n\n" + self.body
-        self.body = self.body + "\n\n" + "Regards,\nMr. HPC"
+        self.body = self.body + "\n\n" + "Regards,\nMRIMath Notifier"
         self.msg.attach(MIMEText(self.body, 'plain'))
         self.server.sendmail(self.addr, self.addressBook.get(recipient), self.msg.as_string())
     
     def finish(self):
         self.body = ''
-        self.msg['To'] = ''
+        if 'To' in self.msg:
+            self.msg.replace_header('To', '')
         self.msg.set_payload([])
         self.server.quit()
         
