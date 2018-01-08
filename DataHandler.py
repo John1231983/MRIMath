@@ -10,6 +10,7 @@ import numpy as np
 import multiprocessing
 from multiprocessing.dummy import Pool as ThreadPool 
 from functools import partial
+import threading
 
 
 
@@ -18,6 +19,7 @@ class DataHandler:
     
     W = 240
     H = 240
+    lock = threading.Lock()
 
 
     def getImage(self, path):
@@ -58,11 +60,12 @@ class DataHandler:
                     img = self.getImage(directory+b'/Original_Img_Data/'+file)
                     X_train.append(img)
                 segment_directory = os.fsencode(directory + b'Segmented_Img_Data')
+                self.lock.acquire()
                 for dir in os.listdir(segment_directory):
                     for file in os.listdir(segment_directory+b'/'+dir):
                         ind = file[4:5]
                         segment_data[int(ind.decode())-1].append(self.getImage(segment_directory+b'/'+dir+b'/'+file))
-        
+                self.lock.release()
     def preprocessForNetwork(self, training_data, segment_data):
         n_imgs = len(training_data)
         training = np.array(training_data)
