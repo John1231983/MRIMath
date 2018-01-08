@@ -52,7 +52,6 @@ class EmailHandler:
         self.server.quit()
         
     def attachFile(self, file, filename):
-        
         attachment = open(file.name, "rb")
         part = MIMEBase('application', 'octet-stream')
         part.set_payload((attachment).read())
