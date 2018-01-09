@@ -42,26 +42,29 @@ decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 
 emailHandler = EmailHandler()
 timer = TimerModule()
-
-training, segments = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
+data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images'
+#data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
+training, segments = dataHandler.loadDataParallel(data_dir, 1, 4)
 
 #training, segments = dataHandler.loadDataSequential('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
-testing, segments2 = dataHandler.loadDataParallel('/coe_data/MRIMath/MS_Research/Patient_Data_Images',151,192)
+testing, segments2 = dataHandler.loadDataParallel(data_dir,151,153)
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
 if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 G = getAvailableGPUs()
-num_epochs = 50
+num_epochs = 1
 batchSize = 32
 segmentation_bank = [[] for _ in range(8)]
 for i in range(0,8):
+    print('Starting training for network ' + str(i))
 
     specific_model_directory = model_directory + '/' + 'Model ' + str(i)
     if not os.path.exists(specific_model_directory):
         os.makedirs(specific_model_directory)
     
+    print('Creating log and info files...')
     model_info_filename = 'model_'+str(i) +"_"+ "info.txt"
     model_info_file = open(specific_model_directory + '/' + model_info_filename,"w") 
     log_info_filename = 'model_' + str(i) + '_loss_log.csv'
@@ -117,7 +120,6 @@ for i in range(0,8):
     emailHandler.attachFile(model_info_file, model_info_filename)
     emailHandler.attachFile(log_info, log_info_filename)
     emailHandler.sendMessage("Danny")
-    emailHandler.sendMessage("Dr. Bouaynaya")
     emailHandler.finish()
 
 
