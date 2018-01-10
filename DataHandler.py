@@ -48,6 +48,7 @@ class DataHandler:
         return training, segments
         
     def loadIndividualImage(self, j, training_directory, X_train, segment_data):
+            self.lock.acquire()
             if((j>0 and j < 107) or j > 135):
                 print('Reading Patient ' + str(j))
                 if j < 10:
@@ -60,12 +61,11 @@ class DataHandler:
                     img = self.getImage(directory+b'/Original_Img_Data/'+file)
                     X_train.append(img)
                 segment_directory = os.fsencode(directory + b'Segmented_Img_Data')
-                self.lock.acquire()
                 for dir in os.listdir(segment_directory):
                     for file in os.listdir(segment_directory+b'/'+dir):
                         ind = file[4:5]
                         segment_data[int(ind.decode())-1].append(self.getImage(segment_directory+b'/'+dir+b'/'+file))
-                self.lock.release()
+            self.lock.release()
         
     def preprocessForNetwork(self, training_data, segment_data):
         n_imgs = len(training_data)
