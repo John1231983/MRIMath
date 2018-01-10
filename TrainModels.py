@@ -15,7 +15,7 @@ from datetime import datetime
 from keras.utils.training_utils import multi_gpu_model
 import tensorflow as tf
 from DataHandler import DataHandler
-import ConvolutionalEncoder
+from ConvolutionalEncoder import ConvolutionalEncoder
 
 
 def getAvailableGPUs():
