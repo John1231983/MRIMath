@@ -32,8 +32,8 @@ input_img, output = model.getModel()
 
 data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images'
 #data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
-training, segments = dataHandler.loadDataParallel(data_dir, 1, 4)
-testing, segments2 = dataHandler.loadDataParallel(data_dir,151,153)
+training, segments = dataHandler.loadDataParallel(data_dir, 1, 107)
+testing, segments2 = dataHandler.loadDataParallel(data_dir,136,167)
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
 if not os.path.exists(model_directory):
