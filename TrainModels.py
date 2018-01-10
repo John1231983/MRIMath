@@ -27,7 +27,7 @@ date_string = now.strftime('%Y_%m_%d')
 dataHandler = DataHandler()
 emailHandler = EmailHandler()
 timer = TimerModule()
-model = ConvolutionalEncoder([120,80,60,40,40,60,80,120])
+model = ConvolutionalEncoder([120,60,30,15,15,30,60,120])
 input_img, output = model.getModel()
 
 data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images'
