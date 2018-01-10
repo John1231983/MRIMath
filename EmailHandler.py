@@ -15,9 +15,10 @@ class EmailHandler:
     addr = "mrimathnotifier@gmail.com"
     password = "mrimathpw"
     addressBook = {'Danny': 'danielenricocahall@gmail.com', 
+         "Daniel": 'cahalld0@students.rowan.edu',
          'Dr.Bouaynaya': 'bouaynaya@rowan.edu', 
          'Oliver': 'palumb48@students.rowan.edu',
-         'Dimah': "derad6@rowan.edu",
+         'Dimah': 'derad6@rowan.edu',
          'Alena': 'alenagusevarus@gmail.com',
          'Dr. Hassan': 'hfshaykh@uabmc.edu'}
     body = ""
@@ -37,12 +38,13 @@ class EmailHandler:
         self.server.ehlo()
         self.server.login(self.addr, self.password)
         
-    def sendMessage(self, recipient):
-        self.msg['To'] = self.addressBook.get(recipient)
-        self.body = "Hello " + recipient + ",\n\n" + self.body
+    def sendMessage(self, recipients):
+        for recipient in recipients:
+            self.msg['To'] += self.addressBook.get(recipient) + ", "
+        self.body = "Hello,\n\n" + self.body
         self.body = self.body + "\n\n" + "Regards,\nMRIMath Notifier"
         self.msg.attach(MIMEText(self.body, 'plain'))
-        self.server.sendmail(self.addr, self.addressBook.get(recipient), self.msg.as_string())
+        self.server.sendmail(self.addr, map(self.addressBook, recipients), self.msg.as_string())
     
     def finish(self):
         self.body = ''

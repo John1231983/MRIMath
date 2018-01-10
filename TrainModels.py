@@ -32,8 +32,8 @@ input_img, output = model.getModel()
 
 data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images'
 #data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
-training, segments = dataHandler.loadDataParallel(data_dir, 1, 107)
-testing, segments2 = dataHandler.loadDataParallel(data_dir,136,167)
+training, segments = dataHandler.loadDataParallel(data_dir, 1, 2)
+testing, segments2 = dataHandler.loadDataParallel(data_dir,2,3)
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
 if not os.path.exists(model_directory):
@@ -102,7 +102,7 @@ for i in range(0,8):
     model_info_file.close()
     emailHandler.attachFile(model_info_file, model_info_filename)
     emailHandler.attachFile(log_info, log_info_filename)
-    emailHandler.sendMessage("Danny")
+    emailHandler.sendMessage(["Danny", "Daniel"])
     emailHandler.finish()
 
 
