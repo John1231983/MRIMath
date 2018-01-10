@@ -16,7 +16,6 @@ class ConvolutionalEncoder():
 
     
     def __init__(self, filters):
-        print(len(filters))
         for ii in range(len(filters)):
             if(ii == math.ceil(len(filters)/2)):
                 self.x = MaxPooling2D((self.S, self.S), padding='same')(self.x)
