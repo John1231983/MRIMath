@@ -47,7 +47,7 @@ class EmailHandler:
         self.body = "Hello,\n\n" + self.body
         self.body = self.body + "\n\n" + "Regards,\nMRIMath Notifier"
         self.msg.attach(MIMEText(self.body, 'plain'))
-        self.server.sendmail(self.addr, map(self.addressBook.get, recipients), self.msg.as_string())
+        self.server.sendmail(self.addr, list(map(self.addressBook.get, recipients)), self.msg.as_string())
     
     def finish(self):
         self.body = ''
