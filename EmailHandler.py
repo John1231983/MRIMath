@@ -43,7 +43,7 @@ class EmailHandler:
         for recipient in recipients:
             recipient_string += self.addressBook.get(recipient) + ", "
         print(recipient_string)
-        self.msg['To'] = recipient_string
+        self.msg['To'] = ''.join(list(map(self.addressBook, recipients)))
         self.body = "Hello,\n\n" + self.body
         self.body = self.body + "\n\n" + "Regards,\nMRIMath Notifier"
         self.msg.attach(MIMEText(self.body, 'plain'))
