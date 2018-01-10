@@ -17,8 +17,6 @@ import threading
 
 class DataHandler:
     
-    W = 240
-    H = 240
     lock = threading.Lock()
 
 
