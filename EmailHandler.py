@@ -39,7 +39,10 @@ class EmailHandler:
         self.server.login(self.addr, self.password)
         
     def sendMessage(self, recipients):
-        print(''.join(map(self.addressBook, recipients)))
+        x = ''
+        for recipient in recipients:
+            x += self.addressBook.get(recipient)
+        print(x)
         self.msg['To'] = ''.join(map(self.addressBook, recipients))
         self.body = "Hello,\n\n" + self.body
         self.body = self.body + "\n\n" + "Regards,\nMRIMath Notifier"
