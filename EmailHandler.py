@@ -15,7 +15,6 @@ class EmailHandler:
     addr = "mrimathnotifier@gmail.com"
     password = "mrimathpw"
     addressBook = {'Danny': 'danielenricocahall@gmail.com', 
-         "Daniel": 'cahalld0@students.rowan.edu',
          'Dr.Bouaynaya': 'bouaynaya@rowan.edu', 
          'Oliver': 'palumb48@students.rowan.edu',
          'Dimah': 'derad6@rowan.edu',
@@ -39,10 +38,6 @@ class EmailHandler:
         self.server.login(self.addr, self.password)
         
     def sendMessage(self, recipients):
-        recipient_string = ''
-        for recipient in recipients:
-            recipient_string += self.addressBook.get(recipient) + ", "
-        print(recipient_string)
         self.msg['To'] = ''.join(list(map(self.addressBook.get, recipients)))
         self.body = "Hello,\n\n" + self.body
         self.body = self.body + "\n\n" + "Regards,\nMRIMath Notifier"

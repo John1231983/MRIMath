@@ -32,15 +32,15 @@ input_img, output = model.getModel()
 
 data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images'
 #data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
-training, segments = dataHandler.loadDataParallel(data_dir, 1, 2)
-testing, segments2 = dataHandler.loadDataParallel(data_dir,2,3)
+training, segments = dataHandler.loadDataParallel(data_dir, 1, 107)
+testing, segments2 = dataHandler.loadDataParallel(data_dir,136,167)
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
 if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 G = getAvailableGPUs()
-num_epochs = 1
+num_epochs = 50
 batchSize = 32
 segmentation_bank = [[] for _ in range(8)]
 for i in range(0,8):
@@ -94,7 +94,8 @@ for i in range(0,8):
     message += 'The network was trained on ' + str(training.shape[0]) + ' images \n\n'
     message += 'The network was validated on ' + str(testing.shape[0]) + ' images \n\n'
     message += "The network was trained for " + str(num_epochs) + " epochs with a batch size of " + str(batchSize) + '\n\n'
-    message += "The model was saved to " + specific_model_directory + '\n'
+    message += "The model was saved to " + specific_model_directory + '\n\n'
+    
     
     segmentation_bank[i].summary(print_fn=lambda x: model_info_file.write(x + '\n'))
     message += "\n Total training time: " + str(timer.getElapsedTime())
@@ -102,7 +103,7 @@ for i in range(0,8):
     model_info_file.close()
     emailHandler.attachFile(model_info_file, model_info_filename)
     emailHandler.attachFile(log_info, log_info_filename)
-    emailHandler.sendMessage(["Danny", "Daniel"])
+    emailHandler.sendMessage(["Danny"])
     emailHandler.finish()
 
 
