@@ -15,29 +15,6 @@ def get_im(path):
     return img
 
 
-def load_data(training_directory, start, finish):
-    X_train = []
-    segments = [[] for _ in range(8)]
-    print('Reading images')
-    for j in range(start,finish):
-        print('Reading Patient ' + str(j))
-        if j < 10:
-            directory = os.fsencode(training_directory + '/Patient_(00' + str(j)  + ')_data/')
-        elif j < 100:
-            directory = os.fsencode(training_directory + '/Patient_(0' + str(j)  + ')_data/')
-
-        else:
-            directory = os.fsencode(training_directory + '/Patient_(' + str(j)  + ')_data/')
-        for file in os.listdir(directory + b'/Original_Img_Data'):
-            img = get_im(directory+b'/Original_Img_Data/'+file)
-            X_train.append(img)
-        segment_directory = os.fsencode(directory + b'Segmented_Img_Data')
-        for dir in os.listdir(segment_directory):
-            for file in os.listdir(segment_directory+b'/'+dir):
-                ind = file[4:5]
-                segments[int(ind.decode())-1].append(get_im(segment_directory+b'/'+dir+b'/'+file).reshape(1,dims*dims));
-    return X_train, segments
-    
 
 
 S = 2;
@@ -52,7 +29,7 @@ x = Conv2D(25, (F, F), activation='relu', padding='same')(x)
 x = Conv2D(10, (F, F), activation='relu', padding='same')(x)
 encoded = MaxPooling2D((S, S), padding='same')(x)
 #encoded = Flatten()(encoded);
-encoded = GlobalAveragePooling2D()(encoded)
+#encoded = GlobalAveragePooling2D()(encoded)
 print(encoded.shape)
 decoded = Dense(dims*dims, activation='relu')(encoded)
 

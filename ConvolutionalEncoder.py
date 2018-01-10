@@ -10,7 +10,33 @@ from DataHandler import DataHandler
 from TimerModule import TimerModule
 from keras.callbacks import CSVLogger
 from tensorflow.python.client import device_lib
+import math
 
+
+
+class ConvolutionalEncoder():
+    
+    F = 3
+    S = 2 
+    input_img = Input(shape=(DataHandler.W, DataHandler.H, 1))  
+    x = input_img
+    output = 0
+
+    
+    def __init__(self, filters):
+        print(len(filters))
+        for ii in range(len(filters)):
+            if(ii == math.ceil(len(filters)/2)):
+                self.x = MaxPooling2D((self.S, self.S), padding='same')(self.x)
+                self.x = UpSampling2D((self.S, self.S))(self.x)
+            self.x = Conv2D(filters[ii], (self.F, self.F), activation='relu', padding='same')(self.x)
+            if(ii == len(filters)-1):
+                self.output = Conv2D(1, (self.F, self.F), activation='relu', padding='same')(self.x)
+
+        
+    
+    def getModel(self):
+        return self.input_img,self.output
 
 
 def getAvailableGPUs():
@@ -21,32 +47,18 @@ now = datetime.now()
 date_string = now.strftime('%Y_%m_%d')
 
 dataHandler = DataHandler()
-emailHandler = EmailHandler()
+#emailHandler = EmailHandler()
 timer = TimerModule()
+model = ConvolutionalEncoder([120,80,60,40,40,60,80,120])
+input_img, output = model.getModel()
 
-F = 3
-S = 2 
-input_img = Input(shape=(dataHandler.W, dataHandler.H, 1))  
 
-x = Conv2D(120, (F, F), activation='relu', padding='same')(input_img)
-x = Conv2D(80, (F, F), activation='relu', padding='same')(x)
-x = Conv2D(60, (F, F), activation='relu', padding='same')(x)
-x = Conv2D(40, (F, F), activation='relu', padding='same')(x)
-encoded = MaxPooling2D((S, S), padding='same')(x)
-x = UpSampling2D((S, S))(encoded)
-x = Conv2D(40, (F, F), activation='relu', padding='same')(x)
-x = Conv2D(60, (F, F), activation='relu', padding='same')(x)
-x = Conv2D(80, (F, F), activation='relu', padding='same')(x)
-x = Conv2D(120, (F, F), activation='relu', padding='same')(x)
-decoded = Conv2D(1, (F, F), activation='relu', padding='same')(x)
 
 emailHandler = EmailHandler()
 timer = TimerModule()
 data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images'
 #data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
 training, segments = dataHandler.loadDataParallel(data_dir, 1, 4)
-
-#training, segments = dataHandler.loadDataSequential('/coe_data/MRIMath/MS_Research/Patient_Data_Images', 1, 151)
 testing, segments2 = dataHandler.loadDataParallel(data_dir,151,153)
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
@@ -58,13 +70,10 @@ num_epochs = 1
 batchSize = 32
 segmentation_bank = [[] for _ in range(8)]
 for i in range(0,8):
-    print('Starting training for network ' + str(i))
-
     specific_model_directory = model_directory + '/' + 'Model ' + str(i)
     if not os.path.exists(specific_model_directory):
         os.makedirs(specific_model_directory)
     
-    print('Creating log and info files...')
     model_info_filename = 'model_'+str(i) +"_"+ "info.txt"
     model_info_file = open(specific_model_directory + '/' + model_info_filename,"w") 
     log_info_filename = 'model_' + str(i) + '_loss_log.csv'
@@ -78,7 +87,7 @@ for i in range(0,8):
     print('Using ' + str(G) + ' GPUs to train the network!')
     if G > 1:
         with tf.device('/cpu:0'):
-            segmentation_bank[i] = Model(input_img, decoded)
+            segmentation_bank[i] = Model(input_img, output)
         parallel_segmentation_bank = multi_gpu_model(segmentation_bank[i], G)
         parallel_segmentation_bank.compile(optimizer='nadam', loss='mean_squared_error')
         timer.startTimer()
@@ -91,7 +100,7 @@ for i in range(0,8):
         timer.stopTimer()
         
     else:
-        segmentation_bank[i] = Model(input_img, decoded)
+        segmentation_bank[i] = Model(input_img, output)
         segmentation_bank[i].compile(optimizer='adam', loss='mean_squared_error')
         timer.startTimer()
         segmentation_bank[i].fit(training, train_segment,
