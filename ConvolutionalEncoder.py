@@ -1,6 +1,7 @@
 
 from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D
 import math
+from DataHandler import DataHandler
 
 
 
@@ -8,9 +9,7 @@ class ConvolutionalEncoder():
     
     F = 3
     S = 2 
-    W = 240
-    H = 240
-    input_img = Input(shape=(W, H, 1))  
+    input_img = Input(shape=(DataHandler.W, DataHandler.H, 1))  
     x = input_img
     output = 0
 

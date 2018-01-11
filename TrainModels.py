@@ -95,11 +95,9 @@ for i in range(0,8):
     message += 'The network was validated on ' + str(testing.shape[0]) + ' images \n\n'
     message += "The network was trained for " + str(num_epochs) + " epochs with a batch size of " + str(batchSize) + '\n\n'
     message += "The model was saved to " + specific_model_directory + '\n\n'
-    
-    
+    message += "Total training time: " + str(timer.getElapsedTime())
     segmentation_bank[i].summary(print_fn=lambda x: model_info_file.write(x + '\n'))
-    message += "\n Total training time: " + str(timer.getElapsedTime())
-    emailHandler.prepareMessage(date_string + " MRIMath Update: Network Training Finished!", message);
+    emailHandler.prepareMessage(now.strftime('%Y-%m-%d') + " MRIMath Update: Network Training Finished!", message);
     model_info_file.close()
     emailHandler.attachFile(model_info_file, model_info_filename)
     emailHandler.attachFile(log_info, log_info_filename)
