@@ -12,15 +12,11 @@ from multiprocessing.dummy import Pool as ThreadPool
 from functools import partial
 import threading
 
-
-
-
 class DataHandler:
     
     lock = threading.Lock()
     W = 240
     H = 240
-
 
     def getImage(self, path):
         path=path.decode()
