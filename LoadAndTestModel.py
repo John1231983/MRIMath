@@ -12,16 +12,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-
-def get_im(path):
-    path=path.decode()
-    img = cv2.imread(path,0)
-    return img
-
 training_directory = '/media/daniel/ExtraDrive1/Patient_Data_Images';
 segment_number = 0;
 k = 1;
-model = load_model('/home/daniel/eclipse-workspace/MRIMath/Models/2018_01_06/model_' + str(segment_number) + '.h5' )
+model = load_model('/home/daniel/eclipse-workspace/MRIMath/Models/model_' + str(segment_number) + '.h5' )
 #X_test = []
 
 for j in range(1,10):
@@ -40,7 +34,6 @@ for j in range(1,10):
             img = get_im(directory+b'/Original_Img_Data/'+file)
             seg_img = get_im(seg_directory+b'/seg_' + str(segment_number+1).encode('ascii') + b'.png')
             X_seg = np.array(seg_img)
-            print(seg_directory)
             X_seg = X_seg.reshape(1,240,240,1)
             X_test = np.array(img)
             X_test = X_test.reshape(1,240,240,1)

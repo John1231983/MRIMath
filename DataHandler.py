@@ -7,16 +7,21 @@ Created on Jan 1, 2018
 import os
 import cv2
 import numpy as np
-import multiprocessing
-from multiprocessing.dummy import Pool as ThreadPool 
 from functools import partial
+from HardwareHandler import HardwareHandler
+from math import floor
 import threading
+import matplotlib.pyplot as plt
+
 
 class DataHandler:
     
     lock = threading.Lock()
+    X = []
+    labels = []
     W = 240
     H = 240
+    hardwareHandler = HardwareHandler()
 
     def getImage(self, path):
         path=path.decode()
@@ -32,36 +37,64 @@ class DataHandler:
         training, segments = self.preprocessForNetwork(X_train, segment_data)
         return training, segments
     
-    def loadDataParallel(self, training_directory, start, finish):
-        X_train = []
+    def loadDataParallel(self, data_directory, start, finish):
         segment_data = [[] for _ in range(8)]
         print('Reading images')
-        num_cores = multiprocessing.cpu_count()
-        pool = ThreadPool(num_cores) 
-        pool.map(partial(self.loadIndividualImage, training_directory=training_directory, X_train=X_train, segment_data=segment_data), range(start, finish))
-        training, segments = self.preprocessForNetwork(X_train, segment_data)
+        pool = self.hardwareHandler.createThreadPool()
+        pool.map(partial(self.loadIndividualImage, data_directory=data_directory), range(start, finish))
+        #training, segments = self.preprocessForNetwork(X_train, segment_data)
         pool.terminate()
-        return training, segments
+        #return training, segments
         
-    def loadIndividualImage(self, j, training_directory, X_train, segment_data):
-            self.lock.acquire()
-            if((j>0 and j < 107) or j > 135):
-                print('Reading Patient ' + str(j))
-                if j < 10:
-                    directory = os.fsencode(training_directory + '/Patient_(00' + str(j)  + ')_data/')
-                elif j < 100:
-                    directory = os.fsencode(training_directory + '/Patient_(0' + str(j)  + ')_data/')
-                else:
-                    directory = os.fsencode(training_directory + '/Patient_(' + str(j)  + ')_data/')
-                for file in os.listdir(directory + b'/Original_Img_Data'):
-                    img = self.getImage(directory+b'/Original_Img_Data/'+file)
-                    X_train.append(img)
-                segment_directory = os.fsencode(directory + b'Segmented_Img_Data')
-                for dir in os.listdir(segment_directory):
-                    for file in os.listdir(segment_directory+b'/'+dir):
-                        ind = file[4:5]
-                        segment_data[int(ind.decode())-1].append(self.getImage(segment_directory+b'/'+dir+b'/'+file))
-            self.lock.release()
+    def loadIndividualImage(self, index, data_directory):
+        print('Reading Patient ' + str(index))
+        img_directory = os.fsencode(self.getDirectoryFromIndex(index, data_directory))
+        for file in os.listdir(img_directory + b'/Original_Img_Data'):
+            img = self.getImage(img_directory+b'/Original_Img_Data/'+file)
+            length, width = img.shape
+            if(length != 240 or width != 240):
+                print('Could not add patient  ' + str(index) + ' because dimensions did not match')
+                print('Width: ' + str(width) + ", Length: " + str(length))
+            else:
+                self.X.append(img)
+                
+    def getDirectoryFromIndex(self, index, data_directory):
+        if index < 10:
+            patient_directory = data_directory + '/Patient_(00' + str(index)  + ')_data/'
+        elif index < 100:
+            patient_directory = data_directory + '/Patient_(0' + str(index)  + ')_data/'
+        else:
+            patient_directory = data_directory + '/Patient_(' + str(index)  + ')_data/'
+        return patient_directory
+        
+    def derivePatches(self, data_directory, n):
+        print(len(self.X))
+        for ind in range(1,len(self.X)):
+            label = dict()
+            for m in range(0, 8):
+                label[m] = 0
+            segment_directory = os.fsencode(self.getDirectoryFromIndex(ind, data_directory)) + b'/Segmented_Img_Data'
+            for dir in os.listdir(segment_directory):
+                for file in os.listdir(segment_directory+b'/'+dir):
+                    seg_img = self.getImage(segment_directory+b'/'+dir+b'/'+file)
+                    seg_num = file[4:5]
+                    length, width = self.X[ind].shape
+                    for col in range(1,width-n):
+                        for row in range(1,length-n):
+                            if(col+n >= length):
+                                col = 0
+                                row = row + 1
+                            #if(row+n >= width):
+                                
+                                
+                            patch = seg_img[row:row+n,col:col+n]
+                            if(patch[floor(n/2),floor(n/2)] == 255):
+                                label[seg_num] = 1
+                    self.labels.append(label)
+                    print(len(self.labels))
+
+                                
+                                
         
     def preprocessForNetwork(self, training_data, segment_data):
         n_imgs = len(training_data)

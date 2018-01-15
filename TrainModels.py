@@ -7,10 +7,10 @@ Created on Jan 9, 2018
 
 from TimerModule import TimerModule
 from keras.callbacks import CSVLogger
-from tensorflow.python.client import device_lib
 from keras.models import Model
 import os
 from EmailHandler import EmailHandler
+from HardwareHandler import HardwareHandler
 from datetime import datetime
 from keras.utils.training_utils import multi_gpu_model
 import tensorflow as tf
@@ -18,28 +18,29 @@ from DataHandler import DataHandler
 from ConvolutionalEncoder import ConvolutionalEncoder
 
 
-def getAvailableGPUs():
-    local_device_protos = device_lib.list_local_devices()
-    return len([x.name for x in local_device_protos if x.device_type == 'GPU'])
-
 now = datetime.now()
 date_string = now.strftime('%Y_%m_%d')
 dataHandler = DataHandler()
 emailHandler = EmailHandler()
+hardwareHandler = HardwareHandler()
 timer = TimerModule()
-model = ConvolutionalEncoder([120,60,30,15,15,30,60,120])
-input_img, output = model.getModel()
+#model = ConvolutionalEncoder([120,60,30,15,15,30,60,120])
+#input_img, output = model.getModel()
 
-data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images'
-#data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
-training, segments = dataHandler.loadDataParallel(data_dir, 1, 107)
+#data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images'
+data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
+dataHandler.loadDataParallel(data_dir, 1, 2)
+dataHandler.derivePatches(data_dir, 20)
 testing, segments2 = dataHandler.loadDataParallel(data_dir,136,167)
+
+
+
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
 if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
-G = getAvailableGPUs()
+G = hardwareHandler.getAvailableGPUs()
 num_epochs = 50
 batchSize = 32
 segmentation_bank = [[] for _ in range(8)]

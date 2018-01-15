@@ -9,7 +9,7 @@ class ConvolutionalSegmenter():
     S = 2 
     input_img = Input(shape=(DataHandler.W, DataHandler.H, 1))  
     x = input_img
-    output = 0
+    output = None
 
     
     def __init__(self, filters):
