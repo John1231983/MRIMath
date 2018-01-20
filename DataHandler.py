@@ -29,7 +29,7 @@ class DataHandler:
     numPatches = None #the number of patches to extract from an imaage
     n = None #dimensions of each patch (n x n)
     #stepSize = None # the stride, in the case of a sliding window approach
-    def __init__(self, tolerance = 0.25, numPatches = 10, n = 25):
+    def __init__(self, tolerance = 0.25, numPatches = 5, n = 25):
         self.tolerance = tolerance
         self.numPatches = numPatches
         self.n = n
@@ -43,8 +43,6 @@ class DataHandler:
         print('Reading images')
         for j in range(start,finish):
             self.loadIndividualImage(j, training_directory)
-        print(len(self.X))
-        print(len(self.labels))
 
     
     def loadDataParallel(self, data_directory, start, finish):
@@ -95,7 +93,7 @@ class DataHandler:
             #self.X.append(window)
         
     def deriveRandomPatch(self, patient_directory,img, file):
-#        self.lock.acquire()
+        self.lock.acquire()
         x = min(randint(1, self.W), self.W - self.n)
         y = min(randint(1, self.H), self.H - self.n)
         patch = img[x:x+self.n, y:y+self.n]
@@ -105,7 +103,7 @@ class DataHandler:
         #else:
         self.X.append(patch)
         self.derivePatchFromSegments(patient_directory, x,y, file)
- #       self.lock.release()
+        self.lock.release()
 
                    
             
