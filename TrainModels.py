@@ -24,9 +24,9 @@ hardwareHandler = HardwareHandler()
 timer = TimerModule()
 # model = ConvolutionalEncoder([120,60,30,15,15,30,60,120])
 # input_img, output = model.getModel()
-input_img = Input(shape=(DataHandler.W, DataHandler.H, 1))  
+input_img = shape=(DataHandler.W, DataHandler.H, 1)
 model = Sequential()
-model.add(Conv2D(75, (3, 3), input_img, padding='same', activation='relu'))
+model.add(Conv2D(75, (3, 3), input_shape=input_img, padding='same', activation='relu'))
 model.add(Dropout(0.2))
 model.add(Conv2D(32, (3, 3), activation='relu', padding='same'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
@@ -37,10 +37,10 @@ model.add(Dense(8, activation='softmax'))
 
 # data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images'
 data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
-dataHandler.loadDataSequential(data_dir, 1, 107)
+dataHandler.loadDataParallel(data_dir, 1, 107)
 training, training_labels = dataHandler.getData()
 dataHandler.clearVectors()
-dataHandler.loadDataSequential(data_dir, 136, 167)
+dataHandler.loadDataParallel(data_dir, 136, 167)
 testing, testing_labels = dataHandler.getData()
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
