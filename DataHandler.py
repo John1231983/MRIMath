@@ -93,6 +93,8 @@ class DataHandler:
         
     def deriveRandomPatch(self, patient_directory,img, file):
         self.lock.acquire()
+        #img = img - img.mean()
+        #img = img/img.std()
         x = min(randint(1, self.W), self.W - self.n)
         y = min(randint(1, self.H), self.H - self.n)
         patch = img[x:x+self.n, y:y+self.n]
