@@ -77,14 +77,13 @@ class DataHandler:
                 
                             
            
-    def preprocessForNetwork(self, training_data, segment_data):
-        n_imgs = len(training_data)
-        training = np.array(training_data)
-        training = training.reshape(n_imgs,self.W,self.H,1)
-        training = training.astype('float32') / 255;
-        segments = np.array(segment_data);
-        segments = segments.reshape(n_imgs,self.W,self.H,8)
-        return training, segments
+    def preprocessForNetwork(self):
+        n_imgs = len(self.X)
+        self.X = np.array(self.X)
+        self.X = self.X.reshape(n_imgs,self.W,self.H,1)
+        self.X = self.X.astype('float32') / 255;
+        self.labels = np.array(self.labels);
+        self.labels = self.labels.reshape(n_imgs,self.W,self.H,1)
     
     def derivePatches(self, img, stepSize):
         for (x, y, window) in self.deriveIndividualPatch(img, stepSize):
@@ -131,6 +130,7 @@ class DataHandler:
             self.labels.append(label)
     
     def getData(self):
+        self.preprocessForNetwork()
         return self.X, self.labels
     def clearVectors(self):
         self.X =[]
