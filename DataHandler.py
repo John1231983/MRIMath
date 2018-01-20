@@ -83,7 +83,7 @@ class DataHandler:
         self.X = self.X.reshape(n_imgs,self.n,self.n,1)
         self.X = self.X.astype('float32') / 255;
         self.labels = np.array(self.labels);
-        self.labels = self.labels.reshape(n_imgs,self.W,self.H,1)
+        self.labels = self.labels.reshape(n_imgs,self.n,self.n,1)
     
     def derivePatches(self, img, stepSize):
         for (x, y, window) in self.deriveIndividualPatch(img, stepSize):
