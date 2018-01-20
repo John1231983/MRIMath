@@ -80,7 +80,7 @@ class DataHandler:
     def preprocessForNetwork(self):
         n_imgs = len(self.X)
         self.X = np.array(self.X)
-        self.X = self.X.reshape(n_imgs,self.W,self.H,1)
+        self.X = self.X.reshape(n_imgs,self.n,self.n,1)
         self.X = self.X.astype('float32') / 255;
         self.labels = np.array(self.labels);
         self.labels = self.labels.reshape(n_imgs,self.W,self.H,1)
