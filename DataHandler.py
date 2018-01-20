@@ -49,7 +49,7 @@ class DataHandler:
         print('Reading images')
         pool = self.hardwareHandler.createThreadPool()
         pool.map(partial(self.loadIndividualImage, data_directory=data_directory), range(start, finish))
-        pool.terminate()
+        #pool.terminate()
     
         
     def loadIndividualImage(self, index, data_directory):
