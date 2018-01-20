@@ -35,8 +35,8 @@ model.add(Dense(512, activation='relu'))
 model.add(Dropout(0.5))
 model.add(Dense(8, activation='softmax'))
 
-# data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images'
-data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
+data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images'
+#data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
 dataHandler.loadDataParallel(data_dir, 1, 107)
 training, training_labels = dataHandler.getData()
 dataHandler.clearVectors()
