@@ -3,7 +3,7 @@ from DataHandler import DataHandler
 
 
 
-class ConvolutionalSegmenter():
+class ConvolutionalClassifier():
     
     F = 3
     S = 2 
@@ -18,7 +18,7 @@ class ConvolutionalSegmenter():
             if(ii == len(filters)-1):
                 self.x = MaxPooling2D((self.S, self.S), padding='same')(self.x)
                 self.x = Flatten()(self.x)
-                self.output = Dense(DataHandler.W*DataHandler.H, activation='relu')(self.x)
+                self.output = Dense(8, activation='softmax')(self.x)
         
     
     def getModel(self):

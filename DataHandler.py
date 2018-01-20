@@ -6,12 +6,14 @@ Created on Jan 1, 2018
 
 import os
 import cv2
-import numpy as np
 from functools import partial
 from HardwareHandler import HardwareHandler
-from math import floor
 import threading
-import matplotlib.pyplot as plt
+from random import randint
+import numpy as np
+from math import floor
+
+#import random
 
 
 class DataHandler:
@@ -22,42 +24,52 @@ class DataHandler:
     W = 240
     H = 240
     hardwareHandler = HardwareHandler()
-
+    
+    tolerance = None #the percentage of background pixels permitted in a patch
+    numPatches = None #the number of patches to extract from an imaage
+    n = None #dimensions of each patch (n x n)
+    #stepSize = None # the stride, in the case of a sliding window approach
+    def __init__(self, tolerance = 0.25, numPatches = 10, n = 25):
+        self.tolerance = tolerance
+        self.numPatches = numPatches
+        self.n = n
+    
     def getImage(self, path):
         path=path.decode()
         img = cv2.imread(path,0)
         return img
 
     def loadDataSequential(self, training_directory, start, finish):
-        X_train = []
-        segment_data = [[] for _ in range(8)]
         print('Reading images')
         for j in range(start,finish):
-            self.loadIndividualImage(j, training_directory, X_train, segment_data)
-        training, segments = self.preprocessForNetwork(X_train, segment_data)
-        return training, segments
+            self.loadIndividualImage(j, training_directory)
+        print(len(self.X))
+        print(len(self.labels))
+
     
     def loadDataParallel(self, data_directory, start, finish):
-        segment_data = [[] for _ in range(8)]
         print('Reading images')
         pool = self.hardwareHandler.createThreadPool()
         pool.map(partial(self.loadIndividualImage, data_directory=data_directory), range(start, finish))
-        #training, segments = self.preprocessForNetwork(X_train, segment_data)
         pool.terminate()
-        #return training, segments
+        print(len(self.X))
+        print(len(self.labels))
+    
         
     def loadIndividualImage(self, index, data_directory):
         print('Reading Patient ' + str(index))
-        img_directory = os.fsencode(self.getDirectoryFromIndex(index, data_directory))
-        for file in os.listdir(img_directory + b'/Original_Img_Data'):
-            img = self.getImage(img_directory+b'/Original_Img_Data/'+file)
+        patient_directory = os.fsencode(self.getDirectoryFromIndex(index, data_directory))
+        data_dir = patient_directory + b'/Original_Img_Data'
+        for file in os.listdir(data_dir):
+            img = self.getImage(data_dir+b'/'+file)
             length, width = img.shape
-            if(length != 240 or width != 240):
+            if(length != self.H or width != self.W):
                 print('Could not add patient  ' + str(index) + ' because dimensions did not match')
                 print('Width: ' + str(width) + ", Length: " + str(length))
             else:
-                self.X.append(img)
-                
+                for _ in range(0,self.numPatches):
+                    self.deriveRandomPatch(patient_directory,img, file)
+
     def getDirectoryFromIndex(self, index, data_directory):
         if index < 10:
             patient_directory = data_directory + '/Patient_(00' + str(index)  + ')_data/'
@@ -66,36 +78,9 @@ class DataHandler:
         else:
             patient_directory = data_directory + '/Patient_(' + str(index)  + ')_data/'
         return patient_directory
-        
-    def derivePatches(self, data_directory, n):
-        print(len(self.X))
-        for ind in range(1,len(self.X)):
-            label = dict()
-            for m in range(0, 8):
-                label[m] = 0
-            segment_directory = os.fsencode(self.getDirectoryFromIndex(ind, data_directory)) + b'/Segmented_Img_Data'
-            for dir in os.listdir(segment_directory):
-                for file in os.listdir(segment_directory+b'/'+dir):
-                    seg_img = self.getImage(segment_directory+b'/'+dir+b'/'+file)
-                    seg_num = file[4:5]
-                    length, width = self.X[ind].shape
-                    for col in range(1,width-n):
-                        for row in range(1,length-n):
-                            if(col+n >= length):
-                                col = 0
-                                row = row + 1
-                            #if(row+n >= width):
-                                
-                                
-                            patch = seg_img[row:row+n,col:col+n]
-                            if(patch[floor(n/2),floor(n/2)] == 255):
-                                label[seg_num] = 1
-                    self.labels.append(label)
-                    print(len(self.labels))
-
-                                
-                                
-        
+                
+                            
+           
     def preprocessForNetwork(self, training_data, segment_data):
         n_imgs = len(training_data)
         training = np.array(training_data)
@@ -105,6 +90,53 @@ class DataHandler:
         segments = segments.reshape(n_imgs,self.W,self.H,8)
         return training, segments
     
+    def derivePatches(self, img, stepSize):
+        for (x, y, window) in self.deriveIndividualPatch(img, stepSize):
+            if window.shape[0] != self.n or window.shape[1] != self.n:
+                continue
+            #self.X.append(window)
+        
+    def deriveRandomPatch(self, patient_directory,img, file):
+        x = min(randint(1, self.W), self.W - self.n)
+        y = min(randint(1, self.H), self.H - self.n)
+        patch = img[x:x+self.n, y:y+self.n]
+        #numBackgroundPixels = np.sum(patch == 0)
+        #if numBackgroundPixels > self.tolerance*img.size:
+        #    return self.deriveRandomPatch(patient_directory,img,file)
+        #else:
+        self.X.append(patch)
+        self.derivePatchFromSegments(patient_directory, x,y, file)
+
+                   
+            
+    def deriveIndividualPatch(self, img, stepSize, n):
+    # slide a window across the image
+        for y in range(0, img.shape[0], stepSize):
+            for x in range(0, img.shape[1], stepSize):
+            # yield the current window
+                yield (x, y, img[y:y + n, x:x + n])
+                
+    def derivePatchFromSegments(self, patient_dir, x ,y, img_num):
+            label = []
+            for _ in range(0, 8):
+                label.append(0)
+            segment_directory = os.fsencode(patient_dir) + b'/Segmented_Img_Data'
+            #for dir in os.listdir(segment_directory):
+            for file in os.listdir(segment_directory+b'/'+img_num[0:len(img_num)-4]):
+                seg_img = self.getImage(segment_directory+b'/'+img_num[0:len(img_num)-4]+b'/'+file)
+                seg_num = int(file[4:5].decode("utf-8"))
+                seg_patch = seg_img[x:x+self.n, y:y+self.n]
+                if(seg_patch[floor(self.n/2),floor(self.n/2)] == 255):
+                    label[seg_num-1] = 1
+                    
+                    
+            self.labels.append(label)
+    
+    def getData(self):
+        return self.X, self.labels
+    def clearVectors(self):
+        self.X =[]
+        self.labels = []
 
         
         
