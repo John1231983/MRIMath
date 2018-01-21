@@ -6,15 +6,15 @@ Created on Jan 9, 2018
 
 from TimerModule import TimerModule
 from keras.callbacks import CSVLogger
-from keras.layers import Input, Conv2D, MaxPooling2D, Dense, Flatten, Dropout, LeakyReLU
-from keras.models import Model, Sequential
+from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout, LeakyReLU
+from keras.models import Sequential
 from keras.optimizers import SGD
 import os
 from EmailHandler import EmailHandler
 from HardwareHandler import HardwareHandler
 from datetime import datetime
 from keras.utils.training_utils import multi_gpu_model
-import tensorflow as tf
+#import tensorflow as tf
 from DataHandler import DataHandler
 
 now = datetime.now()
