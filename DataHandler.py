@@ -95,7 +95,7 @@ class DataHandler:
         self.X = self.X.reshape(n_imgs,self.n,self.n,1)
         self.X = self.X.astype('float32') / 255;
         self.labels = np.array(self.labels);
-        np_utils.to_categorical(self.labels)
+        np_utils.to_categorical(self.labels, nb_classes=8)
         #self.labels = np.array(self.labels);
         #self.labels = self.labels.reshape(n_imgs,8)
     
