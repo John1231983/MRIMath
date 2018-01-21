@@ -52,7 +52,7 @@ class DataHandler:
             self.X = manager.list()  # <-- can be shared between processes.
             processes = []
             for i in range(start, finish):
-                p = Process(target=self.loadIndividualImage, args=(data_directory,i))  # Passing the list
+                p = Process(target=self.loadIndividualImage, args=(i,data_directory))  # Passing the list
                 p.start()
                 processes.append(p)
             for p in processes:
