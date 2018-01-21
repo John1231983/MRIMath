@@ -138,7 +138,7 @@ class DataHandler:
                 seg_num = int(file[4:5].decode("utf-8"))
                 seg_patch = seg_img[x:x+self.n, y:y+self.n]
                 if(seg_patch[floor(self.n/2),floor(self.n/2)] == 255):
-                    label = seg_num
+                    label = seg_num - 1
                     self.labels.append(label)
                     return
                     
