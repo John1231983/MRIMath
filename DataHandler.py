@@ -116,7 +116,8 @@ class DataHandler:
         #else:
         if self.derivePatchFromSegments(patient_directory, x,y, file):  
             self.X.append(patch)
-            self.lock.release()
+        self.lock.release()
+
         #self.derivePatchFromSegments(patient_directory, x,y, file)
 #         else:
 #             self.lock.release()
