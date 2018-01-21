@@ -13,6 +13,7 @@ from random import randint
 import numpy as np
 from math import floor
 from multiprocessing import Process, Manager
+from keras.utils import np_utils
 
 #import random
 
@@ -93,6 +94,7 @@ class DataHandler:
         self.X = np.array(self.X)
         self.X = self.X.reshape(n_imgs,self.n,self.n,1)
         self.X = self.X.astype('float32') / 255;
+        np_utils.to_categorical(self.labels)
         self.labels = np.array(self.labels);
         self.labels = self.labels.reshape(n_imgs,8)
     
@@ -125,9 +127,10 @@ class DataHandler:
                 yield (x, y, img[y:y + n, x:x + n])
                 
     def derivePatchFromSegments(self, patient_dir, x ,y, img_num):
-            label = []
-            for _ in range(0, 8):
-                label.append(0)
+#             label = []
+#             for _ in range(0, 8):
+#                 label.append(0)
+            label = 0
             segment_directory = os.fsencode(patient_dir) + b'/Segmented_Img_Data'
             #for dir in os.listdir(segment_directory):
             for file in os.listdir(segment_directory+b'/'+img_num[0:len(img_num)-4]):
@@ -135,7 +138,7 @@ class DataHandler:
                 seg_num = int(file[4:5].decode("utf-8"))
                 seg_patch = seg_img[x:x+self.n, y:y+self.n]
                 if(seg_patch[floor(self.n/2),floor(self.n/2)] == 255):
-                    label[seg_num-1] = 1
+                    label = seg_num
                     
                     
             self.labels.append(label)

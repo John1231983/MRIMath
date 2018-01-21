@@ -86,7 +86,7 @@ if G > 1:
     #with tf.device('/cpu:0'):
         #segmentation_bank[i] = Model(input_img, output)
     parallel_model = multi_gpu_model(model, G)
-    parallel_model.compile(optimizer=sgd, loss='categorical_crossentropy')
+    parallel_model.compile(optimizer=sgd, loss='categorical_crossentropy',metrics = ['accuracy'])
     timer.startTimer()
     parallel_model.fit(training, training_labels,
             epochs=num_epochs,
@@ -98,7 +98,7 @@ if G > 1:
         
 else:
     #segmentation_bank[i] = Model(input_img, output)
-    model.compile(optimizer=sgd, loss='categorical_crossentropy')
+    model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics = ['accuracy'])
     timer.startTimer()
     model.fit(training, training_labels,
             epochs=num_epochs,
@@ -111,13 +111,15 @@ else:
 model.set_weights(parallel_model.get_weights())
 print('Saving model to disk!')
 model.save(model_directory + '/model.h5')
+scores = model.evaluate(testing, testing_labels, verbose=0)
 
 emailHandler.connectToServer()
 message = "Finished training network at " + str(datetime.now()) + '\n\n'
 message += 'The network was trained on ' + str(training.shape[0]) + ' images \n\n'
 message += 'The network was validated on ' + str(testing.shape[0]) + ' images \n\n'
 message += "The network was trained for " + str(num_epochs) + " epochs with a batch size of " + str(batchSize) + '\n\n'
-message += "The model was saved to " + model_directory + '\n\n'
+message += 'The accuracy of the network is  ' + str(scores[1]*100) + ' % \n\n'
+message += "The network was saved to " + model_directory + '\n\n'
 message += "Total training time: " + str(timer.getElapsedTime())
 model.summary(print_fn=lambda x: model_info_file.write(x + '\n'))
 emailHandler.prepareMessage(now.strftime('%Y-%m-%d') + " MRIMath Update: Network Training Finished!", message);
