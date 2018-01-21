@@ -140,9 +140,10 @@ class DataHandler:
                 seg_patch = seg_img[x:x+self.n, y:y+self.n]
                 if(seg_patch[floor(self.n/2),floor(self.n/2)] == 255):
                     label = seg_num
+                    self.labels.append(label)
+                    return
                     
-                    
-            self.labels.append(label)
+
     
     def getData(self):
         self.preprocessForNetwork()
