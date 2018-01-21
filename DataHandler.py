@@ -131,7 +131,7 @@ class DataHandler:
 #             label = []
 #             for _ in range(0, 8):
 #                 label.append(0)
-            label = 0
+            label = 1
             segment_directory = os.fsencode(patient_dir) + b'/Segmented_Img_Data'
             #for dir in os.listdir(segment_directory):
             for file in os.listdir(segment_directory+b'/'+img_num[0:len(img_num)-4]):
