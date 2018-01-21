@@ -131,7 +131,6 @@ class DataHandler:
 #             label = []
 #             for _ in range(0, 8):
 #                 label.append(0)
-            label = 1
             segment_directory = os.fsencode(patient_dir) + b'/Segmented_Img_Data'
             #for dir in os.listdir(segment_directory):
             for file in os.listdir(segment_directory+b'/'+img_num[0:len(img_num)-4]):
@@ -139,7 +138,7 @@ class DataHandler:
                 seg_num = int(file[4:5].decode("utf-8"))
                 seg_patch = seg_img[x:x+self.n, y:y+self.n]
                 if(seg_patch[floor(self.n/2),floor(self.n/2)] == 255):
-                    label = seg_num
+                    label = seg_num - 1
                     self.labels.append(label)
                     return
                     
