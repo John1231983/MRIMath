@@ -5,7 +5,7 @@ Created on Jan 12, 2018
 '''
 from tensorflow.python.client import device_lib
 import multiprocessing
-from multiprocessing.Pool import Pool as ThreadPool 
+from multiprocessing import Pool as ThreadPool 
 
 
 class HardwareHandler:
