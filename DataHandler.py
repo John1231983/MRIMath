@@ -140,7 +140,7 @@ class DataHandler:
                 if(seg_patch[floor(self.n/2),floor(self.n/2)] == 255):
                     label = seg_num - 1
                     self.labels.append(label)
-                    return
+                    break;
                     
 
     
