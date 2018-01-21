@@ -118,9 +118,9 @@ class DataHandler:
             self.X.append(patch)
             self.lock.release()
         #self.derivePatchFromSegments(patient_directory, x,y, file)
-        else:
-            self.lock.release()
-            self.deriveRandomPatch(patient_directory, img, file)
+#         else:
+#             self.lock.release()
+#             self.deriveRandomPatch(patient_directory, img, file)
 
                    
             
