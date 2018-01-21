@@ -32,7 +32,7 @@ class DataHandler:
     numPatches = None #the number of patches to extract from an imaage
     n = None #dimensions of each patch (n x n)
     #stepSize = None # the stride, in the case of a sliding window approach
-    def __init__(self, tolerance = 0.25, numPatches = 5, n = 25):
+    def __init__(self, tolerance = 0.25, numPatches = 10, n = 25):
         self.tolerance = tolerance
         self.numPatches = numPatches
         self.n = n
