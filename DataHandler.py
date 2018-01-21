@@ -12,6 +12,7 @@ import threading
 from random import randint
 import numpy as np
 from math import floor
+from multiprocessing import Process, Manager
 
 #import random
 
@@ -47,8 +48,18 @@ class DataHandler:
     
     def loadDataParallel(self, data_directory, start, finish):
         print('Reading images')
-        pool = self.hardwareHandler.createThreadPool()
-        pool.apply_async(partial(self.loadIndividualImage, data_directory=data_directory), range(start, finish))
+        with Manager() as manager:
+            self.X = manager.list()  # <-- can be shared between processes.
+            processes = []
+            for i in range(start, finish):
+                p = Process(target=self.loadIndividualImage, args=(data_directory,i))  # Passing the list
+                p.start()
+                processes.append(p)
+            for p in processes:
+                p.join()
+            print(len(self.X))
+        #pool = self.hardwareHandler.createThreadPool()
+        #pool.map(partial(self.loadIndividualImage, data_directory=data_directory), range(start, finish))
         #pool.terminate()
     
         
