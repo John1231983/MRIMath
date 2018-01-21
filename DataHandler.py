@@ -48,7 +48,7 @@ class DataHandler:
     def loadDataParallel(self, data_directory, start, finish):
         print('Reading images')
         pool = self.hardwareHandler.createThreadPool()
-        pool.map(partial(self.loadIndividualImage, data_directory=data_directory), range(start, finish))
+        pool.apply_async(partial(self.loadIndividualImage, data_directory=data_directory), range(start, finish))
         #pool.terminate()
     
         
@@ -93,8 +93,6 @@ class DataHandler:
         
     def deriveRandomPatch(self, patient_directory,img, file):
         self.lock.acquire()
-        #img = img - img.mean()
-        #img = img/img.std()
         x = min(randint(1, self.W), self.W - self.n)
         y = min(randint(1, self.H), self.H - self.n)
         patch = img[x:x+self.n, y:y+self.n]
