@@ -68,7 +68,7 @@ if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 G = hardwareHandler.getAvailableGPUs()
-num_epochs = 50
+num_epochs = 20
 batchSize = 64
 lrate = 0.1
 decay = lrate/num_epochs   
