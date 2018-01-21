@@ -49,11 +49,11 @@ class DataHandler:
     
     def loadDataParallel(self, data_directory, start, finish):
         print('Reading images')
-        self.X = self.manager.list()  # <-- can be shared between processes.
-        self.labels = self.manager.list()  # <-- can be shared between processes.
+        self.X = self.manager.list()  
+        self.labels = self.manager.list()  
         processes = []
         for i in range(start, finish):
-            p = Process(target=self.loadIndividualImage, args=(i, data_directory))  # Passing the list
+            p = Process(target=self.loadIndividualImage, args=(i, data_directory))  
             p.start()
             processes.append(p)
         for p in processes:

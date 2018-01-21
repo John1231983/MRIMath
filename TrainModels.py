@@ -23,29 +23,35 @@ dataHandler = DataHandler()
 emailHandler = EmailHandler()
 hardwareHandler = HardwareHandler()
 timer = TimerModule()
+
 # model = ConvolutionalEncoder([120,60,30,15,15,30,60,120])
 # input_img, output = model.getModel()
 input_img = shape=(dataHandler.n, dataHandler.n, 1)
 model = Sequential()
-model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
-model.add(LeakyReLU(0.33))
-model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
-model.add(LeakyReLU(0.33))
-model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
-model.add(LeakyReLU(0.33))
-model.add(MaxPooling2D(pool_size=(3, 3), strides=(2,2)))
-model.add(Conv2D(128, (3, 3), input_shape=input_img, padding='same'))
-model.add(LeakyReLU(0.33))
-model.add(Conv2D(128, (3, 3), input_shape=input_img, padding='same'))
-model.add(LeakyReLU(0.33))
-model.add(Conv2D(128, (3, 3), input_shape=input_img, padding='same'))
-model.add(LeakyReLU(0.33))
-model.add(MaxPooling2D(pool_size=(3, 3), strides=(2,2)))
+model.add(Conv2D(100, (3, 3), input_shape=input_img, padding='same', activation='relu'))
+model.add(Conv2D(75, (3, 3), activation='relu', padding='same', activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
-model.add(Dense(256))
-model.add(LeakyReLU(0.33))
-model.add(Dense(256))
-model.add(LeakyReLU(0.33))
+model.add(Dense(500, activation='relu'))
+# model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
+# model.add(LeakyReLU(0.33))
+# model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
+# model.add(LeakyReLU(0.33))
+# model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
+# model.add(LeakyReLU(0.33))
+# model.add(MaxPooling2D(pool_size=(3, 3), strides=(2,2)))
+# model.add(Conv2D(128, (3, 3), input_shape=input_img, padding='same'))
+# model.add(LeakyReLU(0.33))
+# model.add(Conv2D(128, (3, 3), input_shape=input_img, padding='same'))
+# model.add(LeakyReLU(0.33))
+# model.add(Conv2D(128, (3, 3), input_shape=input_img, padding='same'))
+# model.add(LeakyReLU(0.33))
+# model.add(MaxPooling2D(pool_size=(3, 3), strides=(2,2)))
+# model.add(Flatten())
+# model.add(Dense(256))
+# model.add(LeakyReLU(0.33))
+# model.add(Dense(256))
+# model.add(LeakyReLU(0.33))
 #model.add(Dropout(0.5))
 model.add(Dense(8, activation='softmax'))
 
@@ -62,11 +68,11 @@ if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 G = hardwareHandler.getAvailableGPUs()
-num_epochs = 25
-batchSize = 32
-lrate = 0.003
+num_epochs = 50
+batchSize = 64
+lrate = 0.1
 decay = lrate/num_epochs   
-sgd = SGD(lr=lrate, momentum=0.9, decay=decay, nesterov=True)
+sgd = SGD(lr=lrate, momentum=0.9, decay=decay, nesterov=False)
 model_info_filename = 'model_info.txt'
 model_info_file = open(model_directory + '/' + model_info_filename, "w") 
 log_info_filename = 'model_loss_log.csv'
@@ -77,10 +83,10 @@ print('Using ' + str(G) + ' GPUs to train the network!')
 if G > 1:
     #with tf.device('/cpu:0'):
         #segmentation_bank[i] = Model(input_img, output)
-    parallel_segmentation_bank = multi_gpu_model(model, G)
-    parallel_segmentation_bank.compile(optimizer=sgd, loss='categorical_crossentropy')
+    parallel_model = multi_gpu_model(model, G)
+    parallel_model.compile(optimizer=sgd, loss='categorical_crossentropy')
     timer.startTimer()
-    parallel_segmentation_bank.fit(training, training_labels,
+    parallel_model.fit(training, training_labels,
             epochs=num_epochs,
             batch_size=batchSize * G,
             shuffle=True,
@@ -100,7 +106,7 @@ else:
             callbacks=[csv_logger])
     timer.stopTimer()
         
-model.set_weights(parallel_segmentation_bank.get_weights())
+model.set_weights(parallel_model.get_weights())
 print('Saving model to disk!')
 model.save(model_directory + '/model.h5')
 
