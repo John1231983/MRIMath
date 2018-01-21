@@ -59,10 +59,10 @@ model.add(Dense(8, activation='softmax'))
 
 data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images'
 #data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
-dataHandler.loadDataParallel(data_dir, 1, 2)
+dataHandler.loadDataParallel(data_dir, 1, 107)
 training, training_labels = dataHandler.getData()
 dataHandler.clearVectors()
-dataHandler.loadDataParallel(data_dir, 3, 4)
+dataHandler.loadDataParallel(data_dir, 136, 170)
 testing, testing_labels = dataHandler.getData()
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
