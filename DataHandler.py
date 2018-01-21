@@ -50,6 +50,7 @@ class DataHandler:
         print('Reading images')
         with Manager() as manager:
             self.X = manager.list()  # <-- can be shared between processes.
+            self.labels = manager.list()  # <-- can be shared between processes.
             processes = []
             for i in range(start, finish):
                 p = Process(target=self.loadIndividualImage, args=(i, data_directory))  # Passing the list
@@ -102,7 +103,7 @@ class DataHandler:
             #self.X.append(window)
         
     def deriveRandomPatch(self, patient_directory,img, file):
-        self.lock.acquire()
+        #self.lock.acquire()
         x = min(randint(1, self.W), self.W - self.n)
         y = min(randint(1, self.H), self.H - self.n)
         patch = img[x:x+self.n, y:y+self.n]
@@ -112,7 +113,7 @@ class DataHandler:
         #else:
         self.X.append(patch)
         self.derivePatchFromSegments(patient_directory, x,y, file)
-        self.lock.release()
+        #self.lock.release()
 
                    
             
@@ -142,6 +143,7 @@ class DataHandler:
     def getData(self):
         self.preprocessForNetwork()
         return self.X, self.labels
+    
     def clearVectors(self):
         self.X =[]
         self.labels = []
