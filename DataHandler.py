@@ -114,9 +114,13 @@ class DataHandler:
         #if numBackgroundPixels > self.tolerance*img.size:
         #    return self.deriveRandomPatch(patient_directory,img,file)
         #else:
-        self.X.append(patch)
-        self.derivePatchFromSegments(patient_directory, x,y, file)
-        self.lock.release()
+        if self.derivePatchFromSegments(patient_directory, x,y, file):  
+            self.X.append(patch)
+            self.lock.release()
+        #self.derivePatchFromSegments(patient_directory, x,y, file)
+        else:
+            self.lock.release()
+            self.deriveRandomPatch(patient_directory, img, file)
 
                    
             
@@ -140,7 +144,8 @@ class DataHandler:
                 if(seg_patch[floor(self.n/2),floor(self.n/2)] == 255):
                     label = seg_num - 1
                     self.labels.append(label)
-                    break;
+                    return True
+            return False
                     
 
     
