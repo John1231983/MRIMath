@@ -12,7 +12,7 @@ import threading
 from random import randint
 import numpy as np
 from math import floor
-from multiprocessing import Process, Manager
+from multiprocessing import Process, Manager, Lock
 from keras.utils import np_utils
 
 #import random
@@ -20,8 +20,8 @@ from keras.utils import np_utils
 
 class DataHandler:
     
-    lock = threading.Lock()
     manager = Manager()
+    lock = Lock()
     X = []
     labels = []
     W = 240
