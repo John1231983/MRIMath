@@ -87,7 +87,7 @@ if G > 1:
     #with tf.device('/cpu:0'):
         #segmentation_bank[i] = Model(input_img, output)
     parallel_model = multi_gpu_model(model, G)
-    parallel_model.compile(optimizer=sgd, loss='categorical_crossentropy',metrics = ['accuracy', 'precision', 'recall'])
+    parallel_model.compile(optimizer=sgd, loss='categorical_crossentropy',metrics = ['accuracy'])
     timer.startTimer()
     parallel_model.fit(training, training_labels,
             epochs=num_epochs,
@@ -99,7 +99,7 @@ if G > 1:
         
 else:
     #segmentation_bank[i] = Model(input_img, output)
-    model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics = ['accuracy', 'precision', 'recall'])
+    model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics = ['accuracy'])
     timer.startTimer()
     model.fit(training, training_labels,
             epochs=num_epochs,
