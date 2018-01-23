@@ -28,15 +28,13 @@ timer = TimerModule()
 # input_img, output = model.getModel()
 input_img = shape=(dataHandler.n, dataHandler.n, 1)
 model = Sequential()
-model.add(Conv2D(125, (3, 3), input_shape=input_img, padding='same'))
+model.add(Conv2D(150, (3, 3), input_shape=input_img, padding='same'))
 model.add(LeakyReLU(0.1))
-model.add(Conv2D(100, (3, 3), padding='same'))
-model.add(LeakyReLU(0.1))
-model.add(Conv2D(75, (3, 3), padding='same'))
+model.add(Conv2D(125, (3, 3), padding='same'))
 model.add(LeakyReLU(0.1))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
-model.add(Dense(500))
+model.add(Dense(520))
 model.add(LeakyReLU(0.1))
 # model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
 # model.add(LeakyReLU(0.33))
@@ -77,7 +75,7 @@ num_epochs = 20
 batchSize = 64
 lrate = 0.1
 #decay = lrate/num_epochs   
-sgd = SGD(lr=lrate, momentum=0.9, nesterov=False)
+sgd = SGD(lr=lrate, momentum=0.9, nesterov=True)
 model_info_filename = 'model_info.txt'
 model_info_file = open(model_directory + '/' + model_info_filename, "w") 
 log_info_filename = 'model_loss_log.csv'
@@ -89,7 +87,7 @@ if G > 1:
     #with tf.device('/cpu:0'):
         #segmentation_bank[i] = Model(input_img, output)
     parallel_model = multi_gpu_model(model, G)
-    parallel_model.compile(optimizer=sgd, loss='categorical_crossentropy',metrics = ['accuracy'])
+    parallel_model.compile(optimizer=sgd, loss='categorical_crossentropy',metrics = ['accuracy', 'f1', 'precision', 'recall'])
     timer.startTimer()
     parallel_model.fit(training, training_labels,
             epochs=num_epochs,
@@ -101,7 +99,7 @@ if G > 1:
         
 else:
     #segmentation_bank[i] = Model(input_img, output)
-    model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics = ['accuracy'])
+    model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics = ['accuracy', 'f1', 'precision', 'recall'])
     timer.startTimer()
     model.fit(training, training_labels,
             epochs=num_epochs,
