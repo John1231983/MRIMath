@@ -44,13 +44,13 @@ timer = TimerModule()
 input_img = shape=(dataHandler.n, dataHandler.n, 1)
 model = Sequential()
 model.add(Conv2D(150, (3, 3), input_shape=input_img, padding='same'))
-model.add(LeakyReLU(0.1))
+model.add(LeakyReLU(0.3))
 model.add(Conv2D(125, (3, 3), padding='same'))
-model.add(LeakyReLU(0.1))
+model.add(LeakyReLU(0.3))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
-model.add(Dense(520))
-model.add(LeakyReLU(0.1))
+model.add(Dense(550))
+model.add(LeakyReLU(0.3))
 # model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
 # model.add(LeakyReLU(0.33))
 # model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
@@ -126,7 +126,6 @@ else:
 model.set_weights(parallel_model.get_weights())
 print('Saving model to disk!')
 model.save(model_directory + '/model.h5')
-
 emailHandler.connectToServer()
 message = "Finished training network at " + str(datetime.now()) + '\n\n'
 message += 'The network was trained on ' + str(training.shape[0]) + ' images \n\n'
@@ -139,6 +138,6 @@ emailHandler.prepareMessage(now.strftime('%Y-%m-%d') + " MRIMath Update: Network
 model_info_file.close()
 emailHandler.attachFile(model_info_file, model_info_filename)
 emailHandler.attachFile(log_info, log_info_filename)
-emailHandler.sendMessage(["Danny", "Dr. Bouaynaya"])
+emailHandler.sendMessage(["Danny", "Dr.Bouaynaya"])
 emailHandler.finish()
 
