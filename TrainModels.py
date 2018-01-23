@@ -16,6 +16,21 @@ from datetime import datetime
 from keras.utils.training_utils import multi_gpu_model
 #import tensorflow as tf
 from DataHandler import DataHandler
+import keras.backend as K
+
+
+def precision(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    precision = true_positives / (predicted_positives + K.epsilon())
+    return precision
+ 
+ 
+def recall(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    recall = true_positives / (possible_positives + K.epsilon())
+    return recall
 
 now = datetime.now()
 date_string = now.strftime('%Y-%m-%d')
@@ -87,7 +102,7 @@ if G > 1:
     #with tf.device('/cpu:0'):
         #segmentation_bank[i] = Model(input_img, output)
     parallel_model = multi_gpu_model(model, G)
-    parallel_model.compile(optimizer=sgd, loss='categorical_crossentropy',metrics = ['accuracy'])
+    parallel_model.compile(optimizer=sgd, loss='categorical_crossentropy',metrics = ['accuracy', precision, recall])
     timer.startTimer()
     parallel_model.fit(training, training_labels,
             epochs=num_epochs,
@@ -98,8 +113,7 @@ if G > 1:
     timer.stopTimer()
         
 else:
-    #segmentation_bank[i] = Model(input_img, output)
-    model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics = ['accuracy'])
+    model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics = ['accuracy', precision, recall])
     timer.startTimer()
     model.fit(training, training_labels,
             epochs=num_epochs,
