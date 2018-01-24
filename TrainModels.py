@@ -49,7 +49,7 @@ model.add(Conv2D(125, (3, 3), padding='same'))
 model.add(LeakyReLU(0.3))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
-model.add(Dense(550))
+model.add(Dense(520))
 model.add(LeakyReLU(0.3))
 # model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
 # model.add(LeakyReLU(0.33))
@@ -86,11 +86,11 @@ if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 G = hardwareHandler.getAvailableGPUs()
-num_epochs = 20
+num_epochs = 25
 batchSize = 64
 lrate = 0.1
-#decay = lrate/num_epochs   
-sgd = SGD(lr=lrate, momentum=0.9, nesterov=True)
+decay = lrate/num_epochs   
+sgd = SGD(lr=lrate, momentum=0.9, decay=decay, nesterov=True)
 model_info_filename = 'model_info.txt'
 model_info_file = open(model_directory + '/' + model_info_filename, "w") 
 log_info_filename = 'model_loss_log.csv'
