@@ -81,9 +81,9 @@ if not os.path.exists(model_directory):
 G = hardwareHandler.getAvailableGPUs()
 num_epochs = 25
 batchSize = 64
-lrate = 0.1
-decay = lrate/num_epochs   
-sgd = SGD(lr=lrate, momentum=0.9, decay=decay, nesterov=True)
+lrate = 0.01
+#decay = lrate/num_epochs   
+sgd = SGD(lr=lrate, momentum=0.9, nesterov=True)
 model_info_filename = 'model_info.txt'
 model_info_file = open(model_directory + '/' + model_info_filename, "w") 
 log_info_filename = 'model_loss_log.csv'
