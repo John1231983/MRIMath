@@ -110,12 +110,12 @@ class DataHandler:
         x = min(randint(1, self.W), self.W - self.n)
         y = min(randint(1, self.H), self.H - self.n)
         patch = img[x:x+self.n, y:y+self.n]
-        #numBackgroundPixels = np.sum(patch == 0)
-        #if numBackgroundPixels > self.tolerance*img.size:
-        #    return self.deriveRandomPatch(patient_directory,img,file)
-        #else:
-        if self.derivePatchFromSegments(patient_directory, x,y, file):  
-            self.X.append(patch)
+        numBackgroundPixels = np.sum(patch == 0)
+        if numBackgroundPixels > self.tolerance*img.size:
+            return self.deriveRandomPatch(patient_directory,img,file)
+        else:
+            if self.derivePatchFromSegments(patient_directory, x,y, file):  
+                self.X.append(patch)
         self.lock.release()
 
         #self.derivePatchFromSegments(patient_directory, x,y, file)

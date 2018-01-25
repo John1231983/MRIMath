@@ -24,13 +24,6 @@ def precision(y_true, y_pred):
     predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
     precision = true_positives / (predicted_positives + K.epsilon())
     return precision
- 
- 
-def recall(y_true, y_pred):
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-    recall = true_positives / (possible_positives + K.epsilon())
-    return recall
 
 now = datetime.now()
 date_string = now.strftime('%Y-%m-%d')
@@ -96,13 +89,13 @@ model_info_file = open(model_directory + '/' + model_info_filename, "w")
 log_info_filename = 'model_loss_log.csv'
 log_info = open(model_directory + '/' + log_info_filename, "w")
 print('Training network!')
-csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=';')
+csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=',')
 print('Using ' + str(G) + ' GPUs to train the network!')
 if G > 1:
     #with tf.device('/cpu:0'):
         #segmentation_bank[i] = Model(input_img, output)
     parallel_model = multi_gpu_model(model, G)
-    parallel_model.compile(optimizer=sgd, loss='categorical_crossentropy',metrics = ['accuracy', precision, recall])
+    parallel_model.compile(optimizer=sgd, loss='categorical_crossentropy',metrics = ['accuracy', precision])
     timer.startTimer()
     parallel_model.fit(training, training_labels,
             epochs=num_epochs,
