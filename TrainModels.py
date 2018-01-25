@@ -6,7 +6,7 @@ Created on Jan 9, 2018
 
 from TimerModule import TimerModule
 from keras.callbacks import CSVLogger
-from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout, LeakyReLU
+from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout, LeakyReLU, PReLU
 from keras.models import Sequential
 from keras.optimizers import SGD
 import os
@@ -37,15 +37,15 @@ timer = TimerModule()
 input_img = shape=(dataHandler.n, dataHandler.n, 1)
 model = Sequential()
 model.add(Conv2D(150, (3, 3), input_shape=input_img, padding='same'))
-model.add(LeakyReLU(0.5))
+model.add(PReLU())
 model.add(Conv2D(125, (3, 3), padding='same'))
-model.add(LeakyReLU(0.5))
+model.add(PReLU())
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
 model.add(Dense(520))
-model.add(LeakyReLU(0.5))
+model.add(PReLU())
 model.add(Dense(250))
-model.add(LeakyReLU(0.5))
+model.add(PReLU())
 # model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
 # model.add(LeakyReLU(0.33))
 # model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
@@ -85,7 +85,7 @@ num_epochs = 25
 batchSize = 64
 lrate = 0.1
 decay = lrate/num_epochs   
-sgd = SGD(lr=lrate, momentum=0.95, nesterov=True)
+sgd = SGD(lr=lrate, momentum=0.9, nesterov=True)
 model_info_filename = 'model_info.txt'
 model_info_file = open(model_directory + '/' + model_info_filename, "w") 
 log_info_filename = 'model_loss_log.csv'
@@ -97,7 +97,7 @@ if G > 1:
     #with tf.device('/cpu:0'):
         #segmentation_bank[i] = Model(input_img, output)
     parallel_model = multi_gpu_model(model, G)
-    parallel_model.compile(optimizer=sgd, loss='categorical_crossentropy',metrics = ['accuracy', precision])
+    parallel_model.compile(optimizer="adam", loss='categorical_crossentropy',metrics = ['accuracy', precision])
     timer.startTimer()
     parallel_model.fit(training, training_labels,
             epochs=num_epochs,
@@ -108,7 +108,7 @@ if G > 1:
     timer.stopTimer()
         
 else:
-    model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics = ['accuracy', precision])
+    model.compile(optimizer="adam", loss='categorical_crossentropy', metrics = ['accuracy', precision])
     timer.startTimer()
     model.fit(training, training_labels,
             epochs=num_epochs,
