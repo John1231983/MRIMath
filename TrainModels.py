@@ -44,6 +44,8 @@ model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
 model.add(Dense(520))
 model.add(LeakyReLU(0.5))
+model.add(Dense(250))
+model.add(LeakyReLU(0.5))
 # model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
 # model.add(LeakyReLU(0.33))
 # model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
@@ -68,10 +70,10 @@ model.add(Dense(8, activation='softmax'))
 
 data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images'
 #data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
-dataHandler.loadDataParallel(data_dir, 1, 107)
+dataHandler.loadDataParallel(data_dir, 1, 150)
 training, training_labels = dataHandler.getData()
 dataHandler.clearVectors()
-dataHandler.loadDataParallel(data_dir, 136, 170)
+dataHandler.loadDataParallel(data_dir, 151, 192)
 testing, testing_labels = dataHandler.getData()
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
@@ -81,9 +83,9 @@ if not os.path.exists(model_directory):
 G = hardwareHandler.getAvailableGPUs()
 num_epochs = 25
 batchSize = 64
-lrate = 0.01
-#decay = lrate/num_epochs   
-sgd = SGD(lr=lrate, momentum=0.9, nesterov=True)
+lrate = 0.1
+decay = lrate/num_epochs   
+sgd = SGD(lr=lrate, momentum=0.95, nesterov=True)
 model_info_filename = 'model_info.txt'
 model_info_file = open(model_directory + '/' + model_info_filename, "w") 
 log_info_filename = 'model_loss_log.csv'
