@@ -100,7 +100,7 @@ print('Using ' + str(G) + ' GPUs to train the network!')
 if G > 1:
     model = multi_gpu_model(model, G)
 
-model.compile(optimizer="adam", loss='categorical_crossentropy',metrics = ['accuracy', precision])
+model.compile(optimizer="nadam", loss='mean_squared_error',metrics = ['accuracy', precision])
 timer.startTimer()       
 model.fit(training, training_labels,
         epochs=num_epochs,
