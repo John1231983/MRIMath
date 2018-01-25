@@ -112,6 +112,7 @@ class DataHandler:
         patch = img[x:x+self.n, y:y+self.n]
         numBackgroundPixels = np.sum(patch == 0)
         if numBackgroundPixels > self.tolerance*img.size:
+            self.lock.release()
             return self.deriveRandomPatch(patient_directory,img,file)
         else:
             if self.derivePatchFromSegments(patient_directory, x,y, file):  
