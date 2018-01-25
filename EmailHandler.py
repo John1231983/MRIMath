@@ -19,7 +19,8 @@ class EmailHandler:
          'Oliver': 'palumb48@students.rowan.edu',
          'Dimah': 'derad6@rowan.edu',
          'Alena': 'alenagusevarus@gmail.com',
-         'Dr. Hassan': 'hfshaykh@uabmc.edu'}
+         'Dr.Hassan': 'hfshaykh@uabmc.edu',
+         'Dr.Rasool ': 'rasool@rowan.edu'}
     body = ""
     
     def __init__(self):

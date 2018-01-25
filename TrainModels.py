@@ -26,7 +26,7 @@ def precision(y_true, y_pred):
     return precision
 
 now = datetime.now()
-date_string = now.strftime('%Y-%m-%d')
+date_string = now.strftime('%Y-%m-%d_%H_%M')
 dataHandler = DataHandler()
 emailHandler = EmailHandler()
 hardwareHandler = HardwareHandler()
@@ -106,7 +106,7 @@ if G > 1:
     timer.stopTimer()
         
 else:
-    model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics = ['accuracy', precision, recall])
+    model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics = ['accuracy', precision])
     timer.startTimer()
     model.fit(training, training_labels,
             epochs=num_epochs,
@@ -131,6 +131,6 @@ emailHandler.prepareMessage(now.strftime('%Y-%m-%d') + " MRIMath Update: Network
 model_info_file.close()
 emailHandler.attachFile(model_info_file, model_info_filename)
 emailHandler.attachFile(log_info, log_info_filename)
-emailHandler.sendMessage(["Danny", "Dr.Bouaynaya"])
+emailHandler.sendMessage(["Danny", "Dr.Bouaynaya","Dr.Hassan","Dr.Rasool"])
 emailHandler.finish()
 
