@@ -5,7 +5,7 @@ Created on Jan 9, 2018
 '''
 
 from TimerModule import TimerModule
-from keras.callbacks import CSVLogger
+from keras.callbacks import CSVLogger, ModelCheckpoint
 from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout, LeakyReLU, PReLU
 from keras.models import Sequential
 from keras.optimizers import SGD
@@ -81,44 +81,36 @@ if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 G = hardwareHandler.getAvailableGPUs()
-num_epochs = 25
+num_epochs = 10
 batchSize = 64
-lrate = 0.1
-decay = lrate/num_epochs   
-sgd = SGD(lr=lrate, momentum=0.9, nesterov=True)
+#lrate = 0.1
+#momentum
+#decay = lrate/num_epochs   
+#sgd = SGD(lr=lrate, momentum=momentum, nesterov=True)
 model_info_filename = 'model_info.txt'
 model_info_file = open(model_directory + '/' + model_info_filename, "w") 
 log_info_filename = 'model_loss_log.csv'
 log_info = open(model_directory + '/' + log_info_filename, "w")
 print('Training network!')
+
+checkpoint = ModelCheckpoint(filepath=model_directory + '/checkpoint_weights.hdf5', verbose=1, save_best_only=True)
 csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=',')
+
 print('Using ' + str(G) + ' GPUs to train the network!')
 if G > 1:
-    #with tf.device('/cpu:0'):
-        #segmentation_bank[i] = Model(input_img, output)
-    parallel_model = multi_gpu_model(model, G)
-    parallel_model.compile(optimizer="adam", loss='categorical_crossentropy',metrics = ['accuracy', precision])
-    timer.startTimer()
-    parallel_model.fit(training, training_labels,
-            epochs=num_epochs,
-            batch_size=batchSize * G,
-            shuffle=True,
-            validation_data=(testing, testing_labels),
-            callbacks=[csv_logger])
-    timer.stopTimer()
+    model = multi_gpu_model(model, G)
+
+model.compile(optimizer="adam", loss='categorical_crossentropy',metrics = ['accuracy', precision])
+timer.startTimer()       
+model.fit(training, training_labels,
+        epochs=num_epochs,
+        batch_size=batchSize * G,
+        shuffle=True,
+        validation_data=(testing, testing_labels),
+        callbacks=[csv_logger, checkpoint])
+timer.stopTimer()
         
-else:
-    model.compile(optimizer="adam", loss='categorical_crossentropy', metrics = ['accuracy', precision])
-    timer.startTimer()
-    model.fit(training, training_labels,
-            epochs=num_epochs,
-            batch_size=batchSize * G,
-            shuffle=True,
-            validation_data=(testing, testing_labels),
-            callbacks=[csv_logger])
-    timer.stopTimer()
-        
-model.set_weights(parallel_model.get_weights())
+#model.set_weights(parallel_model.get_weights())
 print('Saving model to disk!')
 model.save(model_directory + '/model.h5')
 emailHandler.connectToServer()
