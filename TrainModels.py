@@ -17,6 +17,7 @@ from keras.utils.training_utils import multi_gpu_model
 #import tensorflow as tf
 from DataHandler import DataHandler
 import keras.backend as K
+import tensorflow as tf
 
 
 def precision(y_true, y_pred):
@@ -34,18 +35,19 @@ timer = TimerModule()
 
 # model = ConvolutionalEncoder([120,60,30,15,15,30,60,120])
 # input_img, output = model.getModel()
-input_img = shape=(dataHandler.n, dataHandler.n, 1)
-model = Sequential()
-model.add(Conv2D(150, (3, 3), input_shape=input_img, padding='same'))
-model.add(PReLU())
-model.add(Conv2D(125, (3, 3), padding='same'))
-model.add(PReLU())
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Flatten())
-model.add(Dense(520))
-model.add(PReLU())
-model.add(Dense(250))
-model.add(PReLU())
+with tf.device('/cpu:0'):
+    input_img = shape=(dataHandler.n, dataHandler.n, 1)
+    model = Sequential()
+    model.add(Conv2D(150, (3, 3), input_shape=input_img, padding='same'))
+    model.add(PReLU())
+    model.add(Conv2D(125, (3, 3), padding='same'))
+    model.add(PReLU())
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Flatten())
+    model.add(Dense(520))
+    model.add(PReLU())
+    model.add(Dense(250))
+    model.add(PReLU())
 # model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
 # model.add(LeakyReLU(0.33))
 # model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
@@ -66,14 +68,14 @@ model.add(PReLU())
 # model.add(Dense(256))
 # model.add(LeakyReLU(0.33))
 #model.add(Dropout(0.5))
-model.add(Dense(8, activation='softmax'))
+    model.add(Dense(8, activation='softmax'))
 
 data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images'
 #data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
-dataHandler.loadDataParallel(data_dir, 1, 150)
+dataHandler.loadDataParallel(data_dir, 1, 2)
 training, training_labels = dataHandler.getData()
 dataHandler.clearVectors()
-dataHandler.loadDataParallel(data_dir, 151, 192)
+dataHandler.loadDataParallel(data_dir, 151, 152)
 testing, testing_labels = dataHandler.getData()
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
@@ -93,24 +95,34 @@ log_info_filename = 'model_loss_log.csv'
 log_info = open(model_directory + '/' + log_info_filename, "w")
 print('Training network!')
 
-checkpoint = ModelCheckpoint(filepath=model_directory + '/checkpoint_weights.hdf5', verbose=1, save_best_only=True)
+checkpoint = ModelCheckpoint(model_directory + '/checkpoint_weights.hdf5', verbose=1, save_best_only=True)
 csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=',')
 
 print('Using ' + str(G) + ' GPUs to train the network!')
 if G > 1:
-    model = multi_gpu_model(model, G)
+    parallel_model = multi_gpu_model(model, G)
 
-model.compile(optimizer="nadam", loss='mean_squared_error',metrics = ['accuracy', precision])
-timer.startTimer()       
-model.fit(training, training_labels,
+    parallel_model.compile(optimizer="nadam", loss='mean_squared_error',metrics = ['accuracy', precision])
+    timer.startTimer()       
+    parallel_model.fit(training, training_labels,
         epochs=num_epochs,
         batch_size=batchSize * G,
         shuffle=True,
         validation_data=(testing, testing_labels),
         callbacks=[csv_logger, checkpoint])
-timer.stopTimer()
+    timer.stopTimer()
+    model.set_weights(parallel_model.get_weights())
+
+else:
+    timer.startTimer()       
+    model.fit(training, training_labels,
+        epochs=num_epochs,
+        batch_size=batchSize * G,
+        shuffle=True,
+        validation_data=(testing, testing_labels),
+        callbacks=[csv_logger, checkpoint])
+    timer.stopTimer()
         
-#model.set_weights(parallel_model.get_weights())
 print('Saving model to disk!')
 model.save(model_directory + '/model.h5')
 emailHandler.connectToServer()
