@@ -14,18 +14,22 @@ from EmailHandler import EmailHandler
 from HardwareHandler import HardwareHandler
 from datetime import datetime
 from keras.utils.training_utils import multi_gpu_model
-#import tensorflow as tf
 from DataHandler import DataHandler
 import keras.backend as K
 import tensorflow as tf
 
 
+
+# eh, I threw this in here for the sake of having another performance metric -
+# maybe we don't need it, or maybe I'll make a StatHandler class to hold it
 def precision(y_true, y_pred):
     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
     predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
     precision = true_positives / (predicted_positives + K.epsilon())
     return precision
 
+
+# Basic initialization of some of the handlers...
 now = datetime.now()
 date_string = now.strftime('%Y-%m-%d_%H_%M')
 dataHandler = DataHandler()
@@ -33,8 +37,7 @@ emailHandler = EmailHandler()
 hardwareHandler = HardwareHandler()
 timer = TimerModule()
 
-# model = ConvolutionalEncoder([120,60,30,15,15,30,60,120])
-# input_img, output = model.getModel()
+# Creating the model on the CPU
 with tf.device('/cpu:0'):
     input_img = shape=(dataHandler.n, dataHandler.n, 1)
     model = Sequential()
@@ -48,28 +51,10 @@ with tf.device('/cpu:0'):
     model.add(PReLU())
     model.add(Dense(300))
     model.add(PReLU())
-# model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
-# model.add(LeakyReLU(0.33))
-# model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
-# model.add(LeakyReLU(0.33))
-# model.add(Conv2D(64, (3, 3), input_shape=input_img, padding='same'))
-# model.add(LeakyReLU(0.33))
-# model.add(MaxPooling2D(pool_size=(3, 3), strides=(2,2)))
-# model.add(Conv2D(128, (3, 3), input_shape=input_img, padding='same'))
-# model.add(LeakyReLU(0.33))
-# model.add(Conv2D(128, (3, 3), input_shape=input_img, padding='same'))
-# model.add(LeakyReLU(0.33))
-# model.add(Conv2D(128, (3, 3), input_shape=input_img, padding='same'))
-# model.add(LeakyReLU(0.33))
-# model.add(MaxPooling2D(pool_size=(3, 3), strides=(2,2)))
-# model.add(Flatten())
-# model.add(Dense(256))
-# model.add(LeakyReLU(0.33))
-# model.add(Dense(256))
-# model.add(LeakyReLU(0.33))
-#model.add(Dropout(0.5))
     model.add(Dense(8, activation='softmax'))
 
+
+#load up data! This will take a few minutes, even parallelized...
 data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images'
 #data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
 dataHandler.loadDataParallel(data_dir, 1, 151)
@@ -78,11 +63,12 @@ dataHandler.clearVectors()
 dataHandler.loadDataParallel(data_dir, 151, 192)
 testing, testing_labels = dataHandler.getData()
 
+# Creates a directory to save everything (model, loss log, and model info)
+# Should always be unique since the date string is based on the current date and the time
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
 if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
-G = hardwareHandler.getAvailableGPUs()
 num_epochs = 40
 batchSize = 64
 lrate = 0.1
@@ -95,15 +81,20 @@ log_info_filename = 'model_loss_log.csv'
 log_info = open(model_directory + '/' + log_info_filename, "w")
 print('Training network!')
 
-#checkpoint = ModelCheckpoint(model_directory + '/checkpoint_weights.hdf5', verbose=1, save_best_only=True)
+# Declaring the two callbacks I use - still having issues using the model checkpoint one
+# Also considering using the Early Termination...
 csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=',')
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
+
+# Grab the number of available GPUS on the device you're running on - in the case of the HPC, it's 4
+# And on your local lap top, probably 1
+# Based on the result, your model may be converted to a multiple GPU model
+G = hardwareHandler.getAvailableGPUs()
 print('Using ' + str(G) + ' GPUs to train the network!')
 if G > 1:
     parallel_model = multi_gpu_model(model, G)
-
     parallel_model.compile(optimizer=sgd, loss='categorical_crossentropy',metrics = ['accuracy', precision])
-    timer.startTimer()       
+    timer.startTimer()   # this is for timing/profiling purposes    
     parallel_model.fit(training, training_labels,
         epochs=num_epochs,
         batch_size=batchSize * G,
@@ -122,7 +113,9 @@ else:
         validation_data=(testing, testing_labels),
         callbacks=[csv_logger, reduce_lr])
     timer.stopTimer()
-        
+  
+# Wrap Up - Just some useful screen printouts and constructing + sending an email to notify selected individuals
+# that training has finished, and saving the relevant files to the directory we created earlier    
 print('Saving model to disk!')
 model.save(model_directory + '/model.h5')
 emailHandler.connectToServer()
