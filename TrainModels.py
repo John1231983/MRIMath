@@ -43,7 +43,7 @@ with tf.device('/cpu:0'):
     model = Sequential()
     model.add(Conv2D(150, (3, 3), input_shape=input_img, padding='same'))
     model.add(PReLU())
-    model.add(Conv2D(125, (3, 3), padding='same'))
+    model.add(Conv2D(125, (5, 5), padding='same'))
     model.add(PReLU())
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Flatten())
@@ -73,7 +73,7 @@ if not os.path.exists(model_directory):
 num_epochs = 15
 batchSize = 64
 lrate = 0.1
-momentum = 0.95
+momentum = 0.9
 #decay = lrate/num_epochs   
 sgd = SGD(lr=lrate, momentum=momentum, nesterov=True)
 model_info_filename = 'model_info.txt'
