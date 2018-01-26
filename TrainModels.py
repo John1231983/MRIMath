@@ -41,15 +41,15 @@ timer = TimerModule()
 with tf.device('/cpu:0'):
     input_img = shape=(dataHandler.n, dataHandler.n, 1)
     model = Sequential()
-    model.add(Conv2D(175, (3, 3), input_shape=input_img, padding='same'))
+    model.add(Conv2D(150, (3, 3), input_shape=input_img, padding='same'))
     model.add(PReLU())
-    model.add(Conv2D(150, (3, 3), padding='same'))
+    model.add(Conv2D(125, (3, 3), padding='same'))
     model.add(PReLU())
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Flatten())
     model.add(Dense(520))
     model.add(PReLU())
-    model.add(Dense(300))
+    model.add(Dense(250))
     model.add(PReLU())
     model.add(Dense(8, activation='softmax'))
 
@@ -69,10 +69,11 @@ model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
 if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
-num_epochs = 40
+
+num_epochs = 15
 batchSize = 64
 lrate = 0.1
-momentum = 0.9
+momentum = 0.95
 #decay = lrate/num_epochs   
 sgd = SGD(lr=lrate, momentum=momentum, nesterov=True)
 model_info_filename = 'model_info.txt'
@@ -84,7 +85,7 @@ print('Training network!')
 # Declaring the two callbacks I use - still having issues using the model checkpoint one
 # Also considering using the Early Termination...
 csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=',')
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=3, min_lr=0.001)
 
 # Grab the number of available GPUS on the device you're running on - in the case of the HPC, it's 4
 # And on your local lap top, probably 1
