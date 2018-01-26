@@ -5,7 +5,7 @@ Created on Jan 9, 2018
 '''
 
 from TimerModule import TimerModule
-from keras.callbacks import CSVLogger, ModelCheckpoint
+from keras.callbacks import CSVLogger, ModelCheckpoint, ReduceLROnPlateau
 from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout, LeakyReLU, PReLU
 from keras.models import Sequential
 from keras.optimizers import SGD
@@ -72,10 +72,10 @@ with tf.device('/cpu:0'):
 
 data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images'
 #data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
-dataHandler.loadDataParallel(data_dir, 1, 2)
+dataHandler.loadDataParallel(data_dir, 1, 151)
 training, training_labels = dataHandler.getData()
 dataHandler.clearVectors()
-dataHandler.loadDataParallel(data_dir, 151, 152)
+dataHandler.loadDataParallel(data_dir, 151, 192)
 testing, testing_labels = dataHandler.getData()
 
 model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
@@ -83,33 +83,34 @@ if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 G = hardwareHandler.getAvailableGPUs()
-num_epochs = 10
+num_epochs = 40
 batchSize = 64
-#lrate = 0.1
-#momentum
+lrate = 0.1
+momentum = 0.9
 #decay = lrate/num_epochs   
-#sgd = SGD(lr=lrate, momentum=momentum, nesterov=True)
+sgd = SGD(lr=lrate, momentum=momentum, nesterov=True)
 model_info_filename = 'model_info.txt'
 model_info_file = open(model_directory + '/' + model_info_filename, "w") 
 log_info_filename = 'model_loss_log.csv'
 log_info = open(model_directory + '/' + log_info_filename, "w")
 print('Training network!')
 
-checkpoint = ModelCheckpoint(model_directory + '/checkpoint_weights.hdf5', verbose=1, save_best_only=True)
+#checkpoint = ModelCheckpoint(model_directory + '/checkpoint_weights.hdf5', verbose=1, save_best_only=True)
 csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=',')
-
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
+                              patience=5, min_lr=0.001)
 print('Using ' + str(G) + ' GPUs to train the network!')
 if G > 1:
     parallel_model = multi_gpu_model(model, G)
 
-    parallel_model.compile(optimizer="nadam", loss='mean_squared_error',metrics = ['accuracy', precision])
+    parallel_model.compile(optimizer=sgd, loss='categorical_crossentropy',metrics = ['accuracy', precision])
     timer.startTimer()       
     parallel_model.fit(training, training_labels,
         epochs=num_epochs,
         batch_size=batchSize * G,
         shuffle=True,
         validation_data=(testing, testing_labels),
-        callbacks=[csv_logger, checkpoint])
+        callbacks=[csv_logger, reduce_lr])
     timer.stopTimer()
     model.set_weights(parallel_model.get_weights())
 
@@ -120,7 +121,7 @@ else:
         batch_size=batchSize * G,
         shuffle=True,
         validation_data=(testing, testing_labels),
-        callbacks=[csv_logger, checkpoint])
+        callbacks=[csv_logger, reduce_lr])
     timer.stopTimer()
         
 print('Saving model to disk!')
