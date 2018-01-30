@@ -1,0 +1,90 @@
+\hypertarget{classHardwareHandler_1_1HardwareHandler}{}\section{Hardware\+Handler.\+Hardware\+Handler Class Reference}
+\label{classHardwareHandler_1_1HardwareHandler}\index{Hardware\+Handler.\+Hardware\+Handler@{Hardware\+Handler.\+Hardware\+Handler}}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{classHardwareHandler_1_1HardwareHandler_a68c756eacee30649402e79aa0eb23984}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self)
+\begin{DoxyCompactList}\small\item\em The constructor for the hardwarehandler class. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classHardwareHandler_1_1HardwareHandler_aeec8da28ba05b3d7d75cc287b12b71a6}{get\+Available\+G\+P\+Us}} (self)
+\begin{DoxyCompactList}\small\item\em Acquires the number of G\+P\+Us available to use. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classHardwareHandler_1_1HardwareHandler_af9961ceb39d7c07ab58e52841a075a3c}{get\+Number\+Of\+Cores}} (self)
+\begin{DoxyCompactList}\small\item\em Acquires the number of C\+PU cores to use. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classHardwareHandler_1_1HardwareHandler_ab3543fd1ac95a06e42f51b879ad803f2}{create\+Thread\+Pool}} (self, thread\+Count=None)
+\begin{DoxyCompactList}\small\item\em Creates a threadpool, where the number of threads is the number of available cores by default. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classHardwareHandler_1_1HardwareHandler_a7f4d624de0e21d288fd68d6a3bd59448}\label{classHardwareHandler_1_1HardwareHandler_a7f4d624de0e21d288fd68d6a3bd59448}} 
+{\bfseries num\+Threads}
+\end{DoxyCompactItemize}
+\subsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classHardwareHandler_1_1HardwareHandler_a84b61bcfaa7a2d87332bc2b1fdc13952}\label{classHardwareHandler_1_1HardwareHandler_a84b61bcfaa7a2d87332bc2b1fdc13952}} 
+{\bfseries pool} = None
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classHardwareHandler_1_1HardwareHandler_a68c756eacee30649402e79aa0eb23984}\label{classHardwareHandler_1_1HardwareHandler_a68c756eacee30649402e79aa0eb23984}} 
+\index{Hardware\+Handler\+::\+Hardware\+Handler@{Hardware\+Handler\+::\+Hardware\+Handler}!\+\_\+\+\_\+init\+\_\+\+\_\+@{\+\_\+\+\_\+init\+\_\+\+\_\+}}
+\index{\+\_\+\+\_\+init\+\_\+\+\_\+@{\+\_\+\+\_\+init\+\_\+\+\_\+}!Hardware\+Handler\+::\+Hardware\+Handler@{Hardware\+Handler\+::\+Hardware\+Handler}}
+\subsubsection{\texorpdfstring{\+\_\+\+\_\+init\+\_\+\+\_\+()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily def Hardware\+Handler.\+Hardware\+Handler.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+
+
+The constructor for the hardwarehandler class. 
+
+Sets the default number of threads to the number of available cores 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classHardwareHandler_1_1HardwareHandler_ab3543fd1ac95a06e42f51b879ad803f2}\label{classHardwareHandler_1_1HardwareHandler_ab3543fd1ac95a06e42f51b879ad803f2}} 
+\index{Hardware\+Handler\+::\+Hardware\+Handler@{Hardware\+Handler\+::\+Hardware\+Handler}!create\+Thread\+Pool@{create\+Thread\+Pool}}
+\index{create\+Thread\+Pool@{create\+Thread\+Pool}!Hardware\+Handler\+::\+Hardware\+Handler@{Hardware\+Handler\+::\+Hardware\+Handler}}
+\subsubsection{\texorpdfstring{create\+Thread\+Pool()}{createThreadPool()}}
+{\footnotesize\ttfamily def Hardware\+Handler.\+Hardware\+Handler.\+create\+Thread\+Pool (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{thread\+Count = {\ttfamily None} }\end{DoxyParamCaption})}
+
+
+
+Creates a threadpool, where the number of threads is the number of available cores by default. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em thread\+Count} & the number of threads to use (default is number of cores) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+pool the threadpool which was created 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classHardwareHandler_1_1HardwareHandler_aeec8da28ba05b3d7d75cc287b12b71a6}\label{classHardwareHandler_1_1HardwareHandler_aeec8da28ba05b3d7d75cc287b12b71a6}} 
+\index{Hardware\+Handler\+::\+Hardware\+Handler@{Hardware\+Handler\+::\+Hardware\+Handler}!get\+Available\+G\+P\+Us@{get\+Available\+G\+P\+Us}}
+\index{get\+Available\+G\+P\+Us@{get\+Available\+G\+P\+Us}!Hardware\+Handler\+::\+Hardware\+Handler@{Hardware\+Handler\+::\+Hardware\+Handler}}
+\subsubsection{\texorpdfstring{get\+Available\+G\+P\+Us()}{getAvailableGPUs()}}
+{\footnotesize\ttfamily def Hardware\+Handler.\+Hardware\+Handler.\+get\+Available\+G\+P\+Us (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+
+
+Acquires the number of G\+P\+Us available to use. 
+
+\begin{DoxyReturn}{Returns}
+the available number of G\+P\+Us on the device (int) 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classHardwareHandler_1_1HardwareHandler_af9961ceb39d7c07ab58e52841a075a3c}\label{classHardwareHandler_1_1HardwareHandler_af9961ceb39d7c07ab58e52841a075a3c}} 
+\index{Hardware\+Handler\+::\+Hardware\+Handler@{Hardware\+Handler\+::\+Hardware\+Handler}!get\+Number\+Of\+Cores@{get\+Number\+Of\+Cores}}
+\index{get\+Number\+Of\+Cores@{get\+Number\+Of\+Cores}!Hardware\+Handler\+::\+Hardware\+Handler@{Hardware\+Handler\+::\+Hardware\+Handler}}
+\subsubsection{\texorpdfstring{get\+Number\+Of\+Cores()}{getNumberOfCores()}}
+{\footnotesize\ttfamily def Hardware\+Handler.\+Hardware\+Handler.\+get\+Number\+Of\+Cores (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+
+
+Acquires the number of C\+PU cores to use. 
+
+\begin{DoxyReturn}{Returns}
+the number of cores on the device (int) 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+Hardware\+Handler.\+py\end{DoxyCompactItemize}

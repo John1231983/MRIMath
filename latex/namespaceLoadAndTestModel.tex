@@ -1,0 +1,64 @@
+\hypertarget{namespaceLoadAndTestModel}{}\section{Load\+And\+Test\+Model Namespace Reference}
+\label{namespaceLoadAndTestModel}\index{Load\+And\+Test\+Model@{Load\+And\+Test\+Model}}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{namespaceLoadAndTestModel_a361241a6702b6faa835ba3b4823f7d35}\label{namespaceLoadAndTestModel_a361241a6702b6faa835ba3b4823f7d35}} 
+string {\bfseries data\+\_\+dir} = \textquotesingle{}/media/daniel/Extra\+Drive1/Patient\+\_\+\+Data\+\_\+\+Images\textquotesingle{};
+\item 
+\mbox{\Hypertarget{namespaceLoadAndTestModel_a7c95c0ceb71c46e58e3436fc155597fd}\label{namespaceLoadAndTestModel_a7c95c0ceb71c46e58e3436fc155597fd}} 
+{\bfseries model} = load\+\_\+model(\textquotesingle{}/home/daniel/eclipse-\/workspace/M\+R\+I\+Math/Models/2018-\/01-\/25\+\_\+20\+\_\+55/model.\+h5\textquotesingle{});
+\item 
+\mbox{\Hypertarget{namespaceLoadAndTestModel_ad819853917b387f9d5a78dad063fdc79}\label{namespaceLoadAndTestModel_ad819853917b387f9d5a78dad063fdc79}} 
+{\bfseries data\+Handler} = \mbox{\hyperlink{classDataHandler_1_1DataHandler}{Data\+Handler}}()
+\item 
+\mbox{\Hypertarget{namespaceLoadAndTestModel_a8d9259ecdf95d65b1267a15ebbcee078}\label{namespaceLoadAndTestModel_a8d9259ecdf95d65b1267a15ebbcee078}} 
+list {\bfseries segments} = \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\Hypertarget{namespaceLoadAndTestModel_a0ebe95f90c29b30af71d99b51b4f2440}\label{namespaceLoadAndTestModel_a0ebe95f90c29b30af71d99b51b4f2440}} 
+{\bfseries patient\+\_\+directory} = os.\+fsencode(data\+Handler.\+get\+Directory\+From\+Index(i, data\+\_\+dir))
+\item 
+\mbox{\Hypertarget{namespaceLoadAndTestModel_a43a523d3a3deb8b7c6819c3a9e3128d1}\label{namespaceLoadAndTestModel_a43a523d3a3deb8b7c6819c3a9e3128d1}} 
+string {\bfseries orig\+\_\+data} = patient\+\_\+directory + b\textquotesingle{}/Original\+\_\+\+Img\+\_\+\+Data\textquotesingle{}
+\item 
+\mbox{\Hypertarget{namespaceLoadAndTestModel_a5fddddd45be42ad3365a6ef3ffe0426c}\label{namespaceLoadAndTestModel_a5fddddd45be42ad3365a6ef3ffe0426c}} 
+string {\bfseries seg\+\_\+data} = patient\+\_\+directory + b\textquotesingle{}/Segmented\+\_\+\+Img\+\_\+\+Data\textquotesingle{}
+\item 
+\mbox{\Hypertarget{namespaceLoadAndTestModel_a33348f4e675223d4a896ea49c96006c5}\label{namespaceLoadAndTestModel_a33348f4e675223d4a896ea49c96006c5}} 
+{\bfseries img} = data\+Handler.\+get\+Image(orig\+\_\+data+b\textquotesingle{}/\textquotesingle{}+file)
+\item 
+\mbox{\Hypertarget{namespaceLoadAndTestModel_a84a090c1f00c1b9a02770619a582339a}\label{namespaceLoadAndTestModel_a84a090c1f00c1b9a02770619a582339a}} 
+{\bfseries patches} = data\+Handler.\+derive\+Patches(img, 1)
+\item 
+\mbox{\Hypertarget{namespaceLoadAndTestModel_a078a693ffd488436d6610cb7b8db5c30}\label{namespaceLoadAndTestModel_a078a693ffd488436d6610cb7b8db5c30}} 
+{\bfseries x}
+\item 
+\mbox{\Hypertarget{namespaceLoadAndTestModel_a5474cd9a9ba829cc8807a8b3c484d4c9}\label{namespaceLoadAndTestModel_a5474cd9a9ba829cc8807a8b3c484d4c9}} 
+{\bfseries y}
+\item 
+\mbox{\Hypertarget{namespaceLoadAndTestModel_af6ad0cf19bc20fe28cad04ea3a4bddee}\label{namespaceLoadAndTestModel_af6ad0cf19bc20fe28cad04ea3a4bddee}} 
+{\bfseries patch} = patch.\+reshape(1,25, 25, 1)
+\item 
+\mbox{\Hypertarget{namespaceLoadAndTestModel_a5a040e43abef25027a7b178ba9631392}\label{namespaceLoadAndTestModel_a5a040e43abef25027a7b178ba9631392}} 
+{\bfseries pred} = model.\+predict(patch)
+\item 
+\mbox{\Hypertarget{namespaceLoadAndTestModel_ab62a1fa52903aca1c27d1f3e4e210deb}\label{namespaceLoadAndTestModel_ab62a1fa52903aca1c27d1f3e4e210deb}} 
+{\bfseries label} = np.\+argmax(pred)
+\item 
+\mbox{\Hypertarget{namespaceLoadAndTestModel_a0e406681fef2c4c82527e14ce0935a45}\label{namespaceLoadAndTestModel_a0e406681fef2c4c82527e14ce0935a45}} 
+{\bfseries fig} = plt.\+figure()
+\item 
+\mbox{\Hypertarget{namespaceLoadAndTestModel_aa57d75a246d0fb8c979c611eca57a813}\label{namespaceLoadAndTestModel_aa57d75a246d0fb8c979c611eca57a813}} 
+{\bfseries a} = fig.\+add\+\_\+subplot(1,9,1)
+\item 
+\mbox{\Hypertarget{namespaceLoadAndTestModel_a691765bd875502b3a9f36f3e758daede}\label{namespaceLoadAndTestModel_a691765bd875502b3a9f36f3e758daede}} 
+int {\bfseries ind} = 2;
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\begin{DoxyVerb}Created on Nov 28, 2017
+
+@author: daniel
+\end{DoxyVerb}
+ 

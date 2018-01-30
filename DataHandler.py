@@ -1,8 +1,13 @@
 '''
-Created on Jan 1, 2018
 
-@author: daniel
+Class designed to do all data handling and manipulation, ranging from dataloading to network preprocessing.
+As time goes on, some of this may be refactored, and some of this functionality is contingent on the data being stored 
+in a certain structure. 
+
+@author Daniel Enrico Cahall
+
 '''
+
 
 import os
 import cv2
@@ -14,8 +19,6 @@ import numpy as np
 from math import floor
 from multiprocessing import Process, Manager
 from keras.utils import np_utils
-
-#import random
 
 
 class DataHandler:
@@ -32,29 +35,53 @@ class DataHandler:
     numPatches = None #the number of patches to extract from an imaage
     n = None #dimensions of each patch (n x n)
     #stepSize = None # the stride, in the case of a sliding window approach
+    
+    
+
+
+    ## The constructor for the datahandler class
+    #
+    # @param tolerance the percentage of pixels in a patch that can be background (default 0.25)
+    # @param numPatches the number of patches to extract per image (default 10)
+    # @param n the dimensions of the patch to be taken from the image (default 25)
     def __init__(self, tolerance = 0.25, numPatches = 10, n = 25):
         self.tolerance = tolerance
         self.numPatches = numPatches
         self.n = n
     
+    
+    ## Reads an image from a filepath
+    #
+    # @param path the path to an image file
+    # @return the image from the filepath (if one existed) as a numpy array
     def getImage(self, path):
         path=path.decode()
         img = cv2.imread(path,0)
         return img
 
-    def loadDataSequential(self, training_directory, start, finish):
+
+    ## Loads patient images and segments sequentially, assuming you want to through a range of numbered patients
+    #
+    # @param data_directory the directory where all patient data is located
+    # @param start the patient number to start with (inclusive)
+    # @param finish the patient number to stop at (exclusive)
+    def loadDataSequential(self, data_directory, start, finish):
         print('Reading images')
         for j in range(start,finish):
-            self.loadIndividualImage(j, training_directory)
+            self.loadIndividualPatient(j, data_directory)
 
-    
+    ## Loads patient images and segments in parallel, assuming you want to through a range of numbered patients
+    #
+    # @param data_directory the directory where all patient data is located
+    # @param start the patient number to start with (inclusive)
+    # @param finish the patient number to stop at (exclusive)
     def loadDataParallel(self, data_directory, start, finish):
         print('Reading images')
         self.X = self.manager.list()  
         self.labels = self.manager.list()  
         processes = []
         for i in range(start, finish):
-            p = Process(target=self.loadIndividualImage, args=(i, data_directory))  
+            p = Process(target=self.loadIndividualPatient, args=(i, data_directory))  
             p.start()
             processes.append(p)
         for p in processes:
@@ -63,8 +90,11 @@ class DataHandler:
         #pool.map(partial(self.loadIndividualImage, data_directory=data_directory), range(start, finish))
         #pool.terminate()
     
-        
-    def loadIndividualImage(self, index, data_directory):
+    ## Derives and labels patches from an individual patient
+    #
+    # @param data_directory the directory where all patient data is located
+    # @param index index of the patient in the numbered directory
+    def loadIndividualPatient(self, index, data_directory):
         print('Reading Patient ' + str(index))
         patient_directory = os.fsencode(self.getDirectoryFromIndex(index, data_directory))
         data_dir = patient_directory + b'/Original_Img_Data'
@@ -78,6 +108,10 @@ class DataHandler:
                 for _ in range(0,self.numPatches):
                     self.deriveRandomPatch(patient_directory,img, file)
 
+    ## Constructs the patient directory string based on the index (based on current labeling scheme)
+    #
+    # @param index the index of the patient that you need the specific directory for
+    # @param data_directory Directory where all patient data is located
     def getDirectoryFromIndex(self, index, data_directory):
         if index < 10:
             patient_directory = data_directory + '/Patient_(00' + str(index)  + ')_data/'
@@ -87,8 +121,8 @@ class DataHandler:
             patient_directory = data_directory + '/Patient_(' + str(index)  + ')_data/'
         return patient_directory
                 
-                            
-           
+    ## Preprocesses the data for the network by converting the list of patches and labels to a numpy array, and
+    # normalizing the patches               
     def preprocessForNetwork(self):
         n_imgs = len(self.X)
         self.X = np.array(self.X)
@@ -99,12 +133,12 @@ class DataHandler:
         #self.labels = np.array(self.labels);
         #self.labels = self.labels.reshape(n_imgs,8)
     
-    def derivePatches(self, img, stepSize):
-        for (x, y, window) in self.deriveIndividualPatch(img, stepSize):
-            if window.shape[0] != self.n or window.shape[1] != self.n:
-                continue
-            #self.X.append(window)
-        
+    
+    ## Derives random patches from an image
+    #
+    # @param patient_directoy the directory where the specific patient data is located (e.g. Patient_001_Data)
+    # @param img the image to derive patches from
+    # @param file the patient image number (e.g. img_1)
     def deriveRandomPatch(self, patient_directory,img, file):
         self.lock.acquire()
         x = min(randint(1, self.W), self.W - self.n)
@@ -125,14 +159,32 @@ class DataHandler:
 #             self.deriveRandomPatch(patient_directory, img, file)
 
                    
-            
-    def deriveIndividualPatch(self, img, stepSize, n):
+    ## Derives an individual patch from an image
+    #
+    # @param img the image to derive patches from
+    # @param stepSize the amount the sliding window shifts per iteration
+    # @param file the patient image number (e.g. img_1)
+    # @return patches a list of all patches in the image
+    def derivePatches(self, img, stepSize):
     # slide a window across the image
+        patches = []
         for y in range(0, img.shape[0], stepSize):
             for x in range(0, img.shape[1], stepSize):
             # yield the current window
-                yield (x, y, img[y:y + n, x:x + n])
-                
+                window = img[y:y + self.n, x:x + self.n]
+                if window.shape[0] != self.n or window.shape[1] != self.n:
+                    continue
+                else:
+                    patches.append((x, y,img[y:y + self.n, x:x + self.n]))
+        return patches
+    
+    ## Derives and labels the patches in the segment imiage
+    #
+    # @param patient_dir the specific patient directory (e.g. Patient_001_Data)
+    # @param x the starting point for columns (x-direction) for the patch
+    # @param y the starting point for rows (y-direction) for the patch
+    # @param img_num image number (e.g. img_1)
+    # @return a boolean flag which states if a label for the segment was suceesfully found
     def derivePatchFromSegments(self, patient_dir, x ,y, img_num):
 #             label = []
 #             for _ in range(0, 8):
@@ -150,11 +202,16 @@ class DataHandler:
             return False
                     
 
-    
+    ## Acquires the data from the DataHandler after all data has been loaded and processed
+    #
+    # @param img_num image number (e.g. img_1)
+    # @return the data and the labels for the loaded and processed data
     def getData(self):
         self.preprocessForNetwork()
         return self.X, self.labels
     
+    ## Clears the data and labels
+    #
     def clearVectors(self):
         self.X =[]
         self.labels = []
