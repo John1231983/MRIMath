@@ -189,7 +189,7 @@ class DataHandler:
         segment_directory = os.fsencode(patient_dir) + b'/Segmented_Img_Data'
         if os.path.exists(segment_directory+b'/'+img_num[0:len(img_num)-4]):
             for file in os.listdir(segment_directory+b'/'+img_num[0:len(img_num)-4]):
-    		    seg_img = self.getImage(segment_directory+b'/'+img_num[0:len(img_num)-4]+b'/'+file)
+    	        seg_img = self.getImage(segment_directory+b'/'+img_num[0:len(img_num)-4]+b'/'+file)
                 seg_num = int(file[4:5].decode("utf-8"))
                 seg_patch = seg_img[x:x+self.n, y:y+self.n]
                 if(seg_patch[floor(self.n/2),floor(self.n/2)] == 255):
