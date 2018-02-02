@@ -36,7 +36,7 @@ dataHandler = DataHandler()
 emailHandler = EmailHandler()
 hardwareHandler = HardwareHandler()
 timer = TimerModule()
-
+mode = 'T2' # Flair, T1, T2, or T1c
 # Creating the model on the CPU
 with tf.device('/cpu:0'):
     input_img = shape=(dataHandler.n, dataHandler.n, 1)
@@ -55,7 +55,7 @@ with tf.device('/cpu:0'):
 
 
 #load up data! This will take a few minutes, even parallelized...
-data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images'
+data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images/'+mode
 #data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
 dataHandler.loadDataParallel(data_dir, 1, 151)
 training, training_labels = dataHandler.getData()
@@ -65,15 +65,15 @@ testing, testing_labels = dataHandler.getData()
 
 # Creates a directory to save everything (model, loss log, and model info)
 # Should always be unique since the date string is based on the current date and the time
-model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string
+model_directory = "/coe_data/MRIMath/MS_Research/MRIMath/Models/" + date_string+'_'+mode
 if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 
-num_epochs = 15
+num_epochs = 30 
 batchSize = 64
 lrate = 0.1
-momentum = 0.9
+momentum = 0.95
 #decay = lrate/num_epochs   
 sgd = SGD(lr=lrate, momentum=momentum, nesterov=True)
 model_info_filename = 'model_info.txt'
@@ -121,8 +121,8 @@ print('Saving model to disk!')
 model.save(model_directory + '/model.h5')
 emailHandler.connectToServer()
 message = "Finished training network at " + str(datetime.now()) + '\n\n'
-message += 'The network was trained on ' + str(training.shape[0]) + ' images \n\n'
-message += 'The network was validated on ' + str(testing.shape[0]) + ' images \n\n'
+message += 'The network was trained on ' + str(training.shape[0]) +' '+ mode +  ' images \n\n'
+message += 'The network was validated on ' + str(testing.shape[0]) +' '+ mode +  ' images \n\n'
 message += "The network was trained for " + str(num_epochs) + " epochs with a batch size of " + str(batchSize) + '\n\n'
 message += "The network was saved to " + model_directory + '\n\n'
 message += "Total training time: " + str(timer.getElapsedTime())
@@ -131,6 +131,6 @@ emailHandler.prepareMessage(now.strftime('%Y-%m-%d') + " MRIMath Update: Network
 model_info_file.close()
 emailHandler.attachFile(model_info_file, model_info_filename)
 emailHandler.attachFile(log_info, log_info_filename)
-emailHandler.sendMessage(["Danny", "Dr.Bouaynaya","Dr.Hassan","Dr.Rasool"])
+emailHandler.sendMessage(["Danny", "Dr.Bouaynaya"])
 emailHandler.finish()
 
