@@ -187,15 +187,14 @@ class DataHandler:
     # @return a boolean flag which states if a label for the segment was suceesfully found
     def derivePatchFromSegments(self, patient_dir, x ,y, img_num):
         segment_directory = os.fsencode(patient_dir) + b'/Segmented_Img_Data'
-        if os.path.exists(segment_directory+b'/'+img_num[0:len(img_num)-4]):
-            for file in os.listdir(segment_directory+b'/'+img_num[0:len(img_num)-4]):
-    	        seg_img = self.getImage(segment_directory+b'/'+img_num[0:len(img_num)-4]+b'/'+file)
-                seg_num = int(file[4:5].decode("utf-8"))
-                seg_patch = seg_img[x:x+self.n, y:y+self.n]
-                if(seg_patch[floor(self.n/2),floor(self.n/2)] == 255):
-                    label = seg_num - 1
-                    self.labels.append(label)
-                    return True
+        for file in os.listdir(segment_directory+b'/'+img_num[0:len(img_num)-4]):
+            seg_img = self.getImage(segment_directory+b'/'+img_num[0:len(img_num)-4]+b'/'+file)
+            seg_num = int(file[4:5].decode("utf-8"))
+            seg_patch = seg_img[x:x+self.n, y:y+self.n]
+            if(seg_patch[floor(self.n/2),floor(self.n/2)] == 255):
+                label = seg_num - 1
+                self.labels.append(label)
+                return True
         return False
                     
 
