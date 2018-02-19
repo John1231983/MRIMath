@@ -72,7 +72,7 @@ if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 
-num_epochs = 40  
+num_epochs = 10  
 batchSize = 64
 lrate = 0.1
 momentum = 0.9
