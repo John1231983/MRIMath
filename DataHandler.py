@@ -144,7 +144,6 @@ class DataHandler:
         self.X = self.X.reshape(n_imgs,self.n,self.n,1)
         self.X = self.X.astype('float32') / 255;
         self.labels = np.array(self.labels);
-        print(np.count_nonzero(self.labels)/self.labels.shape[0])
         self.labels = np_utils.to_categorical(self.labels)
         #self.labels = np.array(self.labels);
         #self.labels = self.labels.reshape(n_imgs,8)
@@ -157,9 +156,8 @@ class DataHandler:
             x = min(randint(1, self.W), self.W - self.n)
             y = min(randint(1, self.H), self.H - self.n)
             patch = img[x:x+self.n, y:y+self.n]
-            count = count+1
-            # after a certain number of iterations, give up
-            if count == 1000:
+            count = count + 1
+            if count == 100:
                 break
         return x,y, patch
     ## Derives random patches from an image
@@ -187,14 +185,14 @@ class DataHandler:
         if not os.path.exists(label_dir):
             return
         label_img = self.getImage(label_dir + file)
-        for _ in range(0,self.numPatches):
-            if(np.sum(label_img == 0) <= 0.9*label_img.size):
-                #patch = np.zeros((self.n, self.n))
-                #while np.sum(patch == 0) > self.tolerance*patch.size:
+        if(np.sum(label_img == 0) <= 0.9*label_img.size):
+            for _ in range(0,self.numPatches):
+            #patch = np.zeros((self.n, self.n))
+            #while np.sum(patch == 0) > self.tolerance*patch.size:
                 x,y,patch = self.extractPatch(label_img)
-                ## if the entire image is background, we could be stuck in an infinite loop
-                ## this mitigates that problem (presumably)
-                ## Note to self: refactor this at some point
+            ## if the entire image is background, we could be stuck in an infinite loop
+            ## this mitigates that problem (presumably)
+            ## Note to self: refactor this at some point
                 #if(np.sum(label_img == 0) > 0.9*label_img.size):
                     #break;
                 self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
