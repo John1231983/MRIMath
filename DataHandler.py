@@ -150,15 +150,9 @@ class DataHandler:
     
     
     def extractPatch(self, img):
-        patch = np.zeros((self.n,self.n))
-        count = 0
-        while(np.sum(patch == 0) > self.tolerance*patch.size):
-            x = min(randint(1, self.W), self.W - self.n)
-            y = min(randint(1, self.H), self.H - self.n)
-            patch = img[x:x+self.n, y:y+self.n]
-            count = count + 1
-            if count == 100:
-                break
+        x = min(randint(1, self.W), self.W - self.n)
+        y = min(randint(1, self.H), self.H - self.n)
+        patch = img[x:x+self.n, y:y+self.n]
         return x,y, patch
     ## Derives random patches from an image
     #
