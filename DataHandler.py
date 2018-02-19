@@ -179,13 +179,14 @@ class DataHandler:
         if not os.path.exists(label_dir):
             return
         label_img = self.getImage(label_dir + file)
-        for _ in range(0,self.numPatches):
-            x,y,patch = self.extractPatch(label_img)
+        if np.sum(label_img) !=  0:
+            for _ in range(0,self.numPatches):
+                x,y,patch = self.extractPatch(label_img)
             ## if the entire image is background, we could be stuck in an infinite loop
             ## this mitigates that problem (presumably)
             ## Note to self: refactor this at some point
-            self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
-            self.X.append(region[x:x+self.n, y:y+self.n])
+                self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
+                self.X.append(region[x:x+self.n, y:y+self.n])
         #self.X.append(patch)
         
         #print(label_dir + patient_directory[len(patient_directory)-20:len(patient_directory)])
