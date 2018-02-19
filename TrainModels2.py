@@ -58,10 +58,10 @@ with tf.device('/cpu:0'):
 #load up data! This will take a few minutes, even parallelized...
 data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images/'+mode
 #data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
-dataHandler.loadDataParallel(data_dir, 1, 10)
+dataHandler.loadDataParallel(data_dir, 1, 151)
 training, training_labels = dataHandler.getData()
 dataHandler.clearVectors()
-dataHandler.loadDataParallel(data_dir, 151, 161)
+dataHandler.loadDataParallel(data_dir, 151, 192)
 testing, testing_labels = dataHandler.getData()
 
 # Creates a directory to save everything (model, loss log, and model info)
