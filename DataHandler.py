@@ -184,8 +184,6 @@ class DataHandler:
             ## if the entire image is background, we could be stuck in an infinite loop
             ## this mitigates that problem (presumably)
             ## Note to self: refactor this at some point
-                if(np.sum(label_img == 0) > 0.95*label_img.size or count > 1000):
-                    break;
             self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
             self.X.append(region[x:x+self.n, y:y+self.n])
         #self.X.append(patch)
