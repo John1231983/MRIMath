@@ -178,6 +178,7 @@ class DataHandler:
         segment = self.combineSegments(patient_directory, file);
         region = img*segment;
         label_dir = data_directory + b'/Ground_Truth/' 
+        print(label_dir)
         label_dir = label_dir + patient_directory[len(patient_directory)-20:len(patient_directory)]
         if not os.path.exists(label_dir):
             return
