@@ -20,7 +20,8 @@ from math import floor
 from multiprocessing import Process, Manager
 from keras.utils import np_utils
 import matplotlib.pyplot as plt
-
+import sys
+sys.setrecursionlimit(10000)
 
 class DataHandler:
     
@@ -143,6 +144,7 @@ class DataHandler:
         self.X = self.X.reshape(n_imgs,self.n,self.n,1)
         self.X = self.X.astype('float32') / 255;
         self.labels = np.array(self.labels);
+        print(np.count_nonzero(self.labels)/self.labels.shape[0])
         self.labels = np_utils.to_categorical(self.labels)
         #self.labels = np.array(self.labels);
         #self.labels = self.labels.reshape(n_imgs,8)
@@ -152,11 +154,11 @@ class DataHandler:
         x = min(randint(1, self.W), self.W - self.n)
         y = min(randint(1, self.H), self.H - self.n)
         patch = img[x:x+self.n, y:y+self.n]
-        #numBackgroundPixels = np.sum(patch == 0)
-        #if numBackgroundPixels > self.tolerance*patch.size:
-        #   return self.extractPatch(img)
-        #else:
-        return x,y, patch
+        numBackgroundPixels = np.sum(patch == 0)
+        if numBackgroundPixels > self.tolerance*patch.size:
+            return self.extractPatch(img)
+        else:
+            return x,y, patch
     ## Derives random patches from an image
     #
     # @param patient_directoy the directory where the specific patient data is located (e.g. Patient_001_Data)
@@ -183,16 +185,17 @@ class DataHandler:
             return
         label_img = self.getImage(label_dir + file)
         for _ in range(0,self.numPatches):
-            patch = np.zeros((self.n, self.n))
-            while np.sum(patch == 0) > self.tolerance*patch.size:
+            if(np.sum(label_img == 0) < 0.95*label_img.size):
+                #patch = np.zeros((self.n, self.n))
+                #while np.sum(patch == 0) > self.tolerance*patch.size:
                 x,y,patch = self.extractPatch(label_img)
                 ## if the entire image is background, we could be stuck in an infinite loop
                 ## this mitigates that problem (presumably)
                 ## Note to self: refactor this at some point
-                if(np.sum(label_img == 0) > 0.9*label_img.size):
-                    break;
-            self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
-            self.X.append(region[x:x+self.n, y:y+self.n])
+                #if(np.sum(label_img == 0) > 0.9*label_img.size):
+                    #break;
+                self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
+                self.X.append(region[x:x+self.n, y:y+self.n])
         #self.X.append(patch)
         
         #print(label_dir + patient_directory[len(patient_directory)-20:len(patient_directory)])
