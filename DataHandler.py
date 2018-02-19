@@ -104,7 +104,7 @@ class DataHandler:
                 print('Width: ' + str(width) + ", Length: " + str(length))
             else:
                 for _ in range(0,self.numPatches):
-                    self.deriveRandomPatch(patient_directory,img, file)
+                    self.deriveRandomPatch(patient_directory, img, file)
 
     ## TBD
     #
@@ -121,7 +121,7 @@ class DataHandler:
                 print('Could not add patient  ' + str(index) + ' because dimensions did not match')
                 print('Width: ' + str(width) + ", Length: " + str(length))
             else:
-                self.deriveRegionsOfInterest(patient_directory,img, file)
+                self.deriveRegionsOfInterest(patient_directory,data_directory,img, file)
     ## Constructs the patient directory string based on the index (based on current labeling scheme)
     #
     # @param index the index of the patient that you need the specific directory for
@@ -174,10 +174,10 @@ class DataHandler:
     # @param patient_directoy the directory where the specific patient data is located (e.g. Patient_001_Data)
     # @param img the image to derive patches from
     # @param file the patient image number (e.g. img_1)
-    def deriveRegionsOfInterest(self, patient_directory,img, file):
+    def deriveRegionsOfInterest(self, patient_directory, data_directory,img, file):
         segment = self.combineSegments(patient_directory, file);
         region = img*segment;
-        label_dir = patient_directory + b'Ground_Truth/' 
+        label_dir = data_directory + b'/Ground_Truth/' 
         label_dir = label_dir + patient_directory[len(patient_directory)-20:len(patient_directory)]
         if not os.path.exists(label_dir):
             return
