@@ -121,7 +121,7 @@ class DataHandler:
                 print('Could not add patient  ' + str(index) + ' because dimensions did not match')
                 print('Width: ' + str(width) + ", Length: " + str(length))
             else:   
-	        self.deriveRegionsOfInterest(patient_directory,data_directory,img, file)
+                self.deriveRegionsOfInterest(patient_directory,data_directory,img, file)
     ## Constructs the patient directory string based on the index (based on current labeling scheme)
     #
     # @param index the index of the patient that you need the specific directory for
