@@ -152,10 +152,15 @@ class DataHandler:
     
     def extractPatch(self, img):
         patch = np.zeros((self.n,self.n))
+        count = 0
         while(np.sum(patch == 0) > self.tolerance*patch.size):
             x = min(randint(1, self.W), self.W - self.n)
             y = min(randint(1, self.H), self.H - self.n)
             patch = img[x:x+self.n, y:y+self.n]
+            count = count+1
+            # after a certain number of iterations, give up
+            if count == 1000:
+                break
         return x,y, patch
     ## Derives random patches from an image
     #
@@ -183,7 +188,7 @@ class DataHandler:
             return
         label_img = self.getImage(label_dir + file)
         for _ in range(0,self.numPatches):
-            if(np.sum(label_img == 0) < 0.9*label_img.size):
+            if(np.sum(label_img == 0) <= 0.9*label_img.size):
                 #patch = np.zeros((self.n, self.n))
                 #while np.sum(patch == 0) > self.tolerance*patch.size:
                 x,y,patch = self.extractPatch(label_img)
