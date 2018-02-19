@@ -180,11 +180,7 @@ class DataHandler:
             return
         label_img = self.getImage(label_dir + file)
         for _ in range(0,self.numPatches):
-            patch = np.zeros((self.n, self.n))
-            count = 0
-            while np.sum(patch == 0) > self.tolerance*patch.size:
-                count = count + 1
-                x,y,patch = self.extractPatch(label_img)
+            x,y,patch = self.extractPatch(label_img)
             ## if the entire image is background, we could be stuck in an infinite loop
             ## this mitigates that problem (presumably)
             ## Note to self: refactor this at some point
