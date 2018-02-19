@@ -151,14 +151,12 @@ class DataHandler:
     
     
     def extractPatch(self, img):
-        x = min(randint(1, self.W), self.W - self.n)
-        y = min(randint(1, self.H), self.H - self.n)
-        patch = img[x:x+self.n, y:y+self.n]
-        numBackgroundPixels = np.sum(patch == 0)
-        if numBackgroundPixels > self.tolerance*patch.size:
-            return self.extractPatch(img)
-        else:
-            return x,y, patch
+        patch = np.zeros((self.n,self.n))
+        while(np.sum(patch == 0) > self.tolerance*patch.size):
+            x = min(randint(1, self.W), self.W - self.n)
+            y = min(randint(1, self.H), self.H - self.n)
+            patch = img[x:x+self.n, y:y+self.n]
+        return x,y, patch
     ## Derives random patches from an image
     #
     # @param patient_directoy the directory where the specific patient data is located (e.g. Patient_001_Data)
@@ -185,7 +183,7 @@ class DataHandler:
             return
         label_img = self.getImage(label_dir + file)
         for _ in range(0,self.numPatches):
-            if(np.sum(label_img == 0) < 0.95*label_img.size):
+            if(np.sum(label_img == 0) < 0.9*label_img.size):
                 #patch = np.zeros((self.n, self.n))
                 #while np.sum(patch == 0) > self.tolerance*patch.size:
                 x,y,patch = self.extractPatch(label_img)
