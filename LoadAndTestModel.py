@@ -17,7 +17,7 @@ from math import floor
 
 
 data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images';
-model = load_model('/home/daniel/eclipse-workspace/MRIMath/Models/2018-01-25_20_55/model.h5');
+model = load_model('/home/daniel/eclipse-workspace/MRIMath/Models/2018-01-26_16_16/model.h5');
 dataHandler = DataHandler()
 segments = []
 for m in range(0, 8):

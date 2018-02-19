@@ -19,6 +19,7 @@ import numpy as np
 from math import floor
 from multiprocessing import Process, Manager
 from keras.utils import np_utils
+import matplotlib.pyplot as plt
 
 
 class DataHandler:
@@ -44,7 +45,7 @@ class DataHandler:
     # @param tolerance the percentage of pixels in a patch that can be background (default 0.25)
     # @param numPatches the number of patches to extract per image (default 10)
     # @param n the dimensions of the patch to be taken from the image (default 25)
-    def __init__(self, tolerance = 0.25, numPatches = 10, n = 25):
+    def __init__(self, tolerance = 0.1, numPatches = 10, n = 25):
         self.tolerance = tolerance
         self.numPatches = numPatches
         self.n = n
@@ -68,7 +69,7 @@ class DataHandler:
     def loadDataSequential(self, data_directory, start, finish):
         print('Reading images')
         for j in range(start,finish):
-            self.loadIndividualPatient(j, data_directory)
+            self.loadIndividualPatient2(j, data_directory)
 
     ## Loads patient images and segments in parallel, assuming you want to through a range of numbered patients
     #
@@ -81,14 +82,11 @@ class DataHandler:
         self.labels = self.manager.list()  
         processes = []
         for i in range(start, finish):
-            p = Process(target=self.loadIndividualPatient, args=(i, data_directory))  
+            p = Process(target=self.loadIndividualPatient2, args=(i, data_directory))  
             p.start()
             processes.append(p)
         for p in processes:
             p.join()
-        #pool = self.hardwareHandler.createThreadPool()
-        #pool.map(partial(self.loadIndividualImage, data_directory=data_directory), range(start, finish))
-        #pool.terminate()
     
     ## Derives and labels patches from an individual patient
     #
@@ -108,6 +106,22 @@ class DataHandler:
                 for _ in range(0,self.numPatches):
                     self.deriveRandomPatch(patient_directory,img, file)
 
+    ## TBD
+    #
+    # @param data_directory the directory where all patient data is located
+    # @param index index of the patient in the numbered directory
+    def loadIndividualPatient2(self, index, data_directory):
+        print('Reading Patient ' + str(index))
+        patient_directory = os.fsencode(self.getDirectoryFromIndex(index, data_directory))
+        data_dir = patient_directory + b'/Original_Img_Data'
+        for file in os.listdir(data_dir):
+            img = self.getImage(data_dir+b'/'+file)
+            length, width = img.shape
+            if(length != self.H or width != self.W):
+                print('Could not add patient  ' + str(index) + ' because dimensions did not match')
+                print('Width: ' + str(width) + ", Length: " + str(length))
+            else:
+                self.deriveRegionsOfInterest(patient_directory,img, file)
     ## Constructs the patient directory string based on the index (based on current labeling scheme)
     #
     # @param index the index of the patient that you need the specific directory for
@@ -134,6 +148,15 @@ class DataHandler:
         #self.labels = self.labels.reshape(n_imgs,8)
     
     
+    def extractPatch(self, img):
+        x = min(randint(1, self.W), self.W - self.n)
+        y = min(randint(1, self.H), self.H - self.n)
+        patch = img[x:x+self.n, y:y+self.n]
+        #numBackgroundPixels = np.sum(patch == 0)
+        #if numBackgroundPixels > self.tolerance*patch.size:
+        #   return self.extractPatch(img)
+        #else:
+        return x,y, patch
     ## Derives random patches from an image
     #
     # @param patient_directoy the directory where the specific patient data is located (e.g. Patient_001_Data)
@@ -141,23 +164,56 @@ class DataHandler:
     # @param file the patient image number (e.g. img_1)
     def deriveRandomPatch(self, patient_directory,img, file):
         self.lock.acquire()
-        x = min(randint(1, self.W), self.W - self.n)
-        y = min(randint(1, self.H), self.H - self.n)
-        patch = img[x:x+self.n, y:y+self.n]
-        numBackgroundPixels = np.sum(patch == 0)
-        if numBackgroundPixels > self.tolerance*img.size:
-            self.lock.release()
-            return self.deriveRandomPatch(patient_directory,img,file)
-        else:
-            if self.derivePatchFromSegments(patient_directory, x,y, file):  
-                self.X.append(patch)
+        x,y,patch = self.extractPatch(img)
+        self.X.append(patch)
+        self.derivePatchFromSegments(patient_directory, x,y, file)
         self.lock.release()
 
-        #self.derivePatchFromSegments(patient_directory, x,y, file)
-#         else:
-#             self.lock.release()
-#             self.deriveRandomPatch(patient_directory, img, file)
+    ## Derives random patches from an image - Updated for February "pivot"
+    #
+    # @param patient_directoy the directory where the specific patient data is located (e.g. Patient_001_Data)
+    # @param img the image to derive patches from
+    # @param file the patient image number (e.g. img_1)
+    def deriveRegionsOfInterest(self, patient_directory,img, file):
+        segment = self.combineSegments(patient_directory, file);
+        region = img*segment;
+        label_dir = patient_directory + b'Ground_Truth/' 
+        label_dir = label_dir + patient_directory[len(patient_directory)-20:len(patient_directory)]
+        if not os.path.exists(label_dir):
+            return
+        label_img = self.getImage(label_dir + file)
+        for _ in range(0,self.numPatches):
+            patch = np.zeros((self.n, self.n))
+            while np.sum(patch == 0) > self.tolerance*patch.size:
+                x,y,patch = self.extractPatch(label_img)
+                ## if the entire image is background, we could be stuck in an infinite loop
+                ## this mitigates that problem (presumably)
+                ## Note to self: refactor this at some point
+                if(np.sum(label_img == 0) > 0.9*label_img.size):
+                    break;
+            self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
+            self.X.append(region[x:x+self.n, y:y+self.n])
+        #self.X.append(patch)
+        
+        #print(label_dir + patient_directory[len(patient_directory)-20:len(patient_directory)])
+            
+            
 
+    ## Derives and labels the patches in the segment imiage
+    #
+    # @param patient_dir the specific patient directory (e.g. Patient_001_Data)
+    # @param x the starting point for columns (x-direction) for the patch
+    # @param y the starting point for rows (y-direction) for the patch
+    # @param img_num image number (e.g. img_1)
+    # @return a boolean flag which states if a label for the segment was suceesfully found
+    def combineSegments(self, patient_dir, img_num):
+        segment_directory = os.fsencode(patient_dir) + b'/Segmented_Img_Data'
+        seg = np.zeros((self.W, self.H))
+        for file in os.listdir(segment_directory+b'/'+img_num[0:len(img_num)-4]):
+            seg_num = int(file[4:5].decode("utf-8"))
+            if(seg_num > 5):
+                seg = np.add(seg, self.getImage(segment_directory+b'/'+img_num[0:len(img_num)-4]+b'/'+file))
+        return seg  
                    
     ## Derives an individual patch from an image
     #
