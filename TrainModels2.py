@@ -46,15 +46,13 @@ with tf.device('/cpu:0'):
     model.add(PReLU())
     model.add(Conv2D(125, (3, 3), padding='same'))
     model.add(PReLU())
-    model.add(Conv2D(75, (3, 3), padding='same'))
-    model.add(PReLU())
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Flatten())
     model.add(Dense(520))
     model.add(PReLU())
     model.add(Dense(250))
     model.add(PReLU())
-    model.add(Dense(1, activation='softmax'))
+    model.add(Dense(1, activation='sigmoid'))
 
 
 #load up data! This will take a few minutes, even parallelized...
