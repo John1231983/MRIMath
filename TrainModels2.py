@@ -52,7 +52,7 @@ with tf.device('/cpu:0'):
     model.add(PReLU())
     model.add(Dense(250))
     model.add(PReLU())
-    model.add(Dense(2, activation='softmax'))
+    model.add(Dense(1, activation='softmax'))
 
 
 #load up data! This will take a few minutes, even parallelized...

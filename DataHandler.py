@@ -144,7 +144,7 @@ class DataHandler:
         self.X = self.X.reshape(n_imgs,self.n,self.n,1)
         self.X = self.X.astype('float32') / 255;
         self.labels = np.array(self.labels);
-        self.labels = np_utils.to_categorical(self.labels)
+        #self.labels = np_utils.to_categorical(self.labels)
         #self.labels = np.array(self.labels);
         #self.labels = self.labels.reshape(n_imgs,8)
     
@@ -211,7 +211,7 @@ class DataHandler:
         seg = np.zeros((self.W, self.H))
         for file in os.listdir(segment_directory+b'/'+img_num[0:len(img_num)-4]):
             seg_num = int(file[4:5].decode("utf-8"))
-            if(seg_num > 5):
+            if(seg_num > 4):
                 seg = np.add(seg, self.getImage(segment_directory+b'/'+img_num[0:len(img_num)-4]+b'/'+file))
         return seg  
                    
