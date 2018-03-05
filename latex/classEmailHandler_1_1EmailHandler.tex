@@ -1,0 +1,134 @@
+\hypertarget{classEmailHandler_1_1EmailHandler}{}\section{Email\+Handler.\+Email\+Handler Class Reference}
+\label{classEmailHandler_1_1EmailHandler}\index{Email\+Handler.\+Email\+Handler@{Email\+Handler.\+Email\+Handler}}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{classEmailHandler_1_1EmailHandler_ac820eeb8d982e9e9eb3ef60fbe25a4ac}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self)
+\begin{DoxyCompactList}\small\item\em The constructor for the email\+Handler class. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classEmailHandler_1_1EmailHandler_a738e27838ff55ce3ad5264b55f927570}{prepare\+Message}} (self, subject, body)
+\begin{DoxyCompactList}\small\item\em Prepares the message to be sent by setting up the subject and body. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classEmailHandler_1_1EmailHandler_a61a47776f4572f351e8f3ee4a95c476c}\label{classEmailHandler_1_1EmailHandler_a61a47776f4572f351e8f3ee4a95c476c}} 
+def \mbox{\hyperlink{classEmailHandler_1_1EmailHandler_a61a47776f4572f351e8f3ee4a95c476c}{connect\+To\+Server}} (self)
+\begin{DoxyCompactList}\small\item\em Connects to the gmail server and logs in using the mrimathnotifier gmail address. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classEmailHandler_1_1EmailHandler_a54db017e0c03dbf296b537f46ac181e6}{send\+Message}} (self, recipients)
+\begin{DoxyCompactList}\small\item\em Sends the email to all desired recipients as long as they are within the address book. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classEmailHandler_1_1EmailHandler_a66b5b3161b6b60f049e8163fbe2e3f59}\label{classEmailHandler_1_1EmailHandler_a66b5b3161b6b60f049e8163fbe2e3f59}} 
+def \mbox{\hyperlink{classEmailHandler_1_1EmailHandler_a66b5b3161b6b60f049e8163fbe2e3f59}{finish}} (self)
+\begin{DoxyCompactList}\small\item\em Clears the body of the email, the attached files, and the list of recipients, and disconnects from the gmail server. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classEmailHandler_1_1EmailHandler_aeafa5d9ec69ed3459fb5f95804081b30}{attach\+File}} (self, file, filename)
+\begin{DoxyCompactList}\small\item\em Attaches a file to the email. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classEmailHandler_1_1EmailHandler_a5f0428b1c117715c2d922f49396a932c}\label{classEmailHandler_1_1EmailHandler_a5f0428b1c117715c2d922f49396a932c}} 
+{\bfseries msg}
+\item 
+\mbox{\Hypertarget{classEmailHandler_1_1EmailHandler_a5754da0cd979038628031da0ebecc40a}\label{classEmailHandler_1_1EmailHandler_a5754da0cd979038628031da0ebecc40a}} 
+{\bfseries body}
+\item 
+\mbox{\Hypertarget{classEmailHandler_1_1EmailHandler_aadf372340aeaa718ace3de18837a40f6}\label{classEmailHandler_1_1EmailHandler_aadf372340aeaa718ace3de18837a40f6}} 
+{\bfseries server}
+\end{DoxyCompactItemize}
+\subsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classEmailHandler_1_1EmailHandler_ae097564e29120a27af23b6a238b4e8dd}\label{classEmailHandler_1_1EmailHandler_ae097564e29120a27af23b6a238b4e8dd}} 
+string {\bfseries addr} = \char`\"{}mrimathnotifier@gmail.\+com\char`\"{}
+\item 
+\mbox{\Hypertarget{classEmailHandler_1_1EmailHandler_a30ef821e52a96c66887c623ea3b5fe13}\label{classEmailHandler_1_1EmailHandler_a30ef821e52a96c66887c623ea3b5fe13}} 
+string {\bfseries password} = \char`\"{}mrimathpw\char`\"{}
+\item 
+dictionary {\bfseries address\+Book}
+\item 
+\mbox{\Hypertarget{classEmailHandler_1_1EmailHandler_a96497debc081553d1ee839fa89718db1}\label{classEmailHandler_1_1EmailHandler_a96497debc081553d1ee839fa89718db1}} 
+string {\bfseries body} = \char`\"{}\char`\"{}
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classEmailHandler_1_1EmailHandler_ac820eeb8d982e9e9eb3ef60fbe25a4ac}\label{classEmailHandler_1_1EmailHandler_ac820eeb8d982e9e9eb3ef60fbe25a4ac}} 
+\index{Email\+Handler\+::\+Email\+Handler@{Email\+Handler\+::\+Email\+Handler}!\+\_\+\+\_\+init\+\_\+\+\_\+@{\+\_\+\+\_\+init\+\_\+\+\_\+}}
+\index{\+\_\+\+\_\+init\+\_\+\+\_\+@{\+\_\+\+\_\+init\+\_\+\+\_\+}!Email\+Handler\+::\+Email\+Handler@{Email\+Handler\+::\+Email\+Handler}}
+\subsubsection{\texorpdfstring{\+\_\+\+\_\+init\+\_\+\+\_\+()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily def Email\+Handler.\+Email\+Handler.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+
+
+The constructor for the email\+Handler class. 
+
+This creates the message and sets the from address to the \href{mailto:mrimathnotifier@gmail.com}{\tt mrimathnotifier@gmail.\+com} 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classEmailHandler_1_1EmailHandler_aeafa5d9ec69ed3459fb5f95804081b30}\label{classEmailHandler_1_1EmailHandler_aeafa5d9ec69ed3459fb5f95804081b30}} 
+\index{Email\+Handler\+::\+Email\+Handler@{Email\+Handler\+::\+Email\+Handler}!attach\+File@{attach\+File}}
+\index{attach\+File@{attach\+File}!Email\+Handler\+::\+Email\+Handler@{Email\+Handler\+::\+Email\+Handler}}
+\subsubsection{\texorpdfstring{attach\+File()}{attachFile()}}
+{\footnotesize\ttfamily def Email\+Handler.\+Email\+Handler.\+attach\+File (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{file,  }\item[{}]{filename }\end{DoxyParamCaption})}
+
+
+
+Attaches a file to the email. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em file} & the file to attach to the email \\
+\hline
+{\em filename} & the name of the file to attach (may not be necessary actually...) \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classEmailHandler_1_1EmailHandler_a738e27838ff55ce3ad5264b55f927570}\label{classEmailHandler_1_1EmailHandler_a738e27838ff55ce3ad5264b55f927570}} 
+\index{Email\+Handler\+::\+Email\+Handler@{Email\+Handler\+::\+Email\+Handler}!prepare\+Message@{prepare\+Message}}
+\index{prepare\+Message@{prepare\+Message}!Email\+Handler\+::\+Email\+Handler@{Email\+Handler\+::\+Email\+Handler}}
+\subsubsection{\texorpdfstring{prepare\+Message()}{prepareMessage()}}
+{\footnotesize\ttfamily def Email\+Handler.\+Email\+Handler.\+prepare\+Message (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{subject,  }\item[{}]{body }\end{DoxyParamCaption})}
+
+
+
+Prepares the message to be sent by setting up the subject and body. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em subject} & Subject line of the email to be sent \\
+\hline
+{\em body} & Body of the email to be sent \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classEmailHandler_1_1EmailHandler_a54db017e0c03dbf296b537f46ac181e6}\label{classEmailHandler_1_1EmailHandler_a54db017e0c03dbf296b537f46ac181e6}} 
+\index{Email\+Handler\+::\+Email\+Handler@{Email\+Handler\+::\+Email\+Handler}!send\+Message@{send\+Message}}
+\index{send\+Message@{send\+Message}!Email\+Handler\+::\+Email\+Handler@{Email\+Handler\+::\+Email\+Handler}}
+\subsubsection{\texorpdfstring{send\+Message()}{sendMessage()}}
+{\footnotesize\ttfamily def Email\+Handler.\+Email\+Handler.\+send\+Message (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{recipients }\end{DoxyParamCaption})}
+
+
+
+Sends the email to all desired recipients as long as they are within the address book. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em recipients} & a list of the names of desired recipients which have their emails linked in the address book map \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classEmailHandler_1_1EmailHandler_a6caaf424571b574950b15341ed2209a4}\label{classEmailHandler_1_1EmailHandler_a6caaf424571b574950b15341ed2209a4}} 
+\index{Email\+Handler\+::\+Email\+Handler@{Email\+Handler\+::\+Email\+Handler}!address\+Book@{address\+Book}}
+\index{address\+Book@{address\+Book}!Email\+Handler\+::\+Email\+Handler@{Email\+Handler\+::\+Email\+Handler}}
+\subsubsection{\texorpdfstring{address\+Book}{addressBook}}
+{\footnotesize\ttfamily dictionary Email\+Handler.\+Email\+Handler.\+address\+Book\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=  \{\textcolor{stringliteral}{'Danny'}: \textcolor{stringliteral}{'danielenricocahall@gmail.com'}, 
+         \textcolor{stringliteral}{'Dr.Bouaynaya'}: \textcolor{stringliteral}{'bouaynaya@rowan.edu'}, 
+         \textcolor{stringliteral}{'Oliver'}: \textcolor{stringliteral}{'palumb48@students.rowan.edu'},
+         \textcolor{stringliteral}{'Dimah'}: \textcolor{stringliteral}{'derad6@rowan.edu'},
+         \textcolor{stringliteral}{'Alena'}: \textcolor{stringliteral}{'alenagusevarus@gmail.com'},
+         \textcolor{stringliteral}{'Dr.Hassan'}: \textcolor{stringliteral}{'hfshaykh@uabmc.edu'},
+         \textcolor{stringliteral}{'Dr.Rasool'}: \textcolor{stringliteral}{'rasool@rowan.edu'}\}
+\end{DoxyCode}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+Email\+Handler.\+py\end{DoxyCompactItemize}
