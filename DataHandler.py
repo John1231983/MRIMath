@@ -118,10 +118,10 @@ class DataHandler:
         for file in os.listdir(data_dir):
             img = self.getImage(data_dir+b'/'+file)
             length, width = img.shape
-            if(length != self.H or width != self.W):
-                print('Could not add patient  ' + str(index) + ' because dimensions did not match')
-                print('Width: ' + str(width) + ", Length: " + str(length))
-            else:   
+            #if(length != self.H or width != self.W):
+                #print('Could not add patient  ' + str(index) + ' because dimensions did not match')
+                #print('Width: ' + str(width) + ", Length: " + str(length))
+            if(length == self.H and width == self.W):   
                 self.deriveRegionsOfInterest(patient_directory,data_directory,img, file)
     ## Constructs the patient directory string based on the index (based on current labeling scheme)
     #
