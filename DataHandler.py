@@ -100,10 +100,10 @@ class DataHandler:
         for file in os.listdir(data_dir):
             img = self.getImage(data_dir+b'/'+file)
             length, width = img.shape
-            if(length != self.H or width != self.W):
-                print('Could not add patient  ' + str(index) + ' because dimensions did not match')
-                print('Width: ' + str(width) + ", Length: " + str(length))
-            else:
+            #if(length != self.H or width != self.W):
+                #print('Could not add patient  ' + str(index) + ' because dimensions did not match')
+                #print('Width: ' + str(width) + ", Length: " + str(length))
+            if(length == self.H and width == self.W):
                 for _ in range(0,self.numPatches):
                     self.deriveRandomPatch(patient_directory, img, file)
 
