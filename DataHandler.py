@@ -180,8 +180,7 @@ class DataHandler:
             return
         label_img = self.getImage(label_dir + file)
         if np.count_nonzero(label_img) < 0.05*label_img.size:
-            k = self.numPatches/4
-            for _ in range(0,k):
+            for _ in range(0,self.numPatches/4):
                 patch = np.zeros((self.n, self.n))
                 while np.count_nonzero(patch) < self.tolerance*patch.size:
                     x,y,patch = self.extractPatch(label_img)
@@ -190,17 +189,16 @@ class DataHandler:
                 self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
                 self.X.append(region[x:x+self.n, y:y+self.n])
         else:
-            k = self.numPatches
             numWhite = 0
             numBlack = 0
             patch = np.zeros((self.n, self.n))
-            while numWhite < (k/2)-1:
+            while numWhite < self.numPatches/2:
                 x,y,patch = self.extractPatch(label_img)
                 if int(patch[floor(self.n/2),floor(self.n/2)]/255) == 1:
                     numWhite = numWhite + 1
                     self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
                     self.X.append(region[x:x+self.n, y:y+self.n])
-            while numBlack < (k/2)-1:
+            while numBlack < self.numPatches/2:
                 x,y,patch = self.extractPatch(label_img)
                 if int(patch[floor(self.n/2),floor(self.n/2)]/255) == 1:
                     numBlack = numBlack + 1
