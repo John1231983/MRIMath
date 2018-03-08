@@ -46,7 +46,7 @@ class DataHandler:
     # @param tolerance the percentage of pixels in a patch that can be background (default 0.25)
     # @param numPatches the number of patches to extract per image (default 10)
     # @param n the dimensions of the patch to be taken from the image (default 25)
-    def __init__(self, tolerance = 0.25, numPatches = 36, n = 30):
+    def __init__(self, tolerance = 0.25, numPatches = 28, n = 30):
         self.tolerance = tolerance
         self.numPatches = numPatches
         self.n = n
@@ -180,32 +180,33 @@ class DataHandler:
             return
         label_img = self.getImage(label_dir + file)
         if np.count_nonzero(label_img) < 0.05*label_img.size:
-            for _ in range(0,self.numPatches/4):
-                patch = np.zeros((self.n, self.n))
-                while np.count_nonzero(patch) < self.tolerance*patch.size:
-                    x,y,patch = self.extractPatch(label_img)
-                    self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
-                    self.X.append(region[x:x+self.n, y:y+self.n])
-                self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
-                self.X.append(region[x:x+self.n, y:y+self.n])
+            k = self.numPatches/4
         else:
             numWhite = 0
             numBlack = 0
-            patch = np.zeros((self.n, self.n))
-            while numWhite < self.numPatches/2:
-                x,y,patch = self.extractPatch(label_img)
-                if int(patch[floor(self.n/2),floor(self.n/2)]/255) == 1:
-                    numWhite = numWhite + 1
-                    self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
-                    self.X.append(region[x:x+self.n, y:y+self.n])
-            while numBlack < self.numPatches/2:
-                x,y,patch = self.extractPatch(label_img)
-                if int(patch[floor(self.n/2),floor(self.n/2)]/255) == 1:
-                    numBlack = numBlack + 1
-                    self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
-                    self.X.append(region[x:x+self.n, y:y+self.n])
+            k = self.numPatches
+            for _ in range(0,k):
+                patch = np.zeros((self.n, self.n))
+                while np.count_nonzero(patch) < self.tolerance*patch.size:
+                    x,y,patch = self.extractPatch(label_img)
+                    if int(patch[floor(self.n/2),floor(self.n/2)]/255)==1 and numWhite <= numBlack:
+                        self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
+                        self.X.append(region[x:x+self.n, y:y+self.n])
+                        numWhite = numWhite + 1
+                    elif int(patch[floor(self.n/2),floor(self.n/2)]/255)==0 and numBlack <= numWhite:
+                        self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
+                        self.X.append(region[x:x+self.n, y:y+self.n])
+                        numBlack = numBlack + 1
+            ## if the entire image is background, we could be stuck in an infinite loop
+            ## this mitigates that problem (presumably)
+            ## Note to self: refactor this at some point
+                self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
+                self.X.append(region[x:x+self.n, y:y+self.n])
+        #self.X.append(patch)
+    
 
-                
+        #print(label_dir + patient_directory[len(patient_directory)-20:len(patient_directory)])
+            
             
 
     ## Derives and labels the patches in the segment imiage
