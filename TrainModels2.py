@@ -97,7 +97,7 @@ G = hardwareHandler.getAvailableGPUs()
 print('Using ' + str(G) + ' GPUs to train the network!')
 if G > 1:
     parallel_model = multi_gpu_model(model, G)
-    parallel_model.compile(optimizer=sgd, loss='binary_crossentropy',metrics = ['accuracy', precision])
+    parallel_model.compile(optimizer='adagrad', loss='binary_crossentropy',metrics = ['accuracy', precision])
     timer.startTimer()   # this is for timing/profiling purposes    
     parallel_model.fit(training, training_labels,
         epochs=num_epochs,

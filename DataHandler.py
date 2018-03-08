@@ -181,22 +181,33 @@ class DataHandler:
         label_img = self.getImage(label_dir + file)
         if np.count_nonzero(label_img) < 0.05*label_img.size:
             k = self.numPatches/4
-        else:
-            k = self.numPatches
             for _ in range(0,k):
                 patch = np.zeros((self.n, self.n))
                 while np.count_nonzero(patch) < self.tolerance*patch.size:
                     x,y,patch = self.extractPatch(label_img)
-            ## if the entire image is background, we could be stuck in an infinite loop
-            ## this mitigates that problem (presumably)
-            ## Note to self: refactor this at some point
+                    self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
+                    self.X.append(region[x:x+self.n, y:y+self.n])
                 self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
                 self.X.append(region[x:x+self.n, y:y+self.n])
-        #self.X.append(patch)
-    
+        else:
+            k = self.numPatches
+            numWhite = 0
+            numBlack = 0
+            patch = np.zeros((self.n, self.n))
+            while numWhite < (k/2)-1:
+                x,y,patch = self.extractPatch(label_img)
+                if int(patch[floor(self.n/2),floor(self.n/2)]/255) == 1:
+                    numWhite = numWhite + 1
+                    self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
+                    self.X.append(region[x:x+self.n, y:y+self.n])
+            while numBlack < (k/2)-1:
+                x,y,patch = self.extractPatch(label_img)
+                if int(patch[floor(self.n/2),floor(self.n/2)]/255) == 1:
+                    numBlack = numBlack + 1
+                    self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]/255))
+                    self.X.append(region[x:x+self.n, y:y+self.n])
 
-        #print(label_dir + patient_directory[len(patient_directory)-20:len(patient_directory)])
-            
+                
             
 
     ## Derives and labels the patches in the segment imiage
