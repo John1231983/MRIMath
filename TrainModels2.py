@@ -73,9 +73,9 @@ if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 
-num_epochs = 50  
+num_epochs = 25  
 batchSize = 64
-lrate = 0.1e-3
+lrate = 0.1e-6
 momentum = 0.9
 #decay = lrate/num_epochs   
 sgd = SGD(lr=lrate, momentum=momentum, nesterov=True)
@@ -97,7 +97,7 @@ G = hardwareHandler.getAvailableGPUs()
 print('Using ' + str(G) + ' GPUs to train the network!')
 if G > 1:
     parallel_model = multi_gpu_model(model, G)
-    parallel_model.compile(optimizer='sgd', loss='binary_crossentropy',metrics = ['accuracy', precision])
+    parallel_model.compile(optimizer=sgd, loss='binary_crossentropy',metrics = ['accuracy', precision])
     timer.startTimer()   # this is for timing/profiling purposes    
     parallel_model.fit(training, training_labels,
         epochs=num_epochs,
