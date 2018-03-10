@@ -100,7 +100,7 @@ if not os.path.exists(model_directory):
 
 num_epochs = 35  
 batchSize = 64
-lrate = 0.1e-6
+lrate = 0.1e-4
 momentum = 0.9
 #decay = lrate/num_epochs   
 sgd = SGD(lr=lrate, momentum=momentum, nesterov=True)
