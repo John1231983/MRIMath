@@ -7,7 +7,7 @@ Created on Feb 17, 2018
 from TimerModule import TimerModule
 from keras.callbacks import CSVLogger, ModelCheckpoint, ReduceLROnPlateau
 from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout, LeakyReLU, PReLU,concatenate
-from keras.models import Sequential, Model
+from keras.models import Sequential, Model, Input
 from keras.optimizers import SGD
 import os
 from EmailHandler import EmailHandler
@@ -40,7 +40,7 @@ timer = TimerModule()
 mode = 'Flair' # Flair, T1, T2, or T1c
 # Creating the model on the CPU
 with tf.device('/cpu:0'):
-    input_img = shape=(dataHandler.n, dataHandler.n, 1)
+    input_img = Input(shape=(dataHandler.n, dataHandler.n, 1))
     tower_1 = Conv2D(64, (1,1), padding='same', activation='relu')(input_img)
     tower_1 = Conv2D(64, (3,3), padding='same', activation='relu')(tower_1)
     tower_2 = Conv2D(64, (1,1), padding='same', activation='relu')(input_img)
@@ -49,8 +49,10 @@ with tf.device('/cpu:0'):
     tower_3 = Conv2D(64, (1,1), padding='same', activation='relu')(tower_3)
     output = concatenate([tower_1, tower_2, tower_3], axis = 3)
     output = Flatten()(output)
-    out    = Dense(10, activation='softmax')(output)
+    out    = Dense(1, activation='softmax')(output)
     model = Model(inputs = input_img, outputs = out)
+    
+    #input_img = shape=(dataHandler.n, dataHandler.n, 1)
     #model = Sequential()
     #model.add(Conv2D(100, (3, 3), input_shape=input_img, padding='same'))
     #model.add(LeakyReLU())
