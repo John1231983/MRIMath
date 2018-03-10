@@ -128,12 +128,20 @@ class DataHandler:
     # @param index the index of the patient that you need the specific directory for
     # @param data_directory Directory where all patient data is located
     def getDirectoryFromIndex(self, index, data_directory):
+
+        return data_directory + self.getPatientDirectoryFromIndex(index)
+    
+        ## Constructs the patient directory string based on the index (based on current labeling scheme)
+    #
+    # @param index the index of the patient that you need the specific directory for
+    # @param data_directory Directory where all patient data is located
+    def getPatientDirectoryFromIndex(self, index):
         if index < 10:
-            patient_directory = data_directory + '/Patient_(00' + str(index)  + ')_data/'
+            patient_directory =  '/Patient_(00' + str(index)  + ')_data/'
         elif index < 100:
-            patient_directory = data_directory + '/Patient_(0' + str(index)  + ')_data/'
+            patient_directory = '/Patient_(0' + str(index)  + ')_data/'
         else:
-            patient_directory = data_directory + '/Patient_(' + str(index)  + ')_data/'
+            patient_directory =  '/Patient_(' + str(index)  + ')_data/'
         return patient_directory
                 
     ## Preprocesses the data for the network by converting the list of patches and labels to a numpy array, and
