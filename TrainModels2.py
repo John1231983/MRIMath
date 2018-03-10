@@ -42,7 +42,7 @@ mode = 'Flair' # Flair, T1, T2, or T1c
 with tf.device('/cpu:0'):
     input_img = shape=(dataHandler.n, dataHandler.n, 1)
     model = Sequential()
-    model.add(Conv2D(150, (3, 3), input_shape=input_img, padding='same'))
+    model.add(Conv2D(100, (3, 3), input_shape=input_img, padding='same'))
     model.add(LeakyReLU())
     model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Conv2D(100, (3, 3), padding='same'))
@@ -73,9 +73,9 @@ if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 
-num_epochs = 25  
+num_epochs = 35  
 batchSize = 64
-lrate = 0.1e-6
+lrate = 0.1e-5
 momentum = 0.9
 #decay = lrate/num_epochs   
 sgd = SGD(lr=lrate, momentum=momentum, nesterov=True)
