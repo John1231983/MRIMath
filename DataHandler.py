@@ -181,6 +181,8 @@ class DataHandler:
     # @param file the patient image number (e.g. img_1)
     def deriveRegionsOfInterest(self, patient_directory, data_directory,img, file):
         segment = self.combineSegments(patient_directory, file);
+        if np.sum(segment) == 0:
+            return
         region = img*segment;
         label_dir = data_directory + '/Ground_Truth/' 
         label_dir = label_dir.encode() + patient_directory[len(patient_directory)-20:len(patient_directory)]
@@ -226,13 +228,12 @@ class DataHandler:
     # @return a boolean flag which states if a label for the segment was suceesfully found
     def combineSegments(self, patient_dir, img_num):
         segment_directory = os.fsencode(patient_dir) + b'/Segmented_Img_Data'
-        if not os.path.exists(segment_directory):
-            return 
         seg = np.zeros((self.W, self.H))
-        for file in os.listdir(segment_directory+b'/'+img_num[0:len(img_num)-4]):
-            seg_num = int(file[4:5].decode("utf-8"))
-            if(seg_num > 4):
-                seg = np.add(seg, self.getImage(segment_directory+b'/'+img_num[0:len(img_num)-4]+b'/'+file))
+        if os.path.exists(segment_directory+b'/'+img_num[0:len(img_num)-4]):
+            for file in os.listdir(segment_directory+b'/'+img_num[0:len(img_num)-4]):
+                seg_num = int(file[4:5].decode("utf-8"))
+                if(seg_num > 4):
+                    seg = np.add(seg, self.getImage(segment_directory+b'/'+img_num[0:len(img_num)-4]+b'/'+file))
         return seg  
                    
     ## Derives an individual patch from an image
