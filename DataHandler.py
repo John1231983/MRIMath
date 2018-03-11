@@ -194,14 +194,14 @@ class DataHandler:
             k = int(self.numPatches/10)
         else:
             k = self.numPatches
-            for _ in range(0,k/2):
+            for _ in range(0,int(k/2)):
                 patch = np.zeros((self.n, self.n))
                 while np.count_nonzero(patch) < self.tolerance*patch.size:
                     x,y,patch = self.extractPatch(label_img)
                     if int(patch[floor(self.n/2),floor(self.n/2)])==255:
                         self.labels.append(1)
                         self.X.append(region[x:x+self.n, y:y+self.n])
-            for _ in range(0,k/2):
+            for _ in range(0,int(k/2)):
                 patch = np.zeros((self.n, self.n))
                 while np.count_nonzero(patch) < self.tolerance*patch.size:
                     x,y,patch = self.extractPatch(label_img)
