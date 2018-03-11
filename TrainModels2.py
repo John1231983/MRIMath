@@ -65,13 +65,14 @@ with tf.device('/cpu:0'):
     
     input_img = shape=(dataHandler.n, dataHandler.n, 1)
     model = Sequential()
-    model.add(Conv2D(150, (3, 3), input_shape=input_img, padding='same'))
+    model.add(Conv2D(200, (3, 3), input_shape=input_img, padding='same'))
     model.add(PReLU())
     model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Conv2D(100, (3, 3), padding='same'))
     model.add(PReLU())
     model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Conv2D(50, (3,3), padding='same'))
+    model.add(PReLU())
     model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Flatten())
     model.add(Dense(200))
@@ -103,7 +104,7 @@ if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 
-num_epochs = 60  
+num_epochs = 30  
 batchSize = 64
 lrate = 0.1e-3
 momentum = 0.9
