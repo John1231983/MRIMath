@@ -74,7 +74,7 @@ with tf.device('/cpu:0'):
     model.add(Conv2D(50, (3,3), padding='same'))
     model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Flatten())
-    model.add(Dense(150))
+    model.add(Dense(200))
     model.add(PReLU())
     model.add(Dropout(0.5))
     model.add(Dense(75))

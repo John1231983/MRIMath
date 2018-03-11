@@ -191,7 +191,7 @@ class DataHandler:
             return
         label_img = self.getImage(label_dir + file)
         if np.count_nonzero(label_img) < 0.05*label_img.size:
-            k = self.numPatches/4
+            k = int(self.numPatches/10)
         else:
             numWhite = 0
             numBlack = 0
