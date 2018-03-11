@@ -47,7 +47,7 @@ class DataHandler:
     # @param tolerance the percentage of pixels in a patch that can be background (default 0.25)
     # @param numPatches the number of patches to extract per image (default 10)
     # @param n the dimensions of the patch to be taken from the image (default 25)
-    def __init__(self, tolerance = 0.25, numPatches = 100, n = 30):
+    def __init__(self, tolerance = 0.25, numPatches = 50, n = 30):
         self.tolerance = tolerance
         self.numPatches = numPatches
         self.n = n
