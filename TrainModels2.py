@@ -72,6 +72,8 @@ with tf.device('/cpu:0'):
     model.add(LeakyReLU())
     model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Flatten())
+    model.add(Dense(300))
+    model.add(LeakyReLU())
     model.add(Dense(150))
     model.add(LeakyReLU())
     model.add(Dense(75))

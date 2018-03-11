@@ -14,7 +14,7 @@ import cv2
 from functools import partial
 from HardwareHandler import HardwareHandler
 import threading
-from random import randint
+from random import randint,seed
 import numpy as np
 from math import floor
 from multiprocessing import Process, Manager
@@ -25,6 +25,7 @@ sys.setrecursionlimit(10000)
 
 class DataHandler:
     
+    seed(1)
     lock = threading.Lock()
     manager = Manager()
     X = []
@@ -46,7 +47,7 @@ class DataHandler:
     # @param tolerance the percentage of pixels in a patch that can be background (default 0.25)
     # @param numPatches the number of patches to extract per image (default 10)
     # @param n the dimensions of the patch to be taken from the image (default 25)
-    def __init__(self, tolerance = 0.25, numPatches = 60, n = 35):
+    def __init__(self, tolerance = 0.25, numPatches = 40, n = 30):
         self.tolerance = tolerance
         self.numPatches = numPatches
         self.n = n
