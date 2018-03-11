@@ -192,6 +192,10 @@ class DataHandler:
         label_img = self.getImage(label_dir + file)
         if np.count_nonzero(label_img) < 0.05*label_img.size:
             k = int(self.numPatches/10)
+            for _ in range(0,k):
+                x,y,patch = self.extractPatch(label_img)
+                self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]))
+                self.X.append(region[x:x+self.n, y:y+self.n])
         else:
             k = self.numPatches
             for _ in range(0,int(k/2)):
