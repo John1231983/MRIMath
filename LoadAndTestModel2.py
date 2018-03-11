@@ -13,7 +13,7 @@ from math import floor
 
 
 data_dir = '/media/daniel/Backup Data/Flair';
-model = load_model('/home/daniel/eclipse-workspace/MRIMath/Models/2018-03-08_09_39_Flair/model.h5');
+model = load_model('/home/daniel/eclipse-workspace/MRIMath/Models/2018-03-10_16_53_Flair/model.h5');
 dataHandler = DataHandler()
 for i in range(152, 153):
     patient_directory = os.fsencode(dataHandler.getDirectoryFromIndex(i, data_dir))

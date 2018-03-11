@@ -226,6 +226,8 @@ class DataHandler:
     # @return a boolean flag which states if a label for the segment was suceesfully found
     def combineSegments(self, patient_dir, img_num):
         segment_directory = os.fsencode(patient_dir) + b'/Segmented_Img_Data'
+        if not os.path.exists(segment_directory):
+            return 
         seg = np.zeros((self.W, self.H))
         for file in os.listdir(segment_directory+b'/'+img_num[0:len(img_num)-4]):
             seg_num = int(file[4:5].decode("utf-8"))
