@@ -98,9 +98,9 @@ if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 
-num_epochs = 35  
+num_epochs = 50  
 batchSize = 64
-lrate = 0.1e-4
+lrate = 0.1e-6
 momentum = 0.9
 #decay = lrate/num_epochs   
 sgd = SGD(lr=lrate, momentum=momentum, nesterov=True)
