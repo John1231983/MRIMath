@@ -13,9 +13,9 @@ from math import floor
 
 
 data_dir = '/media/daniel/Backup Data/Flair';
-model = load_model('/home/daniel/eclipse-workspace/MRIMath/Models/2018-03-11_14_29_Flair/model.h5');
+model = load_model('/home/daniel/eclipse-workspace/MRIMath/Models/2018-03-11_17_55_Flair/model.h5');
 dataHandler = DataHandler()
-for i in range(3, 4):
+for i in range(155, 156):
     patient_directory = os.fsencode(dataHandler.getDirectoryFromIndex(i, data_dir))
     orig_data = patient_directory + b'/Original_Img_Data'
     ground_truth = b'/media/daniel/Backup Data/Flair/Ground_Truth/' + os.fsencode(dataHandler.getPatientDirectoryFromIndex(i))
@@ -31,7 +31,6 @@ for i in range(3, 4):
             patch = patch/255
             pred = model.predict(patch)
             label = np.rint(pred)
-            print(label)
             predicted_segment[y + floor(dataHandler.n/2),x+floor(dataHandler.n/2)] = label
         intersection = np.logical_and(predicted_segment, true_segment)
         union = np.logical_or(predicted_segment, true_segment)

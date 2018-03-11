@@ -190,22 +190,22 @@ class DataHandler:
         if not os.path.exists(label_dir):
             return
         label_img = self.getImage(label_dir + file)
-        if np.count_nonzero(label_img) < 0.05*label_img.size:
-            k = int(self.numPatches/10)
+        if np.count_nonzero(label_img) == label_img.size:
+            k = 3
             for _ in range(0,k):
                 x,y,patch = self.extractPatch(label_img)
                 self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]))
                 self.X.append(region[x:x+self.n, y:y+self.n])
         else:
             k = self.numPatches
-            for _ in range(0,int(k/2)):
+            for _ in range(0,int(2*k/3)):
                 patch = np.zeros((self.n, self.n))
                 while np.count_nonzero(patch) < self.tolerance*patch.size:
                     x,y,patch = self.extractPatch(label_img)
                     if int(patch[floor(self.n/2),floor(self.n/2)])==255:
                         self.labels.append(1)
                         self.X.append(region[x:x+self.n, y:y+self.n])
-            for _ in range(0,int(k/2)):
+            for _ in range(0,int(k/3)):
                 patch = np.zeros((self.n, self.n))
                 while np.count_nonzero(patch) < self.tolerance*patch.size:
                     x,y,patch = self.extractPatch(label_img)
