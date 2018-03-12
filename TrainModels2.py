@@ -82,7 +82,7 @@ with tf.device('/cpu:0'):
     model.add(PReLU())
     model.add(Dropout(0.5))
     model.add(Dense(35))
-    model.add(LeakyReLU())
+    model.add(PReLU())
     model.add(Dropout(0.5))
     model.add(Dense(1, activation='sigmoid'))
 
