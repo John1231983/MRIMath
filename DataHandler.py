@@ -199,19 +199,21 @@ class DataHandler:
         else:
             k = self.numPatches
             for _ in range(0,int(2*k/3)):
+                x = 0
+                y = 0
                 patch = np.zeros((self.n, self.n))
-                while np.count_nonzero(patch) < self.tolerance*patch.size:
+                while int(patch[floor(self.n/2),floor(self.n/2)]) != 255:
                     x,y,patch = self.extractPatch(label_img)
-                    if int(patch[floor(self.n/2),floor(self.n/2)])==255:
-                        self.labels.append(1)
-                        self.X.append(region[x:x+self.n, y:y+self.n])
+                    #if int(patch[floor(self.n/2),floor(self.n/2)])==255:
+                self.labels.append(1)
+                self.X.append(region[x:x+self.n, y:y+self.n])
             for _ in range(0,int(k/3)):
-                patch = np.zeros((self.n, self.n))
-                while np.count_nonzero(patch) < self.tolerance*patch.size:
-                    x,y,patch = self.extractPatch(label_img)
-                    if int(patch[floor(self.n/2),floor(self.n/2)])==0:
-                        self.labels.append(0)
-                        self.X.append(region[x:x+self.n, y:y+self.n])
+                #patch = np.zeros((self.n, self.n))
+                #while np.count_nonzero(patch) < self.tolerance*patch.size:
+                x,y,patch = self.extractPatch(label_img)
+                #if int(patch[floor(self.n/2),floor(self.n/2)])==0:
+                self.labels.append(0)
+                self.X.append(region[x:x+self.n, y:y+self.n])
                         
     ## Derives and labels the patches in the segment imiage
     #
