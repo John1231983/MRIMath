@@ -14,7 +14,7 @@ import cv2
 from functools import partial
 from HardwareHandler import HardwareHandler
 import threading
-from random import randint,seed
+import random
 import numpy as np
 from math import floor
 from multiprocessing import Process, Manager
@@ -25,7 +25,7 @@ sys.setrecursionlimit(10000)
 
 class DataHandler:
     
-    seed(1)
+    random.seed(1)
     lock = threading.Lock()
     manager = Manager()
     X = []
@@ -33,7 +33,6 @@ class DataHandler:
     W = 240
     H = 240
     hardwareHandler = HardwareHandler()
-    
     tolerance = None #the percentage of background pixels permitted in a patch
     numPatches = None #the number of patches to extract from an imaage
     n = None #dimensions of each patch (n x n)
@@ -159,8 +158,8 @@ class DataHandler:
     
     
     def extractPatch(self, img):
-        x = min(randint(1, self.W), self.W - self.n)
-        y = min(randint(1, self.H), self.H - self.n)
+        x = min(random.randint(1, self.W), self.W - self.n)
+        y = min(random.randint(1, self.H), self.H - self.n)
         patch = img[x:x+self.n, y:y+self.n]
         return x,y, patch
     ## Derives random patches from an image
@@ -190,7 +189,7 @@ class DataHandler:
         if not os.path.exists(label_dir):
             return
         label_img = self.getImage(label_dir + file)
-        if np.count_nonzero(label_img) == label_img.size:
+        if np.count_nonzero(label_img) < 0.05*label_img.size:
             k = 3
             for _ in range(0,k):
                 x,y,patch = self.extractPatch(label_img)
