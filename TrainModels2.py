@@ -29,18 +29,25 @@ def precision(y_true, y_pred):
     precision = true_positives / (predicted_positives + K.epsilon())
     return precision
 
-
+#load up data! This will take a few minutes, even parallelized...
+dataHandler = DataHandler()
+mode = 'Flair' # Flair, T1, T2, or T1c
+data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images/'+mode
+#data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
+dataHandler.loadDataParallel(data_dir, 1, 151)
+training, training_labels = dataHandler.getData()
+dataHandler.clearVectors()
+dataHandler.loadDataParallel(data_dir, 151, 192)
+testing, testing_labels = dataHandler.getData()
 for i in range(10,200,10):
     for j in range(10,200,10):
         for k in range(10, 200, 10):
             # Basic initialization of some of the handlers...
             now = datetime.now()
             date_string = now.strftime('%Y-%m-%d_%H_%M')
-            dataHandler = DataHandler()
             emailHandler = EmailHandler()
             hardwareHandler = HardwareHandler()
             timer = TimerModule()
-            mode = 'Flair' # Flair, T1, T2, or T1c
             # Creating the model on the CPU
             with tf.device('/cpu:0'):
                 
@@ -93,16 +100,6 @@ for i in range(10,200,10):
                 model.add(Dense(35))
                 model.add(PReLU())
                 model.add(Dense(1, activation='sigmoid'))
-            
-            
-            #load up data! This will take a few minutes, even parallelized...
-            data_dir = '/coe_data/MRIMath/MS_Research/Patient_Data_Images/'+mode
-            #data_dir = '/media/daniel/ExtraDrive1/Patient_Data_Images'
-            dataHandler.loadDataParallel(data_dir, 1, 151)
-            training, training_labels = dataHandler.getData()
-            dataHandler.clearVectors()
-            dataHandler.loadDataParallel(data_dir, 151, 192)
-            testing, testing_labels = dataHandler.getData()
             
             # Creates a directory to save everything (model, loss log, and model info)
             # Should always be unique since the date string is based on the current date and the time
