@@ -6,7 +6,7 @@ Created on Feb 17, 2018
 
 from TimerModule import TimerModule
 from keras.callbacks import CSVLogger, ModelCheckpoint, ReduceLROnPlateau
-from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout, LeakyReLU, PReLU,concatenate
+from keras.layers import Conv2D,BatchNormalization, MaxPooling2D, Dense, Flatten, Dropout, LeakyReLU, PReLU,concatenate
 from keras.models import Sequential, Model, Input
 from keras.optimizers import SGD
 import os
@@ -65,26 +65,28 @@ with tf.device('/cpu:0'):
     
     input_img = shape=(dataHandler.n, dataHandler.n, 1)
     model = Sequential()
-    model.add(Conv2D(200, (3, 3), input_shape=input_img, padding='same'))
+    model.add(Conv2D(256, (3, 3), input_shape=input_img, padding='same'))
+    model.add(BatchNormalization())
     model.add(PReLU())
     model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Conv2D(100, (3, 3), padding='same'))
-    model.add(PReLU())
-    model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Conv2D(50, (3,3), padding='same'))
+    model.add(Conv2D(256, (3, 3), padding='same'))
+    model.add(BatchNormalization())
     model.add(PReLU())
     model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Flatten())
-    model.add(Dense(200))
+    model.add(Dense(512))
+    model.add(BatchNormalization())
     model.add(PReLU())
     model.add(Dropout(0.5))
-    model.add(Dense(75))
+    model.add(Dense(256))
+    model.add(BatchNormalization())
     model.add(PReLU())
     model.add(Dropout(0.5))
-    model.add(Dense(35))
+    model.add(Dense(128))
+    model.add(BatchNormalization())
     model.add(PReLU())
     model.add(Dropout(0.5))
-    model.add(Dense(1, activation='sigmoid'))
+    model.add(Dense(1, activation='softmax'))
 
 
 #load up data! This will take a few minutes, even parallelized...
@@ -104,8 +106,8 @@ if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 
-num_epochs = 30  
-batchSize = 64
+num_epochs = 50  
+batchSize = 64 
 lrate = 0.1e-3
 momentum = 0.9
 #decay = lrate/num_epochs   
@@ -119,7 +121,7 @@ print('Training network!')
 # Declaring the two callbacks I use - still having issues using the model checkpoint one
 # Also considering using the Early Termination...
 csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=',')
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=3, min_lr=0.1e-9)
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.1e-9)
 
 # Grab the number of available GPUS on the device you're running on - in the case of the HPC, it's 4
 # And on your local lap top, probably 1
