@@ -117,12 +117,14 @@ if not os.path.exists(model_directory):
     os.makedirs(model_directory)
     
 
-num_epochs = 50  
-batchSize = 64 
-lrate = 0.1e-3
+num_epochs = 25  
+batchSize = 128 
+lrate = 0.3e-3
 momentum = 0.9
+decay_rate = lrate / num_epochs
+
 #decay = lrate/num_epochs   
-sgd = SGD(lr=lrate, momentum=momentum, nesterov=True)
+sgd = SGD(lr=lrate, momentum=momentum, nesterov=True, decay_rate = decay_rate)
 model_info_filename = 'model_info.txt'
 model_info_file = open(model_directory + '/' + model_info_filename, "w") 
 log_info_filename = 'model_loss_log.csv'
@@ -141,7 +143,7 @@ G = hardwareHandler.getAvailableGPUs()
 print('Using ' + str(G) + ' GPUs to train the network!')
 if G > 1:
     parallel_model = multi_gpu_model(model, G)
-    parallel_model.compile(optimizer='adagrad', loss='binary_crossentropy',metrics = ['accuracy', precision])
+    parallel_model.compile(optimizer=sgd, loss='binary_crossentropy',metrics = ['accuracy', precision])
     timer.startTimer()   # this is for timing/profiling purposes    
     parallel_model.fit(training, training_labels,
         epochs=num_epochs,
