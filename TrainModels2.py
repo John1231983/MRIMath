@@ -97,7 +97,7 @@ with tf.device('/cpu:0'):
     #model.add(BatchNormalization())
     model.add(LeakyReLU())
     model.add(Dropout(0.5))
-    model.add(Dense(1, activation='softmax'))
+    model.add(Dense(1, activation='sigmoid'))
 
 
 #load up data! This will take a few minutes, even parallelized...
@@ -124,7 +124,7 @@ momentum = 0.9
 decay_rate = lrate / num_epochs
 
 #decay = lrate/num_epochs   
-sgd = SGD(lr=lrate, momentum=momentum, nesterov=True, decay_rate = decay_rate)
+sgd = SGD(lr=lrate, momentum=momentum, decay=decay_rate, nesterov=True)
 model_info_filename = 'model_info.txt'
 model_info_file = open(model_directory + '/' + model_info_filename, "w") 
 log_info_filename = 'model_loss_log.csv'
