@@ -46,11 +46,8 @@ class DataHandler:
     # @param tolerance the percentage of pixels in a patch that can be background (default 0.25)
     # @param numPatches the number of patches to extract per image (default 10)
     # @param n the dimensions of the patch to be taken from the image (default 25)
-<<<<<<< HEAD
-    def __init__(self, tolerance = 0.25, numPatches = 100, n = 33):
-=======
+
     def __init__(self, tolerance = 0.25, numPatches = 100, n = 30):
->>>>>>> cb2f790c4dec0ca5f1e038a93f9c754f995bc5da
         self.tolerance = tolerance
         self.numPatches = numPatches
         self.n = n
@@ -193,13 +190,8 @@ class DataHandler:
         if not os.path.exists(label_dir):
             return
         label_img = self.getImage(label_dir + file)
-<<<<<<< HEAD
         if np.count_nonzero(label_img) < 0.05* label_img.size:
             k = int(self.numPatches/10)
-=======
-        if np.count_nonzero(label_img) < 0.05*label_img.size:
-            k = int(self.numPatches/20)
->>>>>>> cb2f790c4dec0ca5f1e038a93f9c754f995bc5da
             for _ in range(0,k):
                 x,y,patch = self.extractPatch(label_img)
                 self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]))
