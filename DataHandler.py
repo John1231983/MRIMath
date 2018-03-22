@@ -182,38 +182,14 @@ class DataHandler:
     # @param file the patient image number (e.g. img_1)
     def deriveRegionsOfInterest(self, patient_directory, data_directory,img, file):
         segment = self.combineSegments(patient_directory, file);
-        if np.sum(segment) == 0:
-            return
         region = img*segment;
         label_dir = data_directory + '/Ground_Truth/' 
         label_dir = label_dir.encode() + patient_directory[len(patient_directory)-20:len(patient_directory)]
         if not os.path.exists(label_dir):
             return
         label_img = self.getImage(label_dir + file)
-        if np.count_nonzero(label_img) < 0.05* label_img.size:
-            k = int(self.numPatches/10)
-            for _ in range(0,k):
-                x,y,patch = self.extractPatch(label_img)
-                self.labels.append(int(patch[floor(self.n/2),floor(self.n/2)]))
-                self.X.append(region[x:x+self.n, y:y+self.n])
-        else:
-            k = self.numPatches
-            for _ in range(0,int(3*k/4)):
-                x = 0
-                y = 0
-                patch = np.zeros((self.n, self.n))
-                while int(patch[floor(self.n/2),floor(self.n/2)]) != 255:
-                    x,y,patch = self.extractPatch(label_img)
-                    #if int(patch[floor(self.n/2),floor(self.n/2)])==255:
-                self.labels.append(1)
-                self.X.append(region[x:x+self.n, y:y+self.n])
-            for _ in range(0,int(k/4)):
-                #patch = np.zeros((self.n, self.n))
-                #while np.count_nonzero(patch) < self.tolerance*patch.size:
-                x,y,patch = self.extractPatch(label_img)
-                #if int(patch[floor(self.n/2),floor(self.n/2)])==0:
-                self.labels.append(0)
-                self.X.append(region[x:x+self.n, y:y+self.n])
+        self.X.append(region)
+        self.labels(label_img)
                         
     ## Derives and labels the patches in the segment imiage
     #
