@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import nibabel as nib
-
-
+import shutil
+import random
 # Root directory of the project
 ROOT_DIR = os.path.abspath("Mask_RCNN")
 print(ROOT_DIR)
@@ -38,30 +38,30 @@ class MRIMathConfig(Config):
     # Train on 1 GPU and 8 images per GPU. We can put multiple images on each
     # GPU because the images are small. Batch size is 8 (GPUs * images/GPU).
     GPU_COUNT = 1
-    IMAGES_PER_GPU = 1
+    IMAGES_PER_GPU = 2
 
     # Number of classes (including background)
-    NUM_CLASSES = 1 + 2  # background + 2 shapes
+    NUM_CLASSES = 1 + 3  # background + 2 shapes
 
     # Use small images for faster training. Set the limits of the small side
     # the large side, and that determines the image shape.
-    IMAGE_MIN_DIM = 128
-    IMAGE_MAX_DIM = 128
+    IMAGE_MIN_DIM = 256
+    IMAGE_MAX_DIM = 256
 
     # Use smaller anchors because our image and objects are small
-    RPN_ANCHOR_SCALES = (16,32, 64)  # anchor side in pixels
+    RPN_ANCHOR_SCALES = (16, 32, 64, 128)  # anchor side in pixels
 
     # Reduce training ROIs per image because the images are small and have
     # few objects. Aim to allow ROI sampling to pick 33% positive ROIs.
     TRAIN_ROIS_PER_IMAGE = 128
 
     # Use a small epoch since the data is simple
-    STEPS_PER_EPOCH = 200
+    STEPS_PER_EPOCH = 100
     BACKBONE = "resnet101"
 
 
     # use small validation steps since the epoch is small
-    VALIDATION_STEPS = 50
+    VALIDATION_STEPS = 20
     
 class MRIMathDataset(utils.Dataset):
             
@@ -87,7 +87,7 @@ class MRIMathDataset(utils.Dataset):
         # Add classes
         self.add_class("mrimath", 1, "core")
         self.add_class("mrimath", 2, "active")
-        #self.add_class("mrimath", 3, "whole")
+        self.add_class("mrimath", 3, "whole")
 
         i = 0
         for subdir in os.listdir(data_dir):
@@ -107,51 +107,54 @@ class MRIMathDataset(utils.Dataset):
         """Generate instance masks for shapes of the given image ID.
         """
 
-        mask = np.zeros(shape = (240,240,2))
+        mask = np.zeros(shape = (240,240,3))
         for path in os.listdir(self.image_info[image_id]['path']):
             if "seg" in path:
                 seg = nib.load(self.image_info[image_id]['path']+"/"+path).get_data()[:,:,self.image_info[image_id]['ind']]
                 break
         
         class_ids = []
-        seg_active = seg.copy()
-        seg_active[seg > 3] = 0
-        seg_active[seg<3] = 2
-        seg_active[seg==0] = 0
         
         seg_core = seg.copy()
-
-        seg_core[seg > 1]=0
+        seg_core[seg == 2] = 0
+        seg_core[seg_core>0] = 1
+        #seg_core[seg==0] = 0
         if seg_core.any():
             class_ids.append(1)
         else:
             class_ids.append(0)
-
         
+        
+        seg_active = seg.copy()
+        seg_active[seg < 4] = 0
+        seg_active[seg_active > 0] = 1
+
         if seg_active.any():
             class_ids.append(2)
         else:
             class_ids.append(0)
         
         
-        """
+    
         seg_whole = seg.copy()
         if 4 in seg_whole[:,:]:
-            seg_whole[seg > 0] = 4
+            seg_whole[seg > 0] = 1
             class_ids.append(3)
         else:
             seg_whole = np.zeros((seg_whole.shape[0], seg_whole.shape[1]))
             class_ids.append(0)
-        """
         
         """
+        
         plt.figure(1)
-        plt.subplot(311)
+        plt.subplot(411)
         plt.imshow(seg)
-        plt.subplot(312)
+        plt.subplot(412)
         plt.imshow(seg_core)
-        plt.subplot(313)
+        plt.subplot(413)
         plt.imshow(seg_active)
+        plt.subplot(414)
+        plt.imshow(seg_whole)
 
         plt.show()
         """
@@ -159,6 +162,8 @@ class MRIMathDataset(utils.Dataset):
     
         mask[:,:,0] = seg_core
         mask[:,:,1] = seg_active
+        mask[:,:,2] = seg_whole
+
         #mask[:,:,2] = seg_whole
 
         
@@ -183,17 +188,42 @@ class InferenceConfig(MRIMathConfig):
 def main():
     config = MRIMathConfig()
     config.display()
-
+    
+    random.seed(12345)
+    data_dir = "Data/BRATS_2018/LGG"
+    val_dir = "Data/BRATS_2018/LGG_Validation"
+    test_dir = "Data/BRATS_2018/LGG_Testing"
+    
+    if os.listdir(val_dir) == []:
+        # split validation data (10% of dataset)
+        list_imgs = os.listdir(data_dir)
+        val_imgs = random.sample(list_imgs, round(0.1*len(list_imgs)))
+        for sub_dir in list_imgs:
+            if sub_dir in val_imgs:
+                dir_to_move = os.path.join(data_dir, sub_dir)
+                shutil.move(dir_to_move, val_dir)
+                
+    if os.listdir(test_dir) == []:
+        # split testing data (20% of dataset)
+        list_imgs = os.listdir(data_dir)
+        test_imgs = random.sample(list_imgs, round(0.2*len(list_imgs)))
+        for sub_dir in list_imgs:
+            if sub_dir in test_imgs:
+                dir_to_move = os.path.join(data_dir, sub_dir)
+                shutil.move(dir_to_move, test_dir)
+            
     dataset_train = MRIMathDataset()
-    dataset_train.load_images("Data/BRATS_2018/LGG")
+    dataset_train.load_images(data_dir)
     dataset_train.prepare()
     
     
     dataset_val = MRIMathDataset()
-    dataset_val.load_images("Data/BRATS_2018/LGG_Validation")
+    dataset_val.load_images(val_dir)
     dataset_val.prepare()
     
-    print(len(dataset_train.image_info))
+    print("Training on " + str(len(dataset_train.image_info)) + " images")
+    print("Validating on " + str(len(dataset_val.image_info)) + " images")
+
         # Validation dataset
     #dataset_val = MRIMathDataset()
     #dataset_val.load_images( '/media/daniel/Backup Data/Flair', 130,180)
@@ -222,11 +252,16 @@ def main():
     # layers. You can also pass a regular expression to select
     # which layers to train by name pattern.
     model.train(dataset_train, dataset_val, 
-                learning_rate=config.LEARNING_RATE, 
-                epochs=300,
+                learning_rate=config.LEARNING_RATE/10000, 
+                epochs=700,
                 layers='all')
 
-
+    # move the validation data back
+    list_imgs = os.listdir(val_dir)
+    for sub_dir in list_imgs:
+        dir_to_move = os.path.join(val_dir, sub_dir)
+        shutil.move(dir_to_move, data_dir)
+        
 if __name__ == "__main__":
    # stuff only to run when not called via 'import' here
    main()
