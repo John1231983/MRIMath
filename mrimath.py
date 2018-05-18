@@ -233,7 +233,7 @@ def main():
     model = modellib.MaskRCNN(mode="training", config=config,
                               model_dir=MODEL_DIR)
     # Which weights to start with?
-    init_with = "coco"  # imagenet, coco, or last
+    init_with = "last"  # imagenet, coco, or last
     
     if init_with == "imagenet":
         model.load_weights(model.get_imagenet_weights(), by_name=True)
@@ -252,7 +252,7 @@ def main():
     # layers. You can also pass a regular expression to select
     # which layers to train by name pattern.
     model.train(dataset_train, dataset_val, 
-                learning_rate=config.LEARNING_RATE/10000, 
+                learning_rate=config.LEARNING_RATE, 
                 epochs=700,
                 layers='all')
 
