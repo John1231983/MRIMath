@@ -16,7 +16,9 @@ from mrcnn import utils
 import mrcnn.model as modellib
 from mrcnn import visualize
 from mrcnn.model import log
+from multiprocessing import Pool, Manager, Process, Lock
 
+import skimage.color
 
 # Directory to save logs and trained model
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
@@ -28,73 +30,86 @@ if not os.path.exists(COCO_MODEL_PATH):
     utils.download_trained_weights(COCO_MODEL_PATH)
 
 class MRIMathConfig(Config):
-    """Configuration for training on the toy shapes dataset.
-    Derives from the base Config class and overrides values specific
-    to the toy shapes dataset.
-    """
     # Give the configuration a recognizable name
     NAME = "mrimath"
 
     # Train on 1 GPU and 8 images per GPU. We can put multiple images on each
     # GPU because the images are small. Batch size is 8 (GPUs * images/GPU).
     GPU_COUNT = 1
-    IMAGES_PER_GPU = 2
+    IMAGES_PER_GPU = 1
 
     # Number of classes (including background)
-    NUM_CLASSES = 1 + 3  # background + 2 shapes
+    NUM_CLASSES = 1 + 1  # background + 2 shapes
 
     # Use small images for faster training. Set the limits of the small side
     # the large side, and that determines the image shape.
-    IMAGE_MIN_DIM = 256
-    IMAGE_MAX_DIM = 256
+    #IMAGE_MIN_DIM = 256
+    
+    #IMAGE_MAX_DIM = 256
+    #LEARNING_RATE = 0.0001
+    #LEARNING_RATE = 0.00001
 
     # Use smaller anchors because our image and objects are small
-    RPN_ANCHOR_SCALES = (16, 32, 64, 128)  # anchor side in pixels
+    #RPN_ANCHOR_SCALES = (16, 32, 64, 128)  # anchor side in pixels
 
     # Reduce training ROIs per image because the images are small and have
     # few objects. Aim to allow ROI sampling to pick 33% positive ROIs.
-    TRAIN_ROIS_PER_IMAGE = 128
+    #TRAIN_ROIS_PER_IMAGE = 32
 
     # Use a small epoch since the data is simple
-    STEPS_PER_EPOCH = 100
-    BACKBONE = "resnet101"
+    #STEPS_PER_EPOCH = 120
+    #BACKBONE = "resnet50"
 
 
     # use small validation steps since the epoch is small
-    VALIDATION_STEPS = 20
+    #VALIDATION_STEPS = 30
     
 class MRIMathDataset(utils.Dataset):
+    mode = None
+    tumor_type = None
+    
+
             
     def load_image(self, image_id):
+        ## Note:
+        # FLAIR -> Whole
+        # T2 -> Core
+        # T1C -> Active (if present)
         """Load the specified image and return a [H,W,3] Numpy array.
         """
-        img = np.zeros(shape=(240,240,3))
-        j = 0
         info = self.image_info[image_id]
         for path in os.listdir(info['path']):
-            if "flair" in path or "t2" in path or "t1ce" in path:
-                img[:,:,j] = nib.load(self.image_info[image_id]['path'] + "/"+path).get_data()[:,:,info['ind']]
-                j = j+1
-        return img
-
-    ## Loads patient images and segments sequentially, assuming you want to through a range of numbered patients
-    #
-    # @param data_directory the directory where all patient data is located
-    # @param start the patient number to start with (inclusive)
-    # @param finish the patient number to stop at (exclusive)
+            if self.mode in path:
+                image = nib.load(info['path'] + "/" + path).get_data()[:,:,info['ind']]
+                break;
+        if image.ndim != 3:
+            image = skimage.color.gray2rgb(image)
+        # If has an alpha channel, remove it for consistency
+        if image.shape[-1] == 4:
+            image = image[..., :3]
+        return image
+    
     def load_images(self, data_dir):
         print('Reading images')
         # Add classes
-        self.add_class("mrimath", 1, "core")
-        self.add_class("mrimath", 2, "active")
-        self.add_class("mrimath", 3, "whole")
-
+        self.add_class("mrimath", 1, self.tumor_type)
         i = 0
         for subdir in os.listdir(data_dir):
             for j in range(0,155):
-                self.add_image("mrimath", image_id=i, path=data_dir + "/" + subdir, ind=j)
-                i = i+1
-
+                self.add_image("mrimath", image_id=i, path=data_dir + "/" + subdir, ind = j)
+                if self.checkIfTumorPresent(i): 
+                    i = i + 1
+                    
+    def checkIfTumorPresent(self, image_id):
+        info = self.image_info[image_id]
+        path = next((s for s in os.listdir(info['path']) if "seg" in s), None)
+        if "seg" in path:
+            mask = nib.load(info['path']+"/"+path).get_data()[:,:,info['ind']]
+            if np.count_nonzero(mask) <= 0:
+                self.image_info.remove(info)
+                return False
+        return True
+        
     def image_reference(self, image_id):
         """Return the shapes data of the image."""
         info = self.image_info[image_id]
@@ -105,80 +120,56 @@ class MRIMathDataset(utils.Dataset):
 
     def load_mask(self, image_id):
         """Generate instance masks for shapes of the given image ID.
-        """
-
-        mask = np.zeros(shape = (240,240,3))
+        """        
         for path in os.listdir(self.image_info[image_id]['path']):
             if "seg" in path:
-                seg = nib.load(self.image_info[image_id]['path']+"/"+path).get_data()[:,:,self.image_info[image_id]['ind']]
+                mask = nib.load(self.image_info[image_id]['path']+"/"+path).get_data()[:,:,self.image_info[image_id]['ind']]
                 break
-        
-        class_ids = []
-        
-        seg_core = seg.copy()
-        seg_core[seg == 2] = 0
-        seg_core[seg_core>0] = 1
-        #seg_core[seg==0] = 0
-        if seg_core.any():
-            class_ids.append(1)
-        else:
-            class_ids.append(0)
-        
-        
-        seg_active = seg.copy()
-        seg_active[seg < 4] = 0
-        seg_active[seg_active > 0] = 1
-
-        if seg_active.any():
-            class_ids.append(2)
-        else:
-            class_ids.append(0)
-        
-        
-    
-        seg_whole = seg.copy()
-        if 4 in seg_whole[:,:]:
-            seg_whole[seg > 0] = 1
-            class_ids.append(3)
-        else:
-            seg_whole = np.zeros((seg_whole.shape[0], seg_whole.shape[1]))
-            class_ids.append(0)
-        
         """
-        
         plt.figure(1)
-        plt.subplot(411)
-        plt.imshow(seg)
-        plt.subplot(412)
-        plt.imshow(seg_core)
-        plt.subplot(413)
-        plt.imshow(seg_active)
-        plt.subplot(414)
-        plt.imshow(seg_whole)
-
+        plt.imshow(mask)
         plt.show()
         """
-        
+        mask = self.getMask(mask)
+        mask = mask.reshape(mask.shape[0], mask.shape[1],1)
+        return mask.astype(bool), np.ones([mask.shape[-1]], dtype=np.int32)
+
+    def getMask(self, mask):
+        pass
+
+class FlairDataset(MRIMathDataset):
+
+    mode = "flair"
+    tumor_type = "whole"
     
-        mask[:,:,0] = seg_core
-        mask[:,:,1] = seg_active
-        mask[:,:,2] = seg_whole
+    def getMask(self, mask):
+        mask[mask > 0] = 1
+        return mask
 
-        #mask[:,:,2] = seg_whole
-
+class T2Dataset(MRIMathDataset):
         
-        return mask.astype(np.bool),np.array(class_ids).astype(np.int32)
+    def __init__(self):
+        super().__init__()
+
+        self.mode = "t2"
+        self.tumor_type = "core"
     
-    ## Derives random patches from an image - Updated for February "pivot"
-    #
-    # @param patient_directoy the directory where the specific patient data is located (e.g. Patient_001_Data)
-    # @param img the image to derive patches from
-    # @param file the patient image number (e.g. img_1)
-    def load_segment(self, seg_dir):
-        mask_img = self.getImage(seg_dir)
-        return mask_img
+    def getMask(self, mask):
+        
+        mask[mask == 2] = 0
+        mask[mask > 0] = 1
+        return mask
 
-
+class T1CDataset(MRIMathDataset):
+    def __init__(self):
+        super().__init__()
+        self.mode = "t1ce"
+        self.tumor_type = "active"
+    
+    def getMask(self, mask):
+        mask[mask < 4] = 0
+        mask[mask > 0] = 1
+        return mask
 
 class InferenceConfig(MRIMathConfig):
     GPU_COUNT = 1
@@ -190,14 +181,14 @@ def main():
     config.display()
     
     random.seed(12345)
-    data_dir = "Data/BRATS_2018/LGG"
-    val_dir = "Data/BRATS_2018/LGG_Validation"
-    test_dir = "Data/BRATS_2018/LGG_Testing"
+    data_dir = "Data/BRATS_2018/HGG"
+    val_dir = "Data/BRATS_2018/HGG_Validation"
+    test_dir = "Data/BRATS_2018/HGG_Testing"
     
     if os.listdir(val_dir) == []:
         # split validation data (10% of dataset)
         list_imgs = os.listdir(data_dir)
-        val_imgs = random.sample(list_imgs, round(0.1*len(list_imgs)))
+        val_imgs = random.sample(list_imgs, round(0.05*len(list_imgs)))
         for sub_dir in list_imgs:
             if sub_dir in val_imgs:
                 dir_to_move = os.path.join(data_dir, sub_dir)
@@ -206,23 +197,24 @@ def main():
     if os.listdir(test_dir) == []:
         # split testing data (20% of dataset)
         list_imgs = os.listdir(data_dir)
-        test_imgs = random.sample(list_imgs, round(0.2*len(list_imgs)))
+        test_imgs = random.sample(list_imgs, round(0.05*len(list_imgs)))
         for sub_dir in list_imgs:
             if sub_dir in test_imgs:
                 dir_to_move = os.path.join(data_dir, sub_dir)
                 shutil.move(dir_to_move, test_dir)
             
-    dataset_train = MRIMathDataset()
+    dataset_train = FlairDataset()
     dataset_train.load_images(data_dir)
     dataset_train.prepare()
     
     
-    dataset_val = MRIMathDataset()
+    dataset_val = FlairDataset()
     dataset_val.load_images(val_dir)
     dataset_val.prepare()
     
     print("Training on " + str(len(dataset_train.image_info)) + " images")
     print("Validating on " + str(len(dataset_val.image_info)) + " images")
+
 
         # Validation dataset
     #dataset_val = MRIMathDataset()
@@ -233,7 +225,7 @@ def main():
     model = modellib.MaskRCNN(mode="training", config=config,
                               model_dir=MODEL_DIR)
     # Which weights to start with?
-    init_with = "last"  # imagenet, coco, or last
+    init_with = "coco"  # imagenet, coco, or last
     
     if init_with == "imagenet":
         model.load_weights(model.get_imagenet_weights(), by_name=True)
@@ -253,8 +245,8 @@ def main():
     # which layers to train by name pattern.
     model.train(dataset_train, dataset_val, 
                 learning_rate=config.LEARNING_RATE, 
-                epochs=700,
-                layers='all')
+                epochs=500,
+                layers='heads')
 
     # move the validation data back
     list_imgs = os.listdir(val_dir)
