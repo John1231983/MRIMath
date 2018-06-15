@@ -40,35 +40,38 @@ class MRIMathConfig(Config):
 
     # Number of classes (including background)
     NUM_CLASSES = 1 + 1  # background + 2 shapes
+        # Number of training steps per epoch
+    #STEPS_PER_EPOCH = 200
+
+    # Skip detections with < 90% confidence
+    #DETECTION_MIN_CONFIDENCE = 0.0
 
     # Use small images for faster training. Set the limits of the small side
     # the large side, and that determines the image shape.
-    #IMAGE_MIN_DIM = 256
+    IMAGE_MIN_DIM = 512
     
-    #IMAGE_MAX_DIM = 256
+    IMAGE_MAX_DIM = 512
     #LEARNING_RATE = 0.0001
     #LEARNING_RATE = 0.00001
 
     # Use smaller anchors because our image and objects are small
-    #RPN_ANCHOR_SCALES = (16, 32, 64, 128)  # anchor side in pixels
+    RPN_ANCHOR_SCALES = (16, 32, 64, 128, 256)  # anchor side in pixels
 
     # Reduce training ROIs per image because the images are small and have
     # few objects. Aim to allow ROI sampling to pick 33% positive ROIs.
-    #TRAIN_ROIS_PER_IMAGE = 32
+    #TRAIN_ROIS_PER_IMAGE = 128
+
 
     # Use a small epoch since the data is simple
-    #STEPS_PER_EPOCH = 120
+    STEPS_PER_EPOCH = 50
     #BACKBONE = "resnet50"
 
-
     # use small validation steps since the epoch is small
-    #VALIDATION_STEPS = 30
+    VALIDATION_STEPS = 10
     
 class MRIMathDataset(utils.Dataset):
     mode = None
     tumor_type = None
-    
-
             
     def load_image(self, image_id):
         ## Note:
@@ -95,19 +98,22 @@ class MRIMathDataset(utils.Dataset):
         self.add_class("mrimath", 1, self.tumor_type)
         i = 0
         for subdir in os.listdir(data_dir):
-            for j in range(0,155):
+            indices = self.getIndicesWithTumorPresent(data_dir + "/" + subdir)
+            #if self.checkMaskExists(data_dir + "/" + subdir):
+            #for j in range(0,155):
+            for j in indices:
+                #if self.checkMaskExists(data_dir + "/" + subdir, j):
                 self.add_image("mrimath", image_id=i, path=data_dir + "/" + subdir, ind = j)
-                if self.checkIfTumorPresent(i): 
-                    i = i + 1
+                #if self.checkIfTumorPresent(i): 
+                i = i + 1
                     
     def checkIfTumorPresent(self, image_id):
         info = self.image_info[image_id]
         path = next((s for s in os.listdir(info['path']) if "seg" in s), None)
-        if "seg" in path:
-            mask = nib.load(info['path']+"/"+path).get_data()[:,:,info['ind']]
-            if np.count_nonzero(mask) <= 0:
-                self.image_info.remove(info)
-                return False
+        mask = nib.load(info['path']+"/"+path).get_data()[:,:,info['ind']]
+        if np.count_nonzero(mask) <= 0:
+            self.image_info.remove(info)
+            return False
         return True
         
     def image_reference(self, image_id):
@@ -117,6 +123,16 @@ class MRIMathDataset(utils.Dataset):
             return info["source"]
         else:
             super(self.__class__).image_reference(self, image_id)
+    
+    def getIndicesWithTumorPresent(self, directory):
+        indicesWithMasks = []
+        path = next((s for s in os.listdir(directory) if "seg" in s), None)
+        mask = nib.load(directory+"/"+path).get_data()
+        for i in range(0,155):
+            if np.count_nonzero(mask[:,:,i]) > 0:
+                indicesWithMasks.append(i)
+        return indicesWithMasks
+        
 
     def load_mask(self, image_id):
         """Generate instance masks for shapes of the given image ID.
@@ -184,25 +200,33 @@ def main():
     data_dir = "Data/BRATS_2018/HGG"
     val_dir = "Data/BRATS_2018/HGG_Validation"
     test_dir = "Data/BRATS_2018/HGG_Testing"
-    
+    aug_dir = "Data/BRATS_2018/HGG_Rot"
+    list_imgs = os.listdir(data_dir)
+
     if os.listdir(val_dir) == []:
-        # split validation data (10% of dataset)
-        list_imgs = os.listdir(data_dir)
-        val_imgs = random.sample(list_imgs, round(0.05*len(list_imgs)))
+        # split validation data (20% of dataset)
+        val_imgs = random.sample(list_imgs, round(0.1*len(list_imgs)))
         for sub_dir in list_imgs:
             if sub_dir in val_imgs:
                 dir_to_move = os.path.join(data_dir, sub_dir)
                 shutil.move(dir_to_move, val_dir)
+                list_imgs.remove(sub_dir)
                 
     if os.listdir(test_dir) == []:
-        # split testing data (20% of dataset)
-        list_imgs = os.listdir(data_dir)
+        # split testing data (5% of dataset)
         test_imgs = random.sample(list_imgs, round(0.05*len(list_imgs)))
         for sub_dir in list_imgs:
             if sub_dir in test_imgs:
                 dir_to_move = os.path.join(data_dir, sub_dir)
                 shutil.move(dir_to_move, test_dir)
-            
+    """
+    list_imgs = os.listdir(aug_dir)
+    aug_imgs = random.sample(list_imgs, round(0.5*len(list_imgs)))
+    for sub_dir in list_imgs:
+        if sub_dir in aug_imgs:
+            dir_to_move = os.path.join(aug_dir, sub_dir)
+            shutil.move(dir_to_move, data_dir)
+    """
     dataset_train = FlairDataset()
     dataset_train.load_images(data_dir)
     dataset_train.prepare()
@@ -238,22 +262,51 @@ def main():
                                     "mrcnn_bbox", "mrcnn_mask"])
     elif init_with == "last":
         # Load the last model you trained and continue training
+        
         model.load_weights(model.find_last()[1], by_name=True)
-    # Train the head branches
-    # Passing layers="heads" freezes all layers except the head
-    # layers. You can also pass a regular expression to select
-    # which layers to train by name pattern.
-    model.train(dataset_train, dataset_val, 
-                learning_rate=config.LEARNING_RATE, 
-                epochs=500,
-                layers='heads')
 
-    # move the validation data back
+    
+        # Training - Stage 4
+    # Fine tune all layers
+    
+    print("Fine tune all layers")
+    model.train(dataset_train, dataset_val,
+                learning_rate=config.LEARNING_RATE,
+                epochs=50,
+                layers='heads')
+    
+    print("Fine tune all layers")
+    model.train(dataset_train, dataset_val,
+                learning_rate=config.LEARNING_RATE,
+                epochs=100,
+                layers='4+')
+    
+    print("Fine tune all layers")
+    model.train(dataset_train, dataset_val,
+                learning_rate=config.LEARNING_RATE,
+                epochs=150,
+                layers='all')
+    
+    print("Fine tune all layers")
+    model.train(dataset_train, dataset_val,
+                learning_rate=config.LEARNING_RATE / 10,
+                epochs=200,
+                layers='heads')
+    """
+    print("Fine tune all layers")
+    model.train(dataset_train, dataset_val,
+                learning_rate=config.LEARNING_RATE / 10,
+                epochs=200,
+                layers='heads')
+    """
+    """
+    # move the validation data backq
     list_imgs = os.listdir(val_dir)
     for sub_dir in list_imgs:
         dir_to_move = os.path.join(val_dir, sub_dir)
         shutil.move(dir_to_move, data_dir)
-        
+    
+    """
 if __name__ == "__main__":
    # stuff only to run when not called via 'import' here
    main()

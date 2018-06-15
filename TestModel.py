@@ -13,19 +13,34 @@ import numpy as np
 import random
 import os
 import shutil
+from numpy import genfromtxt
+import matplotlib.pyplot as plt
+
 
 inference_config = InferenceConfig()
 
 test_dir = "Data/BRATS_2018/HGG_Testing"
 data_dir = "Data/BRATS_2018/HGG"
 
+# Directory to save logs and trained model
+MODEL_DIR = os.path.join(ROOT_DIR, "logs")
+result_data = genfromtxt(MODEL_DIR +'/mrimath20180612T1801/model_loss_log.csv', delimiter=',')
+plt.figure()
+#plt.plot(result_data[:,0], result_data[:,1], label="total loss")
+plt.plot(result_data[:,0], result_data[:,1], label = "loss")
+plt.plot(result_data[:,0], result_data[:,7], label = "val loss")
+
+plt.xlabel("Epochs") 
+plt.ylabel("Loss") 
+plt.legend(loc='upper right')
+plt.show()
+
 dataset = FlairDataset()
 dataset.load_images(test_dir)
 dataset.prepare()
 print("Testing on " + str(len(dataset.image_info)) + " images")
 
-# Directory to save logs and trained model
-MODEL_DIR = os.path.join(ROOT_DIR, "logs")
+
 
 # Recreate the model in inference mode
 model = modellib.MaskRCNN(mode="inference", 
@@ -75,8 +90,6 @@ jaccards = {}
 jaccards[1] = []
 
 
-djaccards = {}
-djaccards[1] = []
 
 precision = {}
 precision[1] = []
@@ -105,14 +118,8 @@ for image_id in dataset.image_ids:
         
     for i,label in enumerate(r["class_ids"]):
         if label in gt_class_id:
-            jaccards[label].append(overlaps[i])
-            djaccards[label].append(2*overlaps[i]/(1+overlaps[i]))
             precision[label].append(precisions[i])
             recall[label].append(recalls[i])
-            harmonic_mean = 2*recalls[i]*precisions[i]
-            if harmonic_mean > 0:
-                harmonic_mean = harmonic_mean/(precisions[i] + recalls[i])
-            dice[label].append(harmonic_mean)
             
 
             #print(jaccards[label])
@@ -120,15 +127,11 @@ for image_id in dataset.image_ids:
     APs.append(AP)
 
 
-print("Jaccard score for Core: " + str(np.mean(np.asarray(jaccards[1]))))
-
-print("Dice score for Core (from Jaccard): " + str(np.mean(np.asarray(djaccards[1]))))
 
 print("Precision for Core: " + str(np.mean(np.asarray(precision[1]))))
 
 print("Recall for Core: " + str(np.mean(np.asarray(recall[1]))))
 
-print("Dice for Core (from R+P): " + str(np.mean(np.asarray(dice[1]))))
 
 print("mAP: ", np.mean(APs))
 
