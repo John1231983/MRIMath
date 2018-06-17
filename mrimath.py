@@ -199,8 +199,11 @@ def main():
     random.seed(12345)
     data_dir = "Data/BRATS_2018/HGG"
     val_dir = "Data/BRATS_2018/HGG_Validation"
+    if not os.path.exists(val_dir):
+        os.makedirs(val_dir)
     test_dir = "Data/BRATS_2018/HGG_Testing"
-    aug_dir = "Data/BRATS_2018/HGG_Rot"
+    if not os.path.exists(test_dir):
+        os.makedirs(test_dir)
     list_imgs = os.listdir(data_dir)
 
     if os.listdir(val_dir) == []:
@@ -269,25 +272,21 @@ def main():
         # Training - Stage 4
     # Fine tune all layers
     
-    print("Fine tune all layers")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
                 epochs=50,
                 layers='heads')
     
-    print("Fine tune all layers")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
                 epochs=100,
                 layers='4+')
     
-    print("Fine tune all layers")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
                 epochs=150,
                 layers='all')
     
-    print("Fine tune all layers")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE / 10,
                 epochs=200,

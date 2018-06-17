@@ -27,8 +27,8 @@ MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 result_data = genfromtxt(MODEL_DIR +'/mrimath20180612T1801/model_loss_log.csv', delimiter=',')
 plt.figure()
 #plt.plot(result_data[:,0], result_data[:,1], label="total loss")
-plt.plot(result_data[:,0], result_data[:,1], label = "loss")
-plt.plot(result_data[:,0], result_data[:,7], label = "val loss")
+plt.plot(result_data[:,0], result_data[:,3], label = "loss")
+plt.plot(result_data[:,0], result_data[:,9], label = "val loss")
 
 plt.xlabel("Epochs") 
 plt.ylabel("Loss") 
@@ -85,9 +85,6 @@ visualize.display_differences(original_image,
 #print(dataset.image_ids)
 APs = []
 
-
-jaccards = {}
-jaccards[1] = []
 
 
 
