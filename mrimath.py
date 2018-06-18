@@ -64,6 +64,13 @@ class MRIMathConfig(Config):
 
     # Use a small epoch since the data is simple
     STEPS_PER_EPOCH = 50
+    LOSS_WEIGHTS = {
+        "rpn_class_loss": 0.001,
+        "rpn_bbox_loss": 0.001,
+        "mrcnn_class_loss": 0.001,
+        "mrcnn_bbox_loss": 0.001,
+        "mrcnn_mask_loss": 1.
+    }
     #BACKBONE = "resnet50"
 
     # use small validation steps since the epoch is small
@@ -276,7 +283,7 @@ def main():
                 learning_rate=config.LEARNING_RATE,
                 epochs=50,
                 layers='heads')
-    
+    """
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
                 epochs=100,
@@ -291,7 +298,7 @@ def main():
                 learning_rate=config.LEARNING_RATE / 10,
                 epochs=200,
                 layers='heads')
-    """
+    
     print("Fine tune all layers")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE / 10,
