@@ -1,19 +1,22 @@
 #!/bin/bash
-echo "Downgrading pip install to version 9 for imports and installs. Don't worry, it'll be upgraded once this is finished"
+echo "Installing all necessary dependencies..."
+    pip install nibabel
+    pip install requests
+    pip install multiprocessing
+    pip install tensorflow
+    pip install keras
+    pip install opencv-python
+    pip install matplotlib
+    pip install numpy
+    pip install scipy
+    pip install scikit-image
+    pip install IPython
+echo "Done with installs!"
+echo "Pulling BRATS 2018 Data down, this may take a few minutes..."
 if command -v python3 &>/dev/null; then
-  python3 -m pip install --upgrade pip==9.0.3
-  python3 Utils/setup.py
-  echo "Done with installs! Pulling BRATS 2018 Data down, this may take a few minutes..."
   python3 Utils/getBraTs2018Data.py
-  echo "Done! Upgrading pip back to version 10..."
-  python3 -m pip install --upgrade pip
 else
-  python -m pip install --upgrade pip==9.0.3
-  python Utils/setup.py
-  echo "Done with installs! Pulling BRATS 2018 Data down, this may take a few minutes..."
   python Utils/getBraTS2018Data.py
-  echo "Upgrading pip back to version 10..."
-  python -m pip install --upgrade pip
 fi
 echo "Now to pull down the Mask R-CNN submodule..." 
 git submodule update --init --recursive --remote
