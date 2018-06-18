@@ -16,6 +16,8 @@ if __name__ == '__main__':
     import_or_install('numpy')
     import_or_install('scipy')
     import_or_install('scikit-image')
+    import_or_install('IPython')
+
 
 
 
