@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python3 getBraTs2018Data.py
+python3 Utils/getBraTs2018Data.py
