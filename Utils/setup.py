@@ -5,12 +5,15 @@ def import_or_install(package):
     except ImportError:
         pip.main(['install', package])  
 
-import_or_install('nibabel')
-import_or_install('requests')
-import_or_install('multiprocessing')
-import_or_install('tensorflow')
-import_or_install('keras')
-import_or_install('opencv-python')
-import_or_install('matplotlib')
-import_or_install('numpy')
-import_or_install('scipy')
+if __name__ == '__main__':
+    import_or_install('nibabel')
+    import_or_install('requests')
+    import_or_install('multiprocessing')
+    import_or_install('tensorflow')
+    import_or_install('keras')
+    import_or_install('opencv-python')
+    import_or_install('matplotlib')
+    import_or_install('numpy')
+    import_or_install('scipy')
+
+
