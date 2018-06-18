@@ -1,8 +1,10 @@
 #!/bin/bash
 echo "Pulling BRATS 2018 Data down, this may take a few minutes..."
 if command -v python3 &>/dev/null; then
+  python3 Utils/setup.py
   python3 Utils/getBraTs2018Data.py
 else
+  python Utils/setup.py
   python Utils/getBraTS2018Data.py
 fi
 echo "Data successfully pulled down! Now to pull down the Mask R-CNN submodule..." 
