@@ -8,27 +8,58 @@ from mrcnn import utils
 import mrcnn.model as modellib
 from mrcnn import visualize
 from mrcnn.model import log
-from mrimath import InferenceConfig, FlairDataset
+from MRIMathInferenceConfig import MRIMathInferenceConfig
+from FlairDataset import FlairDataset
 import numpy as np
 import random
-import os
-import shutil
 from numpy import genfromtxt
 import matplotlib.pyplot as plt
+import math
 
+def dice(im1, im2):
+    """
+    Computes the Dice coefficient, a measure of set similarity.
+    Parameters
+    ----------
+    im1 : array-like, bool
+        Any array of arbitrary size. If not boolean, will be converted.
+    im2 : array-like, bool
+        Any other array of identical size. If not boolean, will be converted.
+    Returns
+    -------
+    dice : float
+        Dice coefficient as a float on range [0,1].
+        Maximum similarity = 1
+        No similarity = 0
+        
+    Notes
+    -----
+    The order of inputs for `dice` is irrelevant. The result will be
+    identical if `im1` and `im2` are switched.
+    """
+    im1 = np.asarray(im1).astype(np.bool)
+    im2 = np.asarray(im2).astype(np.bool)
 
-inference_config = InferenceConfig()
+    if im1.shape != im2.shape:
+        raise ValueError("Shape mismatch: im1 and im2 must have the same shape.")
+
+    # Compute Dice coefficient
+    intersection = np.logical_and(im1, im2)
+
+    return 2. * intersection.sum() / (im1.sum() + im2.sum())
+
+inference_config = MRIMathInferenceConfig()
 
 test_dir = "Data/BRATS_2018/HGG_Testing"
 data_dir = "Data/BRATS_2018/HGG"
 
 # Directory to save logs and trained model
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
-result_data = genfromtxt(MODEL_DIR +'/mrimath20180612T1801/model_loss_log.csv', delimiter=',')
+result_data = genfromtxt(MODEL_DIR +'/mrimath20180618T2115/model_loss_log.csv', delimiter=',')
 plt.figure()
-#plt.plot(result_data[:,0], result_data[:,1], label="total loss")
-plt.plot(result_data[:,0], result_data[:,3], label = "loss")
-plt.plot(result_data[:,0], result_data[:,9], label = "val loss")
+#plt.plot(result_data[:,0], result_data[:,1],label="total loss")
+plt.plot(result_data[:,0], result_data[:,4], label = "loss")
+plt.plot(result_data[:,0], result_data[:,10], label = "val loss")
 
 plt.xlabel("Epochs") 
 plt.ylabel("Loss") 
@@ -76,7 +107,7 @@ r = results[0]
 visualize.display_differences(original_image,
                         gt_bbox, gt_class_id, gt_mask,
                         r["rois"], r["class_ids"], r["scores"], r['masks'],
-                        dataset.class_names)     
+                        dataset.class_names, show_box=False)     
 
 # Compute VOC-Style mAP @ IoU=0.5
 # Running on 10 images. Increase for better accuracy.
@@ -94,8 +125,7 @@ precision[1] = []
 recall = {}
 recall[1] = []
 
-dice = {}
-dice[1] = []
+dices = []
 for image_id in dataset.image_ids:
     # Load image and ground truth data
     image, image_meta, gt_class_id, gt_bbox, gt_mask =\
@@ -105,32 +135,31 @@ for image_id in dataset.image_ids:
     # Run object detection
     results = model.detect([image], verbose=0)
     r = results[0]
-    
-    # Compute AP 
     if ((r['masks'] > 0.5).size <= 0 or (gt_mask > 0.5).size <= 0): 
         continue
+    if r['masks'].shape[0] is 256:
+        score = -math.inf
+        for i in range(0, r['masks'].shape[2]):
+            if dice(r['masks'][:,:,i:i+1], gt_mask) > score:
+                score = dice(r['masks'][:,:,0:1], gt_mask)
+        dices.append(score)
+        """
     AP, precisions, recalls, overlaps =\
         utils.compute_ap(gt_bbox, gt_class_id, gt_mask,
-                        r["rois"], r["class_ids"], r["scores"], r['masks'], iou_threshold=0.0)
-        
-    for i,label in enumerate(r["class_ids"]):
-        if label in gt_class_id:
-            precision[label].append(precisions[i])
-            recall[label].append(recalls[i])
+                        r["rois"], r["class_ids"], r["scores"], r['masks'], iou_threshold=0.5)
+        """
             
 
             #print(jaccards[label])
     #print(AP)      
-    APs.append(AP)
+    #APs.append(AP)
 
 
 
-print("Precision for Core: " + str(np.mean(np.asarray(precision[1]))))
-
-print("Recall for Core: " + str(np.mean(np.asarray(recall[1]))))
+print("Dice Coefficient: " + str(np.mean(np.asarray(dices))))
 
 
-print("mAP: ", np.mean(APs))
+
 
 
 # move the testing data back

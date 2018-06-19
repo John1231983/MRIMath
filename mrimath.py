@@ -1,9 +1,5 @@
 import os
 import sys
-import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
-import nibabel as nib
 import shutil
 import random
 # Root directory of the project
@@ -16,187 +12,18 @@ from mrcnn import utils
 import mrcnn.model as modellib
 from mrcnn import visualize
 from mrcnn.model import log
-from multiprocessing import Pool, Manager, Process, Lock
+from MRIMathConfig import MRIMathConfig
+from FlairDataset import FlairDataset
 
-import skimage.color
 
 # Directory to save logs and trained model
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
-
 # Local path to trained weights file
 COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
 # Download COCO trained weights from Releases if needed
 if not os.path.exists(COCO_MODEL_PATH):
     utils.download_trained_weights(COCO_MODEL_PATH)
 
-class MRIMathConfig(Config):
-    # Give the configuration a recognizable name
-    NAME = "mrimath"
-
-    # Train on 1 GPU and 8 images per GPU. We can put multiple images on each
-    # GPU because the images are small. Batch size is 8 (GPUs * images/GPU).
-    GPU_COUNT = 1
-    IMAGES_PER_GPU = 1
-
-    # Number of classes (including background)
-    NUM_CLASSES = 1 + 1  # background + 2 shapes
-        # Number of training steps per epoch
-    #STEPS_PER_EPOCH = 200
-
-    # Skip detections with < 90% confidence
-    #DETECTION_MIN_CONFIDENCE = 0.0
-
-    # Use small images for faster training. Set the limits of the small side
-    # the large side, and that determines the image shape.
-    IMAGE_MIN_DIM = 512
-    
-    IMAGE_MAX_DIM = 512
-    #LEARNING_RATE = 0.0001
-    #LEARNING_RATE = 0.00001
-
-    # Use smaller anchors because our image and objects are small
-    RPN_ANCHOR_SCALES = (16, 32, 64, 128, 256)  # anchor side in pixels
-
-    # Reduce training ROIs per image because the images are small and have
-    # few objects. Aim to allow ROI sampling to pick 33% positive ROIs.
-    #TRAIN_ROIS_PER_IMAGE = 128
-
-
-    # Use a small epoch since the data is simple
-    STEPS_PER_EPOCH = 50
-    LOSS_WEIGHTS = {
-        "rpn_class_loss": 0.001,
-        "rpn_bbox_loss": 0.001,
-        "mrcnn_class_loss": 0.001,
-        "mrcnn_bbox_loss": 0.001,
-        "mrcnn_mask_loss": 1.
-    }
-    #BACKBONE = "resnet50"
-
-    # use small validation steps since the epoch is small
-    VALIDATION_STEPS = 10
-    
-class MRIMathDataset(utils.Dataset):
-    mode = None
-    tumor_type = None
-            
-    def load_image(self, image_id):
-        ## Note:
-        # FLAIR -> Whole
-        # T2 -> Core
-        # T1C -> Active (if present)
-        """Load the specified image and return a [H,W,3] Numpy array.
-        """
-        info = self.image_info[image_id]
-        for path in os.listdir(info['path']):
-            if self.mode in path:
-                image = nib.load(info['path'] + "/" + path).get_data()[:,:,info['ind']]
-                break;
-        if image.ndim != 3:
-            image = skimage.color.gray2rgb(image)
-        # If has an alpha channel, remove it for consistency
-        if image.shape[-1] == 4:
-            image = image[..., :3]
-        return image
-    
-    def load_images(self, data_dir):
-        print('Reading images')
-        # Add classes
-        self.add_class("mrimath", 1, self.tumor_type)
-        i = 0
-        for subdir in os.listdir(data_dir):
-            indices = self.getIndicesWithTumorPresent(data_dir + "/" + subdir)
-            #if self.checkMaskExists(data_dir + "/" + subdir):
-            #for j in range(0,155):
-            for j in indices:
-                #if self.checkMaskExists(data_dir + "/" + subdir, j):
-                self.add_image("mrimath", image_id=i, path=data_dir + "/" + subdir, ind = j)
-                #if self.checkIfTumorPresent(i): 
-                i = i + 1
-                    
-    def checkIfTumorPresent(self, image_id):
-        info = self.image_info[image_id]
-        path = next((s for s in os.listdir(info['path']) if "seg" in s), None)
-        mask = nib.load(info['path']+"/"+path).get_data()[:,:,info['ind']]
-        if np.count_nonzero(mask) <= 0:
-            self.image_info.remove(info)
-            return False
-        return True
-        
-    def image_reference(self, image_id):
-        """Return the shapes data of the image."""
-        info = self.image_info[image_id]
-        if info["source"] == "mrimath":
-            return info["source"]
-        else:
-            super(self.__class__).image_reference(self, image_id)
-    
-    def getIndicesWithTumorPresent(self, directory):
-        indicesWithMasks = []
-        path = next((s for s in os.listdir(directory) if "seg" in s), None)
-        mask = nib.load(directory+"/"+path).get_data()
-        for i in range(0,155):
-            if np.count_nonzero(mask[:,:,i]) > 0:
-                indicesWithMasks.append(i)
-        return indicesWithMasks
-        
-
-    def load_mask(self, image_id):
-        """Generate instance masks for shapes of the given image ID.
-        """        
-        for path in os.listdir(self.image_info[image_id]['path']):
-            if "seg" in path:
-                mask = nib.load(self.image_info[image_id]['path']+"/"+path).get_data()[:,:,self.image_info[image_id]['ind']]
-                break
-        """
-        plt.figure(1)
-        plt.imshow(mask)
-        plt.show()
-        """
-        mask = self.getMask(mask)
-        mask = mask.reshape(mask.shape[0], mask.shape[1],1)
-        return mask.astype(bool), np.ones([mask.shape[-1]], dtype=np.int32)
-
-    def getMask(self, mask):
-        pass
-
-class FlairDataset(MRIMathDataset):
-
-    mode = "flair"
-    tumor_type = "whole"
-    
-    def getMask(self, mask):
-        mask[mask > 0] = 1
-        return mask
-
-class T2Dataset(MRIMathDataset):
-        
-    def __init__(self):
-        super().__init__()
-
-        self.mode = "t2"
-        self.tumor_type = "core"
-    
-    def getMask(self, mask):
-        
-        mask[mask == 2] = 0
-        mask[mask > 0] = 1
-        return mask
-
-class T1CDataset(MRIMathDataset):
-    def __init__(self):
-        super().__init__()
-        self.mode = "t1ce"
-        self.tumor_type = "active"
-    
-    def getMask(self, mask):
-        mask[mask < 4] = 0
-        mask[mask > 0] = 1
-        return mask
-
-class InferenceConfig(MRIMathConfig):
-    GPU_COUNT = 1
-    IMAGES_PER_GPU = 1
 
 # stuff to run always here such as class/def
 def main():
@@ -281,8 +108,16 @@ def main():
     
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=50,
+                epochs=40,
                 layers='heads')
+    model.train(dataset_train, dataset_val,
+        learning_rate=config.LEARNING_RATE/10,
+        epochs=80,
+        layers='heads')
+    model.train(dataset_train, dataset_val,
+        learning_rate=config.LEARNING_RATE/10,
+        epochs=120,
+        layers='all')
     """
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
