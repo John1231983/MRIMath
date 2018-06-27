@@ -15,6 +15,7 @@ from mrcnn.model import log
 from MRIMathConfig import MRIMathConfig
 from FlairDataset import FlairDataset
 
+from T1CDataset import T1CDataset
 
 # Directory to save logs and trained model
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
@@ -107,17 +108,18 @@ def main():
     # Fine tune all layers
     
     model.train(dataset_train, dataset_val,
-                learning_rate=config.LEARNING_RATE,
-                epochs=40,
-                layers='heads')
+            learning_rate=config.LEARNING_RATE,
+            epochs=20,
+            layers='heads')
     model.train(dataset_train, dataset_val,
         learning_rate=config.LEARNING_RATE/10,
-        epochs=80,
+        epochs=40,
         layers='heads')
     model.train(dataset_train, dataset_val,
-        learning_rate=config.LEARNING_RATE/10,
-        epochs=120,
-        layers='all')
+        learning_rate=config.LEARNING_RATE,
+        epochs=60,
+        layers='5+')
+
     """
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,

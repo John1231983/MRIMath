@@ -8,10 +8,17 @@ from mrcnn import utils
 import skimage.color
 import os
 import numpy as np
+from skimage import exposure
+import SimpleITK as sitk
+
+import matplotlib.pyplot as plt
+
 class MRIMathDataset(utils.Dataset):
     mode = None
     tumor_type = None
-            
+        
+
+
     def load_image(self, image_id):
         ## Note:
         # FLAIR -> Whole
@@ -23,7 +30,16 @@ class MRIMathDataset(utils.Dataset):
         for path in os.listdir(info['path']):
             if self.mode in path:
                 image = nib.load(info['path'] + "/" + path).get_data()[:,:,info['ind']]
-                break;
+                break
+        # image = exposure.equalize_hist(image)
+        sitk_image = sitk.GetImageFromArray(image)
+        sitk_image = sitk.Cast( sitk_image, sitk.sitkFloat64 )
+
+        image = sitk.N4BiasFieldCorrection(sitk_image, sitk_image > 0);
+        image = sitk.GetArrayFromImage(image)
+        image = exposure.equalize_hist(image)
+
+        
         if image.ndim != 3:
             image = skimage.color.gray2rgb(image)
         # If has an alpha channel, remove it for consistency

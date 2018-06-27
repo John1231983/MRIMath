@@ -10,6 +10,8 @@ from mrcnn import visualize
 from mrcnn.model import log
 from MRIMathInferenceConfig import MRIMathInferenceConfig
 from FlairDataset import FlairDataset
+from T1CDataset import T1CDataset
+
 import numpy as np
 import random
 from numpy import genfromtxt
@@ -55,7 +57,7 @@ data_dir = "Data/BRATS_2018/HGG"
 
 # Directory to save logs and trained model
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
-result_data = genfromtxt(MODEL_DIR +'/mrimath20180618T2115/model_loss_log.csv', delimiter=',')
+result_data = genfromtxt(MODEL_DIR +'/mrimath20180624T2048/model_loss_log.csv', delimiter=',')
 plt.figure()
 #plt.plot(result_data[:,0], result_data[:,1],label="total loss")
 plt.plot(result_data[:,0], result_data[:,4], label = "loss")
@@ -141,7 +143,7 @@ for image_id in dataset.image_ids:
         score = -math.inf
         for i in range(0, r['masks'].shape[2]):
             if dice(r['masks'][:,:,i:i+1], gt_mask) > score:
-                score = dice(r['masks'][:,:,0:1], gt_mask)
+                score = dice(r['masks'][:,:,i:i+1], gt_mask)
         dices.append(score)
         """
     AP, precisions, recalls, overlaps =\
