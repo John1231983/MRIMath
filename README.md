@@ -1,12 +1,11 @@
 # MRIMath
+This repository is the MRIMath team's approach to the BraTS 2018 Challenge using Mask R-CNN. 
+### Requirements (it may work with lower versions too, but not guaranteed) 
+Keras==2.2.0  
+tensorflow-gpu==1.8.0  
+CUDA==9.0
+### Getting Started
+Pull down the repository, and run the 'configure' script to install all python dependencies, download the BraTS 2018 data, and pull in the Mask R-CNN submodule. Once this has finished, you should be able to run 'mrimath.py' through command line or your favorite IDE.
+# About MRIMath
+Rowan University's Deep Learning research lab, lead by Dr. Nidhal Bouaynaya and Dr. Ghulam Rasool, primarily specializes in applying deep learning to segmentation tasks. While the applications are typically related to brain MRI or potholes, we hope that our work can be used by other researchers and hobbyists.
 
-This is an implementation of an brain MRI segmentation system, MRIMATH. There are two implementations of the system thus far -
-one which is done using a traditional CNN and decomposes segmentation as a classification problem to derive NMF-LSM segments, and the other which leverages 
-a Mask R-CNN implementation. 
-
-Datahandler.py, LoadAndTestModel.py, and TrainModels.py are all portions of the first implementation.
-mrimath.py and Visualizations.py are part of the second implementation (which also depend on https://github.com/matterport/Mask_RCNN)
-
-HardwareHandler.py and EmailHandler.py are general tools which assist with multithreading, multi-GPU use, and sending emails when processes finish.
-
-Note: this is currently a WIP - as work becomes more concrete, this will become more comprehensive and detailed. For the time being, if you have any questions about things which are not clear, feel free to shoot me an email at danielenricocahall@gmail.com
