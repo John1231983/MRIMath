@@ -12,12 +12,23 @@ from skimage import exposure
 import SimpleITK as sitk
 
 import matplotlib.pyplot as plt
+import cv2
 
 class MRIMathDataset(utils.Dataset):
     mode = None
     tumor_type = None
-        
 
+    def preprocess_image(self, image):
+        
+        sitk_image = sitk.GetImageFromArray(image)
+        sitk_image = sitk.IntensityWindowing(sitk_image, np.percentile(image, 1), np.percentile(image, 99))
+        sitk_image = sitk.Cast( sitk_image, sitk.sitkFloat64 )
+
+        corrected_image = sitk.N4BiasFieldCorrection(sitk_image, sitk_image > 0);
+        corrected_image = sitk.GetArrayFromImage(corrected_image)
+        # corrected_image = exposure.equalize_hist(corrected_image)
+        return corrected_image
+        
 
     def load_image(self, image_id):
         ## Note:
@@ -31,17 +42,11 @@ class MRIMathDataset(utils.Dataset):
             if self.mode in path:
                 image = nib.load(info['path'] + "/" + path).get_data()[:,:,info['ind']]
                 break
-        # image = exposure.equalize_hist(image)
-        sitk_image = sitk.GetImageFromArray(image)
-        sitk_image = sitk.Cast( sitk_image, sitk.sitkFloat64 )
-
-        image = sitk.N4BiasFieldCorrection(sitk_image, sitk_image > 0);
-        image = sitk.GetArrayFromImage(image)
-        image = exposure.equalize_hist(image)
-
-        
+        image = self.preprocess_image(image)
         if image.ndim != 3:
-            image = skimage.color.gray2rgb(image)
+            image = image.astype(np.uint8)
+            image = cv2.cvtColor(image,cv2.COLOR_GRAY2RGB)
+            #image = skimage.color.gray2rgb(image)
         # If has an alpha channel, remove it for consistency
         if image.shape[-1] == 4:
             image = image[..., :3]
@@ -54,22 +59,9 @@ class MRIMathDataset(utils.Dataset):
         i = 0
         for subdir in os.listdir(data_dir):
             indices = self.getIndicesWithTumorPresent(data_dir + "/" + subdir)
-            #if self.checkMaskExists(data_dir + "/" + subdir):
-            #for j in range(0,155):
             for j in indices:
-                #if self.checkMaskExists(data_dir + "/" + subdir, j):
                 self.add_image("mrimath", image_id=i, path=data_dir + "/" + subdir, ind = j)
-                #if self.checkIfTumorPresent(i): 
                 i = i + 1
-                    
-    def checkIfTumorPresent(self, image_id):
-        info = self.image_info[image_id]
-        path = next((s for s in os.listdir(info['path']) if "seg" in s), None)
-        mask = nib.load(info['path']+"/"+path).get_data()[:,:,info['ind']]
-        if np.count_nonzero(mask) <= 0:
-            self.image_info.remove(info)
-            return False
-        return True
         
     def image_reference(self, image_id):
         """Return the shapes data of the image."""

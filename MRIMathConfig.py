@@ -30,17 +30,18 @@ class MRIMathConfig(Config):
     IMAGE_MIN_DIM = 256
     IMAGE_MAX_DIM = 256
 
-    #LEARNING_RATE = 0.0001
-    #LEARNING_RATE = 0.0001
+    LEARNING_RATE = 0.0001
+    # LEARNING_RATE = 0.0001
     # MEAN_PIXEL = np.array([0.0, 0.0, 0.0])
     # Use smaller anchors because our image and objects are small
-    # RPN_ANCHOR_SCALES = (16, 32, 64, 128, 256)  # anchor side in pixels
+    RPN_ANCHOR_SCALES = (16, 32, 64, 128)  # anchor side in pixels
+    POST_NMS_ROIS_TRAINING = 2000
 
     # Reduce training ROIs per image because the images are small and have
     # few objects. Aim to allow ROI sampling to pick 33% positive ROIs.
-    # TRAIN_ROIS_PER_IMAGE = 20
+    TRAIN_ROIS_PER_IMAGE = 100
 
-    TRAIN_BN = None
+    # TRAIN_BN = None
     # Use a small epoch since the data is simple
     STEPS_PER_EPOCH = 50
     

@@ -16,7 +16,8 @@ from MRIMathConfig import MRIMathConfig
 from FlairDataset import FlairDataset
 
 from T1CDataset import T1CDataset
-
+from T2Dataset import T2Dataset
+from CombinedDataset import CombinedDataset
 # Directory to save logs and trained model
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 # Local path to trained weights file
@@ -111,15 +112,21 @@ def main():
             learning_rate=config.LEARNING_RATE,
             epochs=20,
             layers='heads')
+    """
     model.train(dataset_train, dataset_val,
-        learning_rate=config.LEARNING_RATE/10,
-        epochs=40,
-        layers='heads')
+            learning_rate=config.LEARNING_RATE,
+            epochs=40,
+            layers='5+')
+    model.train(dataset_train, dataset_val,
+            learning_rate=config.LEARNING_RATE,
+            epochs=60,
+            layers='4+')
+    
     model.train(dataset_train, dataset_val,
         learning_rate=config.LEARNING_RATE,
-        epochs=60,
-        layers='5+')
-
+        epochs=80,
+        layers='3+')
+    """
     """
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,

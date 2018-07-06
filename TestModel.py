@@ -57,7 +57,7 @@ data_dir = "Data/BRATS_2018/HGG"
 
 # Directory to save logs and trained model
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
-result_data = genfromtxt(MODEL_DIR +'/mrimath20180624T2048/model_loss_log.csv', delimiter=',')
+result_data = genfromtxt(MODEL_DIR +'/mrimath20180630T1433/model_loss_log.csv', delimiter=',')
 plt.figure()
 #plt.plot(result_data[:,0], result_data[:,1],label="total loss")
 plt.plot(result_data[:,0], result_data[:,4], label = "loss")

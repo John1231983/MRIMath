@@ -13,7 +13,6 @@ class T2Dataset(MRIMathDataset):
         self.tumor_type = "core"
     
     def getMask(self, mask):
-        
         mask[mask == 2] = 0
         mask[mask > 0] = 1
         return mask
