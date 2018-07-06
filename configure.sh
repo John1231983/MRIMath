@@ -11,6 +11,7 @@ echo "Installing all necessary dependencies..."
     pip install scipy
     pip install scikit-image
     pip install IPython
+    pip install imgaug
 echo "Done with installs!"
 echo "Pulling BRATS 2018 Data down, this may take a few minutes..."
 if command -v python3 &>/dev/null; then
