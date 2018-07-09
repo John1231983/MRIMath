@@ -59,4 +59,8 @@ class NMFComputer():
         W = self.nmf_model.fit_transform(V)
         H = self.nmf_model.components_
         return W, H
-        
+    
+    def run(self, image):
+        V = self.computeHistograms(image)
+        W, H = self.computeNMF(V)
+        return W, H

@@ -44,8 +44,7 @@ def main():
         image[image > 0] = 255
         #image = np.resize(image, (256, 256))
 
-        hist_image = foo.computeHistograms(image)
-        W, H = foo.computeNMF(hist_image)
+        W, H = foo.run(image)
         print(W.shape)
         print(H.shape)
         print(W)
