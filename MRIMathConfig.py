@@ -36,7 +36,7 @@ class MRIMathConfig(Config):
     # Use smaller anchors because our image and objects are small
     RPN_ANCHOR_SCALES = (16, 32, 64, 128)  # anchor side in pixels
     POST_NMS_ROIS_TRAINING = 2000
-
+    #USE_RPN_ROIS = False
     # Reduce training ROIs per image because the images are small and have
     # few objects. Aim to allow ROI sampling to pick 33% positive ROIs.
     TRAIN_ROIS_PER_IMAGE = 200
