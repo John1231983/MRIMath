@@ -12,7 +12,7 @@ class NMFComputer():
     num_hist_bins = 0
     nmf_model = None
     
-    def __init__(self, row_window_size = 5, col_window_size = 5, num_hist_bins = 256, num_components = 5):
+    def __init__(self, row_window_size = 12, col_window_size = 12, num_hist_bins = 256, num_components = 5):
         self.setColWindowSize(col_window_size)
         self.setRowWindowSize(row_window_size)
         self.setNumHistBins(num_hist_bins)
@@ -47,7 +47,6 @@ class NMFComputer():
             
     def computeHistograms(self, image):
         hist_image = []
-        #hist_image = np.zeros([self.num_hist_bins, image.shape[0]/self.row_window_size * image.shape[1]/self.col_window_size])
         for r in range(0,image.shape[0], self.row_window_size):
             for c in range(0,image.shape[1], self.col_window_size):
                 window = image[r:r+self.row_window_size,c:c+self.col_window_size]

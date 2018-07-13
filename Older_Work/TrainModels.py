@@ -19,7 +19,6 @@ import keras.backend as K
 import tensorflow as tf
 
 
-
 # eh, I threw this in here for the sake of having another performance metric -
 # maybe we don't need it, or maybe I'll make a StatHandler class to hold it
 def precision(y_true, y_pred):
