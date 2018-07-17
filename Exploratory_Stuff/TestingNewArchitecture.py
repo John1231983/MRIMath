@@ -24,6 +24,10 @@ import numpy as np
 from Exploratory_Stuff.BasicNMFComputer import BasicNMFComputer
 
 from Exploratory_Stuff.ProbabilisticNMFComputer import ProbabilisticNMFComputer
+import sys
+import os
+DATA_DIR = os.path.abspath("../Data")
+sys.path.append(DATA_DIR)
 
 def main():
     hardwareHandler = HardwareHandler()
@@ -31,7 +35,7 @@ def main():
     timer = TimerModule()
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d_%H_%M')
-    dataHandler = DataHandler("../Data/BRATS_2018/HGG", ProbabilisticNMFComputer())
+    dataHandler = DataHandler("Data/BRATS_2018/HGG", BasicNMFComputer())
     dataHandler.loadData("flair")
     input_img =(dataHandler.W, dataHandler.H, 1)
     """

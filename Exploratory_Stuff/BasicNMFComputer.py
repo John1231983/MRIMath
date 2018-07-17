@@ -20,6 +20,8 @@ class BasicNMFComputer(NMFComputer):
     def computeNMF(self, V):
         W = self.nmf_model.fit_transform(V)
         H = self.nmf_model.components_
+        print(W.shape)
+        print(H.shape)
         return W, H
     
         
