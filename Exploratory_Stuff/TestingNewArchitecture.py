@@ -21,6 +21,9 @@ from keras.utils.training_utils import multi_gpu_model
 import keras.backend as K
 import tensorflow as tf
 import numpy as np
+from Exploratory_Stuff.BasicNMFComputer import BasicNMFComputer
+
+from Exploratory_Stuff.ProbabilisticNMFComputer import ProbabilisticNMFComputer
 
 def main():
     hardwareHandler = HardwareHandler()
@@ -28,7 +31,7 @@ def main():
     timer = TimerModule()
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d_%H_%M')
-    dataHandler = DataHandler(dataDirectory = "../Data/BRATS_2018/HGG")
+    dataHandler = DataHandler("../Data/BRATS_2018/HGG", ProbabilisticNMFComputer())
     dataHandler.loadData("flair")
     input_img =(dataHandler.W, dataHandler.H, 1)
     """
@@ -40,6 +43,7 @@ def main():
     model.add(Dense(5, activation='softmax'))
     
 
+    
     
     num_epochs = 30  
     batchSize = 128 

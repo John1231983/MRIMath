@@ -48,28 +48,32 @@ class DataHandler:
     labels = []
     nmfComp = None
     
-    def __init__(self, dataDirectory):
+    def __init__(self, dataDirectory, nmfComp):
         self.dataDirectory = dataDirectory
-        self.nmfComp = NMFComputer()
         self.X = []
         self.labels = []
+        self.nmfComp = nmfComp
         
     def loadData(self, mode):
         timer = TimerModule()
         timer.startTimer()
         J = 0
         for subdir in os.listdir(self.dataDirectory):
-            if J > 10:
+            if J > 1:
                 timer.stopTimer()
                 print(timer.getElapsedTime())
                 break
-
+            Y = []
             for path in os.listdir(self.dataDirectory + "/" + subdir):
                 if mode in path:
                     image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
+                    for i in range(155):
+                        self.performNMFOnSlice(image, i)
+                    """
                     with Pool(processes=6) as pool:
                         Y = pool.map(partial(self.performNMFOnSlice, image), list(range(155)))
                     self.X.extend(Y)
+                    """
             J = J + 1
             """
 
@@ -78,7 +82,7 @@ class DataHandler:
 """
     def performNMFOnSlice(self, image, i):
         W, H = self.nmfComp.run(image[:,:,i])
-        return H.flatten()
+        return W, H
     
         
     def getLabel(self, mat, i):

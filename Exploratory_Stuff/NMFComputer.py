@@ -4,20 +4,18 @@ Created on Jul 8, 2018
 @author: daniel
 '''
 import numpy as np
-from sklearn.decomposition import NMF
 
 class NMFComputer():
     row_window_size = 0
     col_window_size = 0
     num_hist_bins = 0
-    nmf_model = None
+    num_components = 0
     
     def __init__(self, row_window_size = 12, col_window_size = 12, num_hist_bins = 256, num_components = 5):
         self.setColWindowSize(col_window_size)
         self.setRowWindowSize(row_window_size)
         self.setNumHistBins(num_hist_bins)
-        self.creatNMFModel(num_components)
-        
+        self.setNumComponents(num_components)
         
     def setRowWindowSize(self, row_window_size):
         if row_window_size > 0:
@@ -39,11 +37,11 @@ class NMFComputer():
         else:
             print("Error: please enter a valid histogram bin size!")
     
-    def creatNMFModel(self, num_components):
+    def setNumComponents(self, num_components):
         if num_components > 0:
-            self.nmf_model = NMF(n_components=num_components, init='random', random_state=0)
+            self.num_components = num_components
         else:
-            print("Error: please enter a valid number of NMF Components!")
+            print("Error: please enter a valid number of components!")
             
     def computeHistograms(self, image):
         hist_image = []
@@ -55,9 +53,7 @@ class NMFComputer():
         return np.array(hist_image).transpose()
     
     def computeNMF(self, V):
-        W = self.nmf_model.fit_transform(V)
-        H = self.nmf_model.components_
-        return W, H
+        pass
     
     def run(self, image):
         V = self.computeHistograms(image)
