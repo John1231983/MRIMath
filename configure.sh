@@ -10,6 +10,7 @@ echo "Installing all necessary dependencies..."
     pip install numpy
     pip install scipy
     pip install scikit-image
+	pip install scikit-learn
     pip install IPython
     pip install imgaug
 echo "Done with installs!"
