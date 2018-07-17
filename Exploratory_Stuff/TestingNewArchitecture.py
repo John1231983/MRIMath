@@ -21,9 +21,9 @@ from keras.utils.training_utils import multi_gpu_model
 import keras.backend as K
 import tensorflow as tf
 import numpy as np
-from Exploratory_Stuff.BasicNMFComputer import BasicNMFComputer
+from NMFComputer.BasicNMFComputer import BasicNMFComputer
 
-from Exploratory_Stuff.ProbabilisticNMFComputer import ProbabilisticNMFComputer
+from NMFComputer.ProbabilisticNMFComputer import ProbabilisticNMFComputer
 import sys
 import os
 DATA_DIR = os.path.abspath("../Data")

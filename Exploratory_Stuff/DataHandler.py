@@ -33,7 +33,7 @@ import numpy as np
 import nibabel as nib
 import sys
 from functools import partial
-from Exploratory_Stuff.NMFComputer import NMFComputer
+from NMFComputer.NMFComputer import NMFComputer
 
 timer = TimerModule()
 now = datetime.now()

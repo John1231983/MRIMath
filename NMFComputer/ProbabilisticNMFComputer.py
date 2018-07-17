@@ -3,7 +3,7 @@ Created on Jul 16, 2018
 
 @author: daniel
 '''
-from Exploratory_Stuff.NMFComputer import NMFComputer
+from NMFComputer.NMFComputer import NMFComputer
 
 import numpy as np
 from functools import partial

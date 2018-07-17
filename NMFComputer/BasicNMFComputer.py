@@ -4,7 +4,7 @@ Created on Jul 16, 2018
 @author: daniel
 '''
 
-from Exploratory_Stuff.NMFComputer import NMFComputer
+from NMFComputer.NMFComputer import NMFComputer
 from sklearn.decomposition import NMF
 
 
@@ -20,8 +20,6 @@ class BasicNMFComputer(NMFComputer):
     def computeNMF(self, V):
         W = self.nmf_model.fit_transform(V)
         H = self.nmf_model.components_
-        print(W.shape)
-        print(H.shape)
         return W, H
     
         
