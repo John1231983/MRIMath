@@ -4,29 +4,21 @@ Created on Jul 8, 2018
 @author: daniel
 '''
 import numpy as np
-
+import math
 class NMFComputer():
-    row_window_size = 0
-    col_window_size = 0
+    block_size = 0
     num_hist_bins = 0
     num_components = 0
     
-    def __init__(self, row_window_size = 12, col_window_size = 12, num_hist_bins = 256, num_components = 5):
-        self.setColWindowSize(col_window_size)
-        self.setRowWindowSize(row_window_size)
+    def __init__(self, block_size = 400, num_hist_bins = 256, num_components = 5):
+        self.setBlockSize(block_size)
         self.setNumHistBins(num_hist_bins)
         self.setNumComponents(num_components)
-        
-    def setRowWindowSize(self, row_window_size):
-        if row_window_size > 0:
-            self.row_window_size = row_window_size
-        else:
-            print("Error: please enter a valid row window size!")
 
     
-    def setColWindowSize(self, col_window_size):
-        if col_window_size > 0:
-            self.col_window_size = col_window_size
+    def setBlockSize(self, block_size):
+        if block_size > 0:
+            self.block_size = block_size
         else:
             print("Error: please enter a valid column window size!")
 
@@ -43,13 +35,17 @@ class NMFComputer():
         else:
             print("Error: please enter a valid number of components!")
             
-    def computeHistograms(self, image):
+    def computeHistograms(self, matrix):
         hist_image = []
-        for r in range(0,image.shape[0], self.row_window_size):
-            for c in range(0,image.shape[1], self.col_window_size):
-                window = image[r:r+self.row_window_size,c:c+self.col_window_size]
-                hist, bin_edge = np.histogram(window,bins=self.num_hist_bins)
+        m = math.sqrt(self.block_size)
+        cols = np.hsplit(matrix, m)
+        for c in cols:
+            blocks = np.vsplit(c, m)
+            for b in blocks:
+                hist, _ = np.histogram(b,bins=self.num_hist_bins)
                 hist_image.append(hist)
+
+        #print(len(hist_image))
         return np.array(hist_image).transpose()
     
     def computeNMF(self, V):

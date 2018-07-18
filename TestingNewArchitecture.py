@@ -4,29 +4,33 @@ Created on Jul 10, 2018
 @author: daniel
 '''
 
-from multiprocessing import Process, Manager
-from keras.utils import np_utils
+#from multiprocessing import Process, Manager
+#from keras.utils import np_utils
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 from Utils.TimerModule import TimerModule
 from Exploratory_Stuff.DataHandler import DataHandler
-from keras.callbacks import CSVLogger,ReduceLROnPlateau
-from keras.layers import Conv2D, Activation, MaxPooling2D, Reshape, Dense, Flatten, BatchNormalization, Dropout, LeakyReLU, PReLU,concatenate
-from keras.models import Sequential, Model, Input
-from keras.optimizers import SGD
-import os
+#from keras.callbacks import CSVLogger,ReduceLROnPlateau
+#from keras.layers import Conv2D, Activation, MaxPooling2D, Reshape, Dense, Flatten, BatchNormalization, Dropout, LeakyReLU, PReLU,concatenate
+#from keras.models import Sequential, Model, Input
+#from keras.optimizers import SGD
+#import os
 from Utils.EmailHandler import EmailHandler
 from Utils.HardwareHandler import HardwareHandler
 
 from datetime import datetime
-from keras.utils.training_utils import multi_gpu_model
-import keras.backend as K
-import tensorflow as tf
-import numpy as np
+#from keras.utils.training_utils import multi_gpu_model
+#import keras.backend as K
+#import tensorflow as tf
+#import numpy as np
 from NMFComputer.BasicNMFComputer import BasicNMFComputer
 
 from NMFComputer.ProbabilisticNMFComputer import ProbabilisticNMFComputer
 import sys
 import os
-DATA_DIR = os.path.abspath("../Data")
+DATA_DIR = os.path.abspath("../")
 sys.path.append(DATA_DIR)
 
 def main():

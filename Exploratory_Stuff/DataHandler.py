@@ -8,26 +8,27 @@ in a certain structure.
 
 '''
 
-
+"""
 import os
 import cv2
 from functools import partial
 import threading
 import random
 import numpy as np
+"""
 from math import floor
-from multiprocessing import Process, Manager, Pool
+from multiprocessing import Pool
 from keras.utils import np_utils
 from Utils.TimerModule import TimerModule
-from keras.callbacks import CSVLogger,ReduceLROnPlateau
-from keras.layers import Conv2D, Activation, MaxPooling2D, Reshape, Dense, Flatten, BatchNormalization, Dropout, LeakyReLU, PReLU,concatenate
-from keras.models import Sequential, Model, Input
-from keras.optimizers import SGD
+#from keras.callbacks import CSVLogger,ReduceLROnPlateau
+#from keras.layers import Conv2D, Activation, MaxPooling2D, Reshape, Dense, Flatten, BatchNormalization, Dropout, LeakyReLU, PReLU,concatenate
+#from keras.models import Sequential, Model, Input
+#from keras.optimizers import SGD
 import os
 from datetime import datetime
-from keras.utils.training_utils import multi_gpu_model
-import keras.backend as K
-import tensorflow as tf
+#from keras.utils.training_utils import multi_gpu_model
+#import keras.backend as K
+#import tensorflow as tf
 import numpy as np
 #import matplotlib.pyplot as plt
 import nibabel as nib
@@ -38,7 +39,8 @@ from NMFComputer.NMFComputer import NMFComputer
 timer = TimerModule()
 now = datetime.now()
 date_string = now.strftime('%Y-%m-%d_%H_%M')
-
+DATA_DIR = os.path.abspath("../")
+sys.path.append(DATA_DIR)
 class DataHandler:
     
     W = None
@@ -67,13 +69,9 @@ class DataHandler:
             for path in os.listdir(self.dataDirectory + "/" + subdir):
                 if mode in path:
                     image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
-                    for i in range(155):
-                        self.performNMFOnSlice(image, i)
-                    """
-                    with Pool(processes=6) as pool:
+                    with Pool(processes=7) as pool:
                         Y = pool.map(partial(self.performNMFOnSlice, image), list(range(155)))
                     self.X.extend(Y)
-                    """
             J = J + 1
             """
 

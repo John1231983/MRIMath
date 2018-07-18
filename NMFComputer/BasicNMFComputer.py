@@ -11,8 +11,8 @@ from sklearn.decomposition import NMF
 class BasicNMFComputer(NMFComputer):
     nmf_model = None
 
-    def __init__(self, row_window_size = 12, col_window_size = 12, num_hist_bins = 256, num_components = 5):
-        super().__init__(row_window_size, col_window_size, num_hist_bins, num_components)
+    def __init__(self, block_size = 400, num_hist_bins = 256, num_components = 5):
+        super().__init__(block_size, num_hist_bins, num_components)
         self.creatNMFModel(num_components)
 
         
