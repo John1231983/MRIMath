@@ -69,7 +69,7 @@ class DataHandler:
             for path in os.listdir(self.dataDirectory + "/" + subdir):
                 if mode in path:
                     image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
-                    with Pool(processes=os.cpu_count()) as pool:
+                    with Pool(processes=8) as pool:
                         Y = pool.map(partial(self.performNMFOnSlice, image), list(range(155)))
                     self.X.extend(Y)
             J = J + 1
