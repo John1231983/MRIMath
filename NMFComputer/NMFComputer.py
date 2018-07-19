@@ -45,7 +45,6 @@ class NMFComputer():
                 hist, _ = np.histogram(b,bins=self.num_hist_bins)
                 hist_image.append(hist)
 
-        #print(len(hist_image))
         return np.array(hist_image).transpose()
     
     def computeNMF(self, V):

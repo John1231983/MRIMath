@@ -24,7 +24,6 @@ from datetime import datetime
 #from keras.utils.training_utils import multi_gpu_model
 #import keras.backend as K
 #import tensorflow as tf
-#import numpy as np
 from NMFComputer.BasicNMFComputer import BasicNMFComputer
 
 from NMFComputer.ProbabilisticNMFComputer import ProbabilisticNMFComputer
