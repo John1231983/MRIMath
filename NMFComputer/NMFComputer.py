@@ -34,17 +34,17 @@ class NMFComputer():
             self.num_components = num_components
         else:
             print("Error: please enter a valid number of components!")
-            
+    
+    def computeHistogram(self, block):
+        hist, _ = np.histogram(block,bins=self.num_hist_bins)
+        return hist
+    
     def computeHistograms(self, matrix):
-        hist_image = []
         m = math.sqrt(self.block_size)
         cols = np.hsplit(matrix, m)
-        for c in cols:
-            blocks = np.vsplit(c, m)
-            for b in blocks:
-                hist, _ = np.histogram(b,bins=self.num_hist_bins)
-                hist_image.append(hist)
-
+        blocks = [np.vsplit(c,m) for c in cols]
+        hist_image = [self.computeHistogram(block) for block in blocks] 
+        print(hist_image)           
         return np.array(hist_image).transpose()
     
     def computeNMF(self, V):
