@@ -39,8 +39,8 @@ class NMFComputer():
             
     
     def computeHistograms(self, matrix):
-        cols = np.hsplit(matrix, self.block_dim)
-        row_split = [np.vsplit(c,self.block_dim) for c in cols]
+        cols = np.hsplit(matrix, matrix.shape[0]/self.block_dim)
+        row_split = [np.vsplit(c,matrix.shape[0]/self.block_dim) for c in cols]
         blocks = [item for sublist in row_split for item in sublist]
         hist_image = [np.histogram(block,bins=self.num_hist_bins)[0] for block in blocks] 
         return np.array(hist_image).transpose()
