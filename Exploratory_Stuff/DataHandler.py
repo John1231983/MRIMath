@@ -20,6 +20,8 @@ from math import floor
 from multiprocessing import Pool
 from keras.utils import np_utils
 from Utils.TimerModule import TimerModule
+import matplotlib.pyplot as plt
+
 #from keras.callbacks import CSVLogger,ReduceLROnPlateau
 #from keras.layers import Conv2D, Activation, MaxPooling2D, Reshape, Dense, Flatten, BatchNormalization, Dropout, LeakyReLU, PReLU,concatenate
 #from keras.models import Sequential, Model, Input
@@ -84,33 +86,49 @@ class DataHandler:
                     with Pool(processes=8) as pool:
                         Y = pool.map(partial(self.performNMFOnSlice, image), list(range(155)))
                     self.X.extend(Y)
-            J = J + 1
-            """
-
+                """
+                elif "seg" in path:
+                    seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
+                    for i in range(155):
+                        self.labels.extend(seg_image[:,:,i])
+                """
             J = J + 1
         self.preprocessForNetwork()
-"""
+
+
     def performNMFOnSlice(self, image, i):
         W, H = self.nmfComp.run(image[:,:,i])
+        self.processData(image[:,:,i], W,H)
         return W, H
     
+    
+    def processData(self, image, W, H):
         
-    def getLabel(self, mat, i):
-        image = mat[:,:,i]
-        labels = []
-        for r in range(0,image.shape[0], self.nmfComp.row_window_size):
-            for c in range(0,image.shape[1], self.nmfComp.col_window_size):
-                window = image[r:r+self.nmfComp.row_window_size,c:c+self.nmfComp.col_window_size]
-                labels.append(window[floor(self.nmfComp.row_window_size/2), floor(self.nmfComp.col_window_size/2)])
-        return labels
+        indices = np.argmax(W, axis=0)
+        H = H[indices > 0]
+        regions = np.argmax(H, axis=0)
+        n = 5
+        regions[regions<n] = 0
+        regions = regions.astype(bool)
+        m = self.nmfComp.block_dim
+        ind = 0
+        for i in range(0, image.shape[0], m):
+            for j in range(0, image.shape[1], m):
+                image[i:i+m, j:j+m] *= regions[ind]
+                ind = ind + 1
+        plt.imshow(image)
+        plt.show()
+                
                     
+        
 
     def preprocessForNetwork(self):
-        print(len(self.labels))
-        print(len(self.X))
-        self.X = np.array(self.X)
-        self.X = self.X.transpose()
-        self.labels = np.array(self.labels)
-        self.labels = np_utils.to_categorical(self.labels)
+
+        """
+        plt.bar(np.arange(H.shape[0]), H[:,10])
+            plt.show()
+         """
+            
+            
            
 

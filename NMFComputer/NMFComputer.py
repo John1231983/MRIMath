@@ -4,21 +4,23 @@ Created on Jul 8, 2018
 @author: daniel
 '''
 import numpy as np
-import math
+import matplotlib.pyplot as plt
+
+
 class NMFComputer():
-    block_size = 0
+    block_dim = 0
     num_hist_bins = 0
     num_components = 0
     
-    def __init__(self, block_size = 400, num_hist_bins = 256, num_components = 5):
-        self.setBlockSize(block_size)
+    def __init__(self, block_dim = 20, num_hist_bins = 256, num_components = 8):
+        self.setBlockDim(block_dim)
         self.setNumHistBins(num_hist_bins)
         self.setNumComponents(num_components)
 
     
-    def setBlockSize(self, block_size):
-        if block_size > 0:
-            self.block_size = block_size
+    def setBlockDim(self, block_dim):
+        if block_dim > 0:
+            self.block_dim = block_dim
         else:
             print("Error: please enter a valid column window size!")
 
@@ -35,21 +37,37 @@ class NMFComputer():
         else:
             print("Error: please enter a valid number of components!")
             
+    
     def computeHistograms(self, matrix):
-        hist_image = []
-        m = math.sqrt(self.block_size)
-        cols = np.hsplit(matrix, m)
-        for c in cols:
-            blocks = np.vsplit(c, m)
-            for b in blocks:
-                hist, _ = np.histogram(b,bins=self.num_hist_bins)
-                hist_image.append(hist)
-
+        cols = np.hsplit(matrix, self.block_dim)
+        row_split = [np.vsplit(c,self.block_dim) for c in cols]
+        blocks = [item for sublist in row_split for item in sublist]
+        hist_image = [np.histogram(block,bins=self.num_hist_bins)[0] for block in blocks] 
         return np.array(hist_image).transpose()
     
+    """
+    def computeHistograms(self, matrix):
+        hist_image = []
+        cols = np.hsplit(matrix, self.block_dim)
+        print(len(cols))
+        for c in cols:
+            blocks = np.vsplit(c, self.block_dim)
+            print(len(blocks))
+
+            for b in blocks:
+                hist, _ = np.histogram(block,bins=self.num_hist_bins)
+                hist_image.append(hist)
+        return np.array(hist_image).transpose()
+    """
     def computeNMF(self, V):
         pass
     
+    def showHistogram(self, block):
+        hist, bin_edges = np.histogram(block,bins=self.num_hist_bins)
+        plt.bar(bin_edges[:-1], hist, width = 1)
+        plt.xlim(min(bin_edges), max(bin_edges))
+        plt.show()  
+        
     def run(self, image):
         V = self.computeHistograms(image)
         W, H = self.computeNMF(V)
