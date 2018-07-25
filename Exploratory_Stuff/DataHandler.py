@@ -108,7 +108,6 @@ class DataHandler:
         indices = np.argmax(W, axis=0)
         #H = H[indices > 0]
         regions = np.argmax(H, axis=0)
-        print(regions)
         n = 6
         region_5 = regions.copy()
         region_5_and_6 = regions.copy()
@@ -124,8 +123,10 @@ class DataHandler:
 
         
         #region_5_and_6_and_7[regions < ] = 0
-        #region_5_and_6_and_7[regions < 1] = 0
-        region_5_and_6_and_7[regions > 1] = 1
+        region_5_and_6_and_7[regions < 6] = 1
+        region_5_and_6_and_7[regions > 6] = 0
+
+        #region_5_and_6_and_7[regions > 6] = 1
 
         region_5_and_6_and_7 = region_5_and_6_and_7.astype(bool)
         
