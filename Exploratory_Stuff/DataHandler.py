@@ -83,8 +83,9 @@ class DataHandler:
             for path in os.listdir(self.dataDirectory + "/" + subdir):
                 if mode in path:
                     image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
+                    seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + path.replace(mode, "seg")).get_data()
                     with Pool(processes=8) as pool:
-                        Y = pool.map(partial(self.performNMFOnSlice, image), list(range(155)))
+                        Y = pool.map(partial(self.performNMFOnSlice, image, seg_image), list(range(155)))
                     self.X.extend(Y)
                 """
                 elif "seg" in path:
@@ -96,27 +97,72 @@ class DataHandler:
         self.preprocessForNetwork()
 
 
-    def performNMFOnSlice(self, image, i):
+    def performNMFOnSlice(self, image, seg_image, i):
         W, H = self.nmfComp.run(image[:,:,i])
-        self.processData(image[:,:,i], W,H)
+        self.processData(image[:,:,i], W,H, seg_image[:,:,i])
         return W, H
     
     
-    def processData(self, image, W, H):
+    def processData(self, image, W, H, seg_image):
         
         indices = np.argmax(W, axis=0)
-        H = H[indices > 0]
+        #H = H[indices > 0]
         regions = np.argmax(H, axis=0)
-        n = 5
-        regions[regions<n] = 0
+        print(regions)
+        n = 6
+        region_5 = regions.copy()
+        region_5_and_6 = regions.copy()
+        region_5_and_6_and_7 = regions.copy()
+        
+        region_5[regions < 3] = 0
+        region_5[regions > 3] = 0
+        region_5 = region_5.astype(bool)
+        
+        region_5_and_6[regions < 3] = 0
+        region_5_and_6[regions > 4] = 0
+        region_5_and_6 = region_5_and_6.astype(bool)
+
+        
+        #region_5_and_6_and_7[regions < ] = 0
+        #region_5_and_6_and_7[regions < 1] = 0
+        region_5_and_6_and_7[regions > 1] = 1
+
+        region_5_and_6_and_7 = region_5_and_6_and_7.astype(bool)
+        
+        
+        reg_5_image = image.copy()
+        reg_5_and_6_image = image.copy()
+        reg_5_and_6_and_7_image = image.copy()
+        #reg_4_and_5_and_6_and_7_image = image.copy()
+
         regions = regions.astype(bool)
         m = self.nmfComp.block_dim
         ind = 0
         for i in range(0, image.shape[0], m):
             for j in range(0, image.shape[1], m):
-                image[i:i+m, j:j+m] *= regions[ind]
+                reg_5_image[i:i+m, j:j+m] *= region_5[ind]
+                reg_5_and_6_image[i:i+m, j:j+m] *= region_5_and_6[ind] 
+                reg_5_and_6_and_7_image[i:i+m, j:j+m] *= region_5_and_6_and_7[ind]
                 ind = ind + 1
+                
+        fig = plt.figure()
+        plt.gray();   
+        a=fig.add_subplot(1,5,1)
         plt.imshow(image)
+        plt.axis('off')
+        a=fig.add_subplot(1,5,2)
+        plt.imshow(reg_5_image)
+        plt.axis('off')
+        a=fig.add_subplot(1,5,3)
+        plt.imshow(reg_5_and_6_image)
+        plt.axis('off')
+        a=fig.add_subplot(1,5,4)
+        plt.imshow(reg_5_and_6_and_7_image)
+        plt.axis('off')
+        a=fig.add_subplot(1,5,5)
+        plt.imshow(seg_image)
+        plt.axis('off')
+
         plt.show()
                 
                     
