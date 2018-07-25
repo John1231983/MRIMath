@@ -38,7 +38,7 @@ def main():
     timer = TimerModule()
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d_%H_%M')
-    dataHandler = DataHandler("Data/BRATS_2018/HGG", BasicNMFComputer(block_dim=4))
+    dataHandler = DataHandler("Data/BRATS_2018/HGG", BasicNMFComputer(block_dim=8))
     dataHandler.loadData("flair")
     input_img =(dataHandler.W, dataHandler.H, 1)
     """

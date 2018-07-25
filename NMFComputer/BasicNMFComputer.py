@@ -24,5 +24,5 @@ class BasicNMFComputer(NMFComputer):
     
         
     def creatNMFModel(self, num_components):
-        self.nmf_model = NMF(n_components=num_components, init='random', random_state=0, solver='mu')
+        self.nmf_model = NMF(n_components=num_components, init='random', random_state=0, solver='cd')
             
