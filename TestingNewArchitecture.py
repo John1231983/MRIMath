@@ -19,7 +19,10 @@ from Exploratory_Stuff.DataHandler import DataHandler
 #import os
 from Utils.EmailHandler import EmailHandler
 from Utils.HardwareHandler import HardwareHandler
-
+from keras.layers import Input, Dense, Conv2D, MaxPooling2D, UpSampling2D
+from keras.models import Model
+from keras import backend as K
+import numpy as np
 from datetime import datetime
 #from keras.utils.training_utils import multi_gpu_model
 #import keras.backend as K
@@ -40,7 +43,38 @@ def main():
     date_string = now.strftime('%Y-%m-%d_%H_%M')
     dataHandler = DataHandler("Data/BRATS_2018/HGG", BasicNMFComputer(block_dim=8))
     dataHandler.loadData("flair")
-    input_img =(dataHandler.W, dataHandler.H, 1)
+    input_img = Input(shape=(dataHandler.W, dataHandler.H, 1))
+    dataHandler.preprocessForNetwork()
+    
+    x = Conv2D(16, (3, 3), activation='relu', padding='same')(input_img)
+    x = MaxPooling2D((2, 2), padding='same')(x)
+    x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
+    x = MaxPooling2D((2, 2), padding='same')(x)
+    x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
+    encoded = MaxPooling2D((2, 2), padding='same')(x)
+    
+    # at this point the representation is (4, 4, 8) i.e. 128-dimensional
+    
+    x = Conv2D(8, (3, 3), activation='relu', padding='same')(encoded)
+    x = UpSampling2D((2, 2))(x)
+    x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
+    x = UpSampling2D((2, 2))(x)
+    x = Conv2D(16, (3, 3), activation='relu', padding='same')(x)
+    x = UpSampling2D((2, 2))(x)
+    decoded = Conv2D(1, (3, 3), activation='sigmoid', padding='same')(x)
+    
+    encoder = Model(input_img, decoded)
+    encoder.compile(optimizer='adadelta', loss='binary_crossentropy')
+    x_train = dataHandler.X
+    x_seg = dataHandler.labels
+    #x_train = x_train.astype('float32') / 255.
+    
+    encoder.fit(x_train, x_seg,
+                epochs=50,
+                batch_size=128,
+                shuffle=True,
+                #validation_data=(x_test, x_test),
+                )
     """
     model = Sequential()
     model.add(Dense(100, input_shape = (310,)))

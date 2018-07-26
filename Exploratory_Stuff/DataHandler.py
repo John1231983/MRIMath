@@ -53,10 +53,12 @@ class DataHandler:
     labels = []
     nmfComp = None
     
-    def __init__(self, dataDirectory, nmfComp):
+    def __init__(self, dataDirectory, nmfComp, W = 240, H = 240):
         self.dataDirectory = dataDirectory
         self.X = []
         self.labels = []
+        self.W = W
+        self.H = H
         self.nmfComp = nmfComp
     
     def preprocess(self, image):
@@ -79,37 +81,43 @@ class DataHandler:
                 timer.stopTimer()
                 print(timer.getElapsedTime())
                 break
-            Y = []
+            #Y = []
             for path in os.listdir(self.dataDirectory + "/" + subdir):
                 if mode in path:
                     image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
                     seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + path.replace(mode, "seg")).get_data()
+                    inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
                     with Pool(processes=8) as pool:
-                        Y = pool.map(partial(self.performNMFOnSlice, image, seg_image), list(range(155)))
-                    self.X.extend(Y)
-                """
-                elif "seg" in path:
-                    seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
-                    for i in range(155):
-                        self.labels.extend(seg_image[:,:,i])
-                """
-            J = J + 1
+                        temp = pool.map(partial(self.performNMFOnSlice, image, seg_image), inds)
+                    foo = [i[0] for i in temp]
+                    bar = [i[1] for i in temp]
+
+                    self.X.extend([item for sublist in foo for item in sublist])
+                    self.labels.extend([item for sublist in bar for item in sublist])
+                    J = J + 1
+                    break
         self.preprocessForNetwork()
 
+    
+    def getImagesWithSegment(self, seg_image, i):
+        if np.count_nonzero(seg_image[:,:,i]) > 0:
+            self.labels.append(seg_image[:,:,i])
+            return i
+        return -1
 
     def performNMFOnSlice(self, image, seg_image, i):
         W, H = self.nmfComp.run(image[:,:,i])
-        self.processData(image[:,:,i], W,H, seg_image[:,:,i])
-        return W, H
+        return self.processData(image[:,:,i], W,H, seg_image[:,:,i])
+        
     
     
     def processData(self, image, W, H, seg_image):
-        print(W)
+        X = []
+        y = []
         indices = np.argmax(W, axis=0)
         H = H[indices > 0]
         regions = np.argmax(H, axis=0)
-        print(indices)
-        n = 6
+        
         
         region_1 = regions.copy()
         region_1_and_2 = regions.copy()
@@ -118,7 +126,7 @@ class DataHandler:
         region_1_and_2_and_3_and_4_and_5 = regions.copy()
         region_1_and_2_and_3_and_4_and_5_and_6 = regions.copy() 
         
-        region_1[regions < 1] = 0
+        region_1[regions < 0] = 0
         region_1[regions > 1] = 0
         region_1 = region_1.astype(bool)
         
@@ -163,6 +171,22 @@ class DataHandler:
                 reg_1_and_2_and_3_and_4_and_5_and_6_image[i:i+m, j:j+m] *= region_1_and_2_and_3_and_4_and_5_and_6[ind]
                 ind = ind + 1
                 
+        X.append(reg_1_and_2_and_3_image)
+        y.append(seg_image)
+        
+        X.append(reg_1_and_2_and_3_and_4_image)
+        y.append(seg_image)
+        
+        X.append(reg_1_and_2_and_3_and_4_and_5_image)
+        y.append(seg_image)
+
+        X.append(reg_1_and_2_and_3_and_4_and_5_and_6_image)
+        y.append(seg_image)
+        
+        return X, y
+
+        
+        """
         fig = plt.figure()
         plt.gray();   
         
@@ -186,6 +210,7 @@ class DataHandler:
         plt.imshow(reg_1_and_2_and_3_image)
         plt.axis('off')
         plt.title(r'1 $\cup$ 2 $\cup$ 3')
+        self.X.append(reg_1_and_2_and_3_image)
         
         
         a=fig.add_subplot(1,8,5)
@@ -210,16 +235,23 @@ class DataHandler:
         plt.title('Segment')
 
         plt.show()
+    """
+    
                 
                     
-        
+    
 
     def preprocessForNetwork(self):
-
-        """
-        plt.bar(np.arange(H.shape[0]), H[:,10])
-            plt.show()
-         """
+        n_imgs = len(self.X)
+        
+        self.X = np.array( self.X )
+        self.X = self.X.reshape(n_imgs,self.W,self.H,1)
+        
+        self.labels = np.array( self.labels )
+        self.labels = self.labels.reshape(n_imgs,self.W,self.H,1)
+        
+        print(self.X.shape)
+        
             
             
            
