@@ -71,6 +71,9 @@ class DataHandler:
         # corrected_image = exposure.equalize_hist(corrected_image)
         return corrected_image
         
+    def clear(self):
+        self.X = []
+        self.labels = []
         
     def loadData(self, mode):
         timer = TimerModule()
@@ -99,6 +102,9 @@ class DataHandler:
         self.preprocessForNetwork()
 
     
+    def setDataDirectory(self, dataDirectory):
+        self.dataDirectory = dataDirectory
+        
     def getImagesWithSegment(self, seg_image, i):
         if np.count_nonzero(seg_image[:,:,i]) > 0:
             self.labels.append(seg_image[:,:,i])
@@ -250,7 +256,6 @@ class DataHandler:
         self.labels = np.array( self.labels )
         self.labels = self.labels.reshape(n_imgs,self.W,self.H,1)
         
-        print(self.X.shape)
         
             
             
