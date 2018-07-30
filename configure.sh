@@ -11,6 +11,7 @@ echo "Installing all necessary dependencies..."
     pip install scipy
     pip install scikit-image
     pip install scikit-learn
+    pip install scikit-build
     pip install simpleitk
     pip install IPython
     pip install imgaug
