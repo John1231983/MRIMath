@@ -8,29 +8,32 @@ from NMFComputer.NMFComputer import NMFComputer
 import numpy as np
 from functools import partial
 import matplotlib.pyplot as plt
-    from numpy import linalg
+from numpy import linalg
 
 
 class ProbabilisticNMFComputer(NMFComputer):
+
+    num_iterations = 0
     
-    def __init__(self, block_size = 400, num_hist_bins = 256, num_components = 8):
-        super().__init__(block_size, num_hist_bins, num_components)
+    def __init__(self, block_dim = 20, num_hist_bins = 256, num_components = 8, num_iterations = 50):
+        super().__init__(block_dim, num_hist_bins, num_components)
+        self.num_iterations = num_iterations
         
         
-    def cost(A, W, H):
+    def cost(self, V, W, H):
         WH = np.matmul(W, H)
-        A_WH = A-WH
-        return linalg.norm(A_WH, 'fro')
+        V_WH = V-WH
+        return linalg.norm(V_WH, 'fro')
     
     
     def computeNMF(self, V):
-        
+        plot = []
         sigma = np.var(V)
         
         W = np.abs(np.random.uniform(low=0, high=1, size=(V.shape[0], self.num_components)))
         H = np.abs(np.random.uniform(low=0, high=1, size=(self.num_components, V.shape[1])))
      
-        for _ in range(0, 10):
+        for _ in range(0, self.num_iterations):
             lamda_H = sigma/np.var(H)
             lamda_W  = sigma/np.var(W)
 
@@ -46,12 +49,7 @@ class ProbabilisticNMFComputer(NMFComputer):
             H *= np.divide(WV,WTWH+lamda_H*H)
             W *= np.divide(HV,WHHT+lamda_W*W)
             
-            print(self.cost(V, W, H))
-            
-            
-            
-        
-
+			
         return W, H
 
             
