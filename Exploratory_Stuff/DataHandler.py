@@ -21,6 +21,9 @@ from multiprocessing import Pool
 from keras.utils import np_utils
 from Utils.TimerModule import TimerModule
 import matplotlib.pyplot as plt
+from keras.utils import to_categorical
+
+from scipy import stats
 
 #from keras.callbacks import CSVLogger,ReduceLROnPlateau
 #from keras.layers import Conv2D, Activation, MaxPooling2D, Reshape, Dense, Flatten, BatchNormalization, Dropout, LeakyReLU, PReLU,concatenate
@@ -113,16 +116,41 @@ class DataHandler:
 
     def performNMFOnSlice(self, image, seg_image, i):
         W, H = self.nmfComp.run(image[:,:,i])
-        return self.processData(image[:,:,i], W,H, seg_image[:,:,i])
-        
+        return self.processData2(W,H, seg_image[:,:,i])
+    
+    def processData2(self, W, H, seg_image):
+        X = []
+        y = []
+        m = self.nmfComp.block_dim
+        max_background_blocks = 0.05*H.shape[1]
+        num_background_blocks = 0
+        ind = 0
+        for i in range(0, seg_image.shape[0], m):
+            for j in range(0, seg_image.shape[1], m):
+                counts = np.bincount(seg_image[i:i+m, j:j+m].flatten())
+                mode = int(np.argmax(counts))
+                if mode == 0:
+                    if num_background_blocks < max_background_blocks:
+                        y.append(mode)
+                        X.append(H[:, ind:ind+1])
+                    num_background_blocks = num_background_blocks + 1
+                else:
+                    y.append(mode)
+                    X.append(H[:, ind:ind+1])
+                ind = ind + 1
+                        
+
+        return X, y
+
     
     
     def processData(self, image, W, H, seg_image):
         X = []
         y = []
         indices = np.argmax(W, axis=0)
-        H = H[indices > 0]
+        #H = H[indices > 0]
         regions = np.argmax(H, axis=0)
+        
         
         
         region_1 = regions.copy()
@@ -163,12 +191,12 @@ class DataHandler:
         reg_1_and_2_and_3_and_4_image = image.copy()
         reg_1_and_2_and_3_and_4_and_5_image = image.copy()
         reg_1_and_2_and_3_and_4_and_5_and_6_image = image.copy()
-
-        regions = regions.astype(bool)
+        
+        #regions = regions.astype(bool)
         m = self.nmfComp.block_dim
         ind = 0
-        for i in range(0, image.shape[0], m):
-            for j in range(0, image.shape[1], m):
+        for i in range(0, seg_image.shape[0], m):
+            for j in range(0, seg_image.shape[1], m):
                 reg_1_image[i:i+m, j:j+m] *= region_1[ind]
                 reg_1_and_2_image[i:i+m, j:j+m] *= region_1_and_2[ind]
                 reg_1_and_2_and_3_image[i:i+m, j:j+m] *= region_1_and_2_and_3[ind]
@@ -176,7 +204,9 @@ class DataHandler:
                 reg_1_and_2_and_3_and_4_and_5_image[i:i+m, j:j+m] *= region_1_and_2_and_3_and_4_and_5[ind] 
                 reg_1_and_2_and_3_and_4_and_5_and_6_image[i:i+m, j:j+m] *= region_1_and_2_and_3_and_4_and_5_and_6[ind]
                 ind = ind + 1
-                
+                """
+        #seg_image[seg_image > 0] = 1
+        """
         X.append(reg_1_and_2_and_3_image)
         y.append(seg_image)
         
@@ -189,8 +219,7 @@ class DataHandler:
         X.append(reg_1_and_2_and_3_and_4_and_5_and_6_image)
         y.append(seg_image)
         
-        return X, y
-
+        
         
         """
         fig = plt.figure()
@@ -241,7 +270,10 @@ class DataHandler:
         plt.title('Segment')
 
         plt.show()
-    """
+        """
+        return X, y
+
+    
     
                 
                     
@@ -251,10 +283,14 @@ class DataHandler:
         n_imgs = len(self.X)
         
         self.X = np.array( self.X )
-        self.X = self.X.reshape(n_imgs,self.W,self.H,1)
+        self.X = self.X.reshape(n_imgs,self.nmfComp.block_dim)
+        #self.labels = np.array( self.labels )
+        n_values = int(np.max( self.labels ) + 1)
         
-        self.labels = np.array( self.labels )
-        self.labels = self.labels.reshape(n_imgs,self.W,self.H,1)
+        #self.labels = np_utils.to_categorical(self.labels)
+        #self.labels = self.labels.reshape(n_imgs,self.W,self.H,1)
+        # self.labels = self.labels.reshape(n_imgs, self.W*self.H,2)
+
         
         
             
