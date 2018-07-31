@@ -55,15 +55,20 @@ class DataHandler:
     X = []
     labels = []
     nmfComp = None
+    num_patients = 0
     
-    def __init__(self, dataDirectory, nmfComp, W = 240, H = 240):
+    def __init__(self, dataDirectory, nmfComp, W = 240, H = 240, num_patients = 3):
         self.dataDirectory = dataDirectory
         self.X = []
         self.labels = []
         self.W = W
         self.H = H
         self.nmfComp = nmfComp
+        self.setNumPatients(num_patients)
     
+    def setNumPatients(self, num_patients):
+        if num_patients > 0:
+            self.num_patients = num_patients
     def preprocess(self, image):
         sitk_image = sitk.GetImageFromArray(image)
         sitk_image = sitk.IntensityWindowing(sitk_image, np.percentile(image, 1), np.percentile(image, 99))
@@ -83,7 +88,7 @@ class DataHandler:
         timer.startTimer()
         J = 0
         for subdir in os.listdir(self.dataDirectory):
-            if J > 1:
+            if J > self.num_patients:
                 timer.stopTimer()
                 print(timer.getElapsedTime())
                 break
