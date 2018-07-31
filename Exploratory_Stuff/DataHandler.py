@@ -22,8 +22,7 @@ from keras.utils import np_utils
 from Utils.TimerModule import TimerModule
 import matplotlib.pyplot as plt
 from keras.utils import to_categorical
-
-from scipy import stats
+from scipy.stats import mode
 
 #from keras.callbacks import CSVLogger,ReduceLROnPlateau
 #from keras.layers import Conv2D, Activation, MaxPooling2D, Reshape, Dense, Flatten, BatchNormalization, Dropout, LeakyReLU, PReLU,concatenate
@@ -126,22 +125,29 @@ class DataHandler:
         X = []
         y = []
         m = self.nmfComp.block_dim
-        max_background_blocks = 0.05*H.shape[1]
+        max_background_blocks = 0.01*H.shape[1]
         num_background_blocks = 0
         ind = 0
-        for i in range(0, seg_image.shape[0], m):
-            for j in range(0, seg_image.shape[1], m):
-                counts = np.bincount(seg_image[i:i+m, j:j+m].flatten())
-                mode = int(np.argmax(counts))
-                if mode == 0:
-                    if num_background_blocks < max_background_blocks:
-                        y.append(mode)
-                        X.append(H[:, ind:ind+1])
-                    num_background_blocks = num_background_blocks + 1
-                else:
+        cols = np.hsplit(seg_image, seg_image.shape[0]/m)
+        row_split = [np.vsplit(c,seg_image.shape[0]/m) for c in cols]
+        blocks = [item.flatten() for sublist in row_split for item in sublist]
+		#mode_blocks = [int(mode(block)[0][0]) for block in blocks]
+		#background_blocks = [block for block in mode_blocks if block==0]
+		#normal_blocks = [block for block in mode_blocks if block>0]
+		# y = background_blocks[0:max_background_blocks]
+		# y.extend()
+        for block in blocks:
+            counts = np.bincount(block)
+            mode = int(np.argmax(counts))
+            if mode == 0:
+                if num_background_blocks < max_background_blocks:
                     y.append(mode)
                     X.append(H[:, ind:ind+1])
-                ind = ind + 1
+                num_background_blocks = num_background_blocks + 1
+            else:
+                y.append(mode)
+                X.append(H[:, ind:ind+1])
+            ind = ind + 1
                         
 
         return X, y
