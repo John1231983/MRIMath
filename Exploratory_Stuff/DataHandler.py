@@ -102,7 +102,6 @@ class DataHandler:
                     self.labels.extend([item for sublist in bar for item in sublist])
                     J = J + 1
                     break
-        self.preprocessForNetwork()
 
     
     def setDataDirectory(self, dataDirectory):
@@ -285,9 +284,7 @@ class DataHandler:
         self.X = np.array( self.X )
         self.X = self.X.reshape(n_imgs,self.nmfComp.block_dim)
         #self.labels = np.array( self.labels )
-        n_values = int(np.max( self.labels ) + 1)
-        
-        #self.labels = np_utils.to_categorical(self.labels)
+        self.labels = np_utils.to_categorical(self.labels)
         #self.labels = self.labels.reshape(n_imgs,self.W,self.H,1)
         # self.labels = self.labels.reshape(n_imgs, self.W*self.H,2)
 

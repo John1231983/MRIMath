@@ -51,8 +51,6 @@ def main():
     dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
     labels = dataHandler.labels
-    print(x_train.shape)
-    print(labels)
     dataHandler.clear()
     """
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
