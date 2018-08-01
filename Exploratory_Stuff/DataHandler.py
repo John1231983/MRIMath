@@ -127,27 +127,21 @@ class DataHandler:
         m = self.nmfComp.block_dim
         max_background_blocks = 0.01*H.shape[1]
         num_background_blocks = 0
-        ind = 0
+        
+        
         cols = np.hsplit(seg_image, seg_image.shape[0]/m)
         row_split = [np.vsplit(c,seg_image.shape[0]/m) for c in cols]
-        blocks = [item.flatten() for sublist in row_split for item in sublist]
-		#mode_blocks = [int(mode(block)[0][0]) for block in blocks]
-		#background_blocks = [block for block in mode_blocks if block==0]
-		#normal_blocks = [block for block in mode_blocks if block>0]
-		# y = background_blocks[0:max_background_blocks]
-		# y.extend()
-        for block in blocks:
-            counts = np.bincount(block)
-            mode = int(np.argmax(counts))
-            if mode == 0:
-                if num_background_blocks < max_background_blocks:
-                    y.append(mode)
-                    X.append(H[:, ind:ind+1])
+        blocks = [int(mode(block, axis=None)[0][0]) for sublist in row_split for block in sublist]
+        H_cols = np.hsplit(H, H.shape[1])
+        
+        
+        for i, block in enumerate(blocks):
+            if block == 0:
                 num_background_blocks = num_background_blocks + 1
-            else:
-                y.append(mode)
-                X.append(H[:, ind:ind+1])
-            ind = ind + 1
+                if num_background_blocks > max_background_blocks:
+                    continue
+            y.append(block)
+            X.append(H_cols[i])
                         
 
         return X, y

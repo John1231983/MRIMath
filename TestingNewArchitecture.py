@@ -60,16 +60,13 @@ def main():
     x_seg_val = dataHandler.labels
     dataHandler.clear()
     """
-    
-    input_shape = (dataHandler.nmfComp.block_dim, 1)
-    #inputs = Input(shape=input_shape)
-    
+        
     model = Sequential()
     model.add(Dense(100, input_dim=dataHandler.nmfComp.block_dim, activation='relu'))
     model.add(Dense(8, activation='relu'))
-    model.add(Dense(labels.shape[1], activation='sigmoid'))
+    model.add(Dense(labels.shape[1], activation='relu'))
 # Compile model
-    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.compile(loss='mse', optimizer='sgd', metrics=['accuracy'])
 # Fit the model
     model.fit(x_train, labels, epochs=150, batch_size=10)
 # evaluate the model
