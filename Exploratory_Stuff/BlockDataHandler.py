@@ -18,9 +18,9 @@ class BlockDataHandler(DataHandler):
         X = []
         y = []
         m = self.nmfComp.block_dim
-        max_background_blocks = 0.01*H.shape[1]
+        max_background_blocks = int(0.01*H.shape[1])
         num_background_blocks = 0
-        seg_image[seg_image > 0] = 1
+        #seg_image[seg_image > 0] = 1
         H = np.nan_to_num(H)
         cols = np.hsplit(seg_image, seg_image.shape[0]/m)
         row_split = [np.vsplit(c,seg_image.shape[0]/m) for c in cols]

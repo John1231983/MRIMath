@@ -27,6 +27,7 @@ import nibabel as nib
 import numpy as np
 from NMFComputer.BasicNMFComputer import BasicNMFComputer
 import matplotlib.pyplot as plt
+from keras.layers.advanced_activations import LeakyReLU, PReLU
 
 from NMFComputer.ProbabilisticNMFComputer import ProbabilisticNMFComputer
 import sys
@@ -42,8 +43,8 @@ def main():
     date_string = now.strftime('%Y-%m-%d_%H_%M')
     
     
-    nmfComp = ProbabilisticNMFComputer(block_dim=8)
-    dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = 5)
+    nmfComp = BasicNMFComputer(block_dim=8, num_components=10)
+    dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = 10)
     dataHandler.loadData("flair")
     dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
@@ -60,10 +61,16 @@ def main():
     
         
     model = Sequential()
-    model.add(Dense(200, input_dim=dataHandler.nmfComp.num_components, activation='relu'))
-    model.add(Dense(100, activation='relu'))
-    model.add(Dense(50, activation='relu'))
-    model.add(Dense(10, activation='relu'))
+    model.add(Dense(500, input_dim=dataHandler.nmfComp.num_components))
+    model.add(LeakyReLU())
+    model.add(Dense(250))
+    model.add(LeakyReLU())
+    model.add(Dense(150))
+    model.add(LeakyReLU())
+    model.add(Dense(75))
+    model.add(LeakyReLU())
+    model.add(Dense(25))
+    model.add(LeakyReLU())
     model.add(Dense(labels.shape[1], activation='softmax'))
 # Compile model
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -84,30 +91,38 @@ def main():
                 image = nib.load(test_data_dir + "/" + subdir + "/" + path).get_data()
                 seg_image = nib.load(test_data_dir+ "/" + subdir + "/" + path.replace(mode, "seg")).get_data()
                 break
-    
     m = nmfComp.block_dim
-    for k in range(0,155):
+    inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
+
+    for k in inds:
         seg_est = np.zeros(shape=(dataHandler.W, dataHandler.H))
-        _, H = nmfComp.run(image[:,:,k])
+        img = dataHandler.preprocess(image[:,:,k])
+        _, H = nmfComp.run(img)
         H_cols = np.hsplit(H, H.shape[1])
         labels = [model.predict(x.T) for x in H_cols]
         #labels = model.predict(H.T)
         ind = 0
         for i in range(0, dataHandler.W, m):
             for j in range(0, dataHandler.H, m):
-                seg_est[i:i+m, j:j+m] = np.full(m, m, np.argmax(labels[ind]))
+                seg_est[j:j+m, i:i+m] = np.full((m, m), np.argmax(labels[ind]))
                 ind = ind+1
         
         fig = plt.figure()
         plt.gray();
-        a=fig.add_subplot(1,2,1)
-        plt.imshow(seg_image[:,:,k])
+        a=fig.add_subplot(1,3,1)
+        plt.imshow(img)
         plt.axis('off')
         plt.title('Original')
+
+        a=fig.add_subplot(1,3,2)
+        plt.imshow(seg_image[:,:,k])
+        plt.axis('off')
+        plt.title('GT Segment')
         
-        a=fig.add_subplot(1,2,2)
+        a=fig.add_subplot(1,3,3)
         plt.imshow(seg_est)
-        plt.gray()
+        plt.axis('off')
+        plt.title('Estimate Segment')
         plt.show()
         
         
