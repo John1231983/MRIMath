@@ -18,11 +18,8 @@ import numpy as np
 """
 from math import floor
 from multiprocessing import Pool
-from keras.utils import np_utils
 from Utils.TimerModule import TimerModule
 import matplotlib.pyplot as plt
-from keras.utils import to_categorical
-from scipy.stats import mode
 
 #from keras.callbacks import CSVLogger,ReduceLROnPlateau
 #from keras.layers import Conv2D, Activation, MaxPooling2D, Reshape, Dense, Flatten, BatchNormalization, Dropout, LeakyReLU, PReLU,concatenate
@@ -91,7 +88,6 @@ class DataHandler:
                 timer.stopTimer()
                 print(timer.getElapsedTime())
                 break
-            #Y = []
             for path in os.listdir(self.dataDirectory + "/" + subdir):
                 if mode in path:
                     image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
@@ -119,179 +115,17 @@ class DataHandler:
 
     def performNMFOnSlice(self, image, seg_image, i):
         W, H = self.nmfComp.run(image[:,:,i])
-        return self.processData2(W,H, seg_image[:,:,i])
+        return self.processData(W,H, seg_image[:,:,i])
     
-    def processData2(self, W, H, seg_image):
-        X = []
-        y = []
-        m = self.nmfComp.block_dim
-        max_background_blocks = 0.01*H.shape[1]
-        num_background_blocks = 0
-        
-        
-        cols = np.hsplit(seg_image, seg_image.shape[0]/m)
-        row_split = [np.vsplit(c,seg_image.shape[0]/m) for c in cols]
-        blocks = [int(mode(block, axis=None)[0][0]) for sublist in row_split for block in sublist]
-        H_cols = np.hsplit(H, H.shape[1])
-        
-        
-        for i, block in enumerate(blocks):
-            if block == 0:
-                num_background_blocks = num_background_blocks + 1
-                if num_background_blocks > max_background_blocks:
-                    continue
-            y.append(block)
-            X.append(H_cols[i])
-                        
-
-        return X, y
-
+    def processData(self, W, H, seg_image):
+        pass
     
-    
-    def processData(self, image, W, H, seg_image):
-        X = []
-        y = []
-        indices = np.argmax(W, axis=0)
-        #H = H[indices > 0]
-        regions = np.argmax(H, axis=0)
-        
-        
-        
-        region_1 = regions.copy()
-        region_1_and_2 = regions.copy()
-        region_1_and_2_and_3 = regions.copy()
-        region_1_and_2_and_3_and_4 = regions.copy()
-        region_1_and_2_and_3_and_4_and_5 = regions.copy()
-        region_1_and_2_and_3_and_4_and_5_and_6 = regions.copy() 
-        
-        region_1[regions < 0] = 0
-        region_1[regions > 1] = 0
-        region_1 = region_1.astype(bool)
-        
-        region_1_and_2[regions < 1] = 0
-        region_1_and_2[regions > 2] = 0
-        region_1_and_2 = region_1_and_2.astype(bool)
-                
-        region_1_and_2_and_3[regions < 1] = 0
-        region_1_and_2_and_3[regions > 3] = 0
-        region_1_and_2_and_3 = region_1_and_2_and_3.astype(bool)
-        
-        region_1_and_2_and_3_and_4[regions < 1] = 0
-        region_1_and_2_and_3_and_4[regions > 4] = 0
-        region_1_and_2_and_3_and_4 = region_1_and_2_and_3_and_4.astype(bool)
-        
-        region_1_and_2_and_3_and_4_and_5[regions < 1] = 0
-        region_1_and_2_and_3_and_4_and_5[regions > 5] = 0
-        region_1_and_2_and_3_and_4_and_5 = region_1_and_2_and_3_and_4_and_5.astype(bool)
-
-        
-        region_1_and_2_and_3_and_4_and_5_and_6[regions < 1] = 0
-        region_1_and_2_and_3_and_4_and_5_and_6[regions > 6] = 0
-        region_1_and_2_and_3_and_4_and_5_and_6 = region_1_and_2_and_3_and_4_and_5_and_6.astype(bool)
-        
-        reg_1_image = image.copy()
-        reg_1_and_2_image = image.copy()
-        reg_1_and_2_and_3_image = image.copy()
-        reg_1_and_2_and_3_and_4_image = image.copy()
-        reg_1_and_2_and_3_and_4_and_5_image = image.copy()
-        reg_1_and_2_and_3_and_4_and_5_and_6_image = image.copy()
-        
-        #regions = regions.astype(bool)
-        m = self.nmfComp.block_dim
-        ind = 0
-        for i in range(0, seg_image.shape[0], m):
-            for j in range(0, seg_image.shape[1], m):
-                reg_1_image[i:i+m, j:j+m] *= region_1[ind]
-                reg_1_and_2_image[i:i+m, j:j+m] *= region_1_and_2[ind]
-                reg_1_and_2_and_3_image[i:i+m, j:j+m] *= region_1_and_2_and_3[ind]
-                reg_1_and_2_and_3_and_4_image[i:i+m, j:j+m] *= region_1_and_2_and_3_and_4[ind]
-                reg_1_and_2_and_3_and_4_and_5_image[i:i+m, j:j+m] *= region_1_and_2_and_3_and_4_and_5[ind] 
-                reg_1_and_2_and_3_and_4_and_5_and_6_image[i:i+m, j:j+m] *= region_1_and_2_and_3_and_4_and_5_and_6[ind]
-                ind = ind + 1
-                """
-        #seg_image[seg_image > 0] = 1
-        """
-        X.append(reg_1_and_2_and_3_image)
-        y.append(seg_image)
-        
-        X.append(reg_1_and_2_and_3_and_4_image)
-        y.append(seg_image)
-        
-        X.append(reg_1_and_2_and_3_and_4_and_5_image)
-        y.append(seg_image)
-
-        X.append(reg_1_and_2_and_3_and_4_and_5_and_6_image)
-        y.append(seg_image)
-        
-        
-        
-        """
-        fig = plt.figure()
-        plt.gray();   
-        
-        a=fig.add_subplot(1,8,1)
-        plt.imshow(image)
-        plt.axis('off')
-        plt.title('Original')
-        
-        a=fig.add_subplot(1,8,2)
-        plt.imshow(reg_1_image)
-        plt.axis('off')
-        plt.title('1')
-        
-        
-        a=fig.add_subplot(1,8,3)
-        plt.imshow(reg_1_and_2_image)
-        plt.axis('off')
-        plt.title(r'1 $\cup$ 2')
-        
-        a=fig.add_subplot(1,8,4)
-        plt.imshow(reg_1_and_2_and_3_image)
-        plt.axis('off')
-        plt.title(r'1 $\cup$ 2 $\cup$ 3')
-        self.X.append(reg_1_and_2_and_3_image)
-        
-        
-        a=fig.add_subplot(1,8,5)
-        plt.imshow(reg_1_and_2_and_3_and_4_image)
-        plt.axis('off')
-        plt.title(r'1 $\cup$ 2 $\cup$ 3 $\cup$ 4')
-        
-        a=fig.add_subplot(1,8,6)
-        plt.imshow(reg_1_and_2_and_3_and_4_and_5_image)
-        plt.axis('off')
-        plt.title(r'1 $\cup$ 2 $\cup$ 3 $\cup$ 4 $\cup$ 5')
-
-
-        a=fig.add_subplot(1,8,7)
-        plt.imshow(reg_1_and_2_and_3_and_4_and_5_and_6_image)
-        plt.axis('off') 
-        plt.title(r'1 $\cup$ 2 $\cup$ 3 $\cup$ 4 $\cup$ 5 $\cup$ 6')
-
-        a=fig.add_subplot(1,8,8)
-        plt.imshow(seg_image)
-        plt.axis('off')
-        plt.title('Segment')
-
-        plt.show()
-        """
-        return X, y
-
-    
-    
-                
-                    
-    
-
     def preprocessForNetwork(self):
-        n_imgs = len(self.X)
-        
-        self.X = np.array( self.X )
-        self.X = self.X.reshape(n_imgs,self.nmfComp.block_dim)
-        #self.labels = np.array( self.labels )
-        self.labels = np_utils.to_categorical(self.labels)
-        #self.labels = self.labels.reshape(n_imgs,self.W,self.H,1)
-        # self.labels = self.labels.reshape(n_imgs, self.W*self.H,2)
+        pass
+
+
+    
+    
 
         
         

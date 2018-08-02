@@ -11,7 +11,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from Utils.TimerModule import TimerModule
-from Exploratory_Stuff.DataHandler import DataHandler
+from Exploratory_Stuff.SegNetDataHandler import SegNetDataHandler
 #from keras.callbacks import CSVLogger,ReduceLROnPlateau
 from keras.layers import Conv2D, Activation, MaxPooling2D, Reshape, Dense, Flatten, BatchNormalization, Dropout, LeakyReLU, PReLU,concatenate
 from keras.models import Sequential, Model, Input
@@ -46,38 +46,27 @@ def main():
     date_string = now.strftime('%Y-%m-%d_%H_%M')
     
     
-    dataHandler = DataHandler("Data/BRATS_2018/HGG", ProbabilisticNMFComputer(block_dim=8))
+    dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", ProbabilisticNMFComputer(block_dim=10), num_patients = 1)
     dataHandler.loadData("flair")
     dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
-    labels = dataHandler.labels
+    x_seg_train = dataHandler.labels
     dataHandler.clear()
-    """
+
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
     dataHandler.loadData("flair")
     dataHandler.preprocessForNetwork()
     x_val = dataHandler.X
     x_seg_val = dataHandler.labels
     dataHandler.clear()
-    """
-        
-    model = Sequential()
-    model.add(Dense(100, input_dim=dataHandler.nmfComp.block_dim, activation='relu'))
-    model.add(Dense(8, activation='relu'))
-    model.add(Dense(labels.shape[1], activation='relu'))
-# Compile model
-    model.compile(loss='mse', optimizer='sgd', metrics=['accuracy'])
-# Fit the model
-    model.fit(x_train, labels, epochs=150, batch_size=10)
-# evaluate the model
-
     
-    """
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Testing")
     dataHandler.loadData("flair")
     dataHandler.preprocessForNetwork()
     x_test = dataHandler.X
     x_seg_test = dataHandler.labels
+    dataHandler.clear()
+
     
     input_shape = (dataHandler.W, dataHandler.H, 1)
     inputs = Input(shape=input_shape)
@@ -205,7 +194,6 @@ def main():
     segnet = Model(inputs=inputs, outputs=outputs, name="SegNet")
     segnet.compile(optimizer='adadelta', loss='categorical_crossentropy')
 
-    #x_train = x_train.astype('float32') / 255.
     
     segnet.fit(x_train, x_seg_train,
                 epochs=10,
@@ -256,7 +244,7 @@ def main():
     
     
 
-    
+    """
     
     num_epochs = 30  
     batchSize = 128 
