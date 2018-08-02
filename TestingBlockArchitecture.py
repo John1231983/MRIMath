@@ -23,8 +23,10 @@ from datetime import datetime
 #from keras.utils.training_utils import multi_gpu_model
 #import keras.backend as K
 #import tensorflow as tf
-
+import nibabel as nib
+import numpy as np
 from NMFComputer.BasicNMFComputer import BasicNMFComputer
+import matplotlib.pyplot as plt
 
 from NMFComputer.ProbabilisticNMFComputer import ProbabilisticNMFComputer
 import sys
@@ -40,7 +42,8 @@ def main():
     date_string = now.strftime('%Y-%m-%d_%H_%M')
     
     
-    dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", ProbabilisticNMFComputer(block_dim=8), num_patients = 5)
+    nmfComp = ProbabilisticNMFComputer(block_dim=8)
+    dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = 5)
     dataHandler.loadData("flair")
     dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
@@ -64,12 +67,49 @@ def main():
     model.add(Dense(labels.shape[1], activation='softmax'))
 # Compile model
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-# Fit the model
+# Fit the mode
     model.fit(x_train,
                labels,
-                epochs=150,
+                epochs=10,
                 validation_data=(x_val, val_labels),
                 batch_size=10)
+    
+    test_data_dir = "Data/BRATS_2018/HGG_Testing"
+    mode = "flair"
+    image = None
+    seg_image = None
+    for subdir in os.listdir(test_data_dir):
+        for path in os.listdir(test_data_dir+ "/" + subdir):
+            if mode in path:
+                image = nib.load(test_data_dir + "/" + subdir + "/" + path).get_data()
+                seg_image = nib.load(test_data_dir+ "/" + subdir + "/" + path.replace(mode, "seg")).get_data()
+                break
+    
+    m = nmfComp.block_dim
+    for k in range(0,155):
+        seg_est = np.zeros((dataHandler.W, dataHandler.H))
+        _, H = nmfComp.run(image[:,:,k])
+        H_cols = np.hsplit(H, H.shape[1])
+        labels = [model.predict(x) for x in H_cols]
+        ind = 0
+        for i in range(0, dataHandler.W, m):
+            for j in range(0, dataHandler.H, m):
+                seg_est[i:i+m, j:j+m] = labels[ind]
+                ind = ind+1
+        
+        fig = plt.figure()
+        plt.gray();
+        a=fig.add_subplot(1,2,1)
+        plt.imshow(seg_image[:,:,i])
+        plt.axis('off')
+        plt.title('Original')
+        
+        a=fig.add_subplot(1,2,2)
+        plt.imshow(seg_est)
+        plt.gray()
+        plt.show()
+        
+        
 # evaluate the model
 
 if __name__ == "__main__":
