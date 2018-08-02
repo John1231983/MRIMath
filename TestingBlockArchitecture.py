@@ -87,20 +87,21 @@ def main():
     
     m = nmfComp.block_dim
     for k in range(0,155):
-        seg_est = np.zeros((dataHandler.W, dataHandler.H))
+        seg_est = np.zeros(shape=(dataHandler.W, dataHandler.H))
         _, H = nmfComp.run(image[:,:,k])
         H_cols = np.hsplit(H, H.shape[1])
-        labels = [model.predict(x) for x in H_cols]
+        labels = [model.predict(x.T) for x in H_cols]
+        #labels = model.predict(H.T)
         ind = 0
         for i in range(0, dataHandler.W, m):
             for j in range(0, dataHandler.H, m):
-                seg_est[i:i+m, j:j+m] = labels[ind]
+                seg_est[i:i+m, j:j+m] = np.full(m, m, np.argmax(labels[ind]))
                 ind = ind+1
         
         fig = plt.figure()
         plt.gray();
         a=fig.add_subplot(1,2,1)
-        plt.imshow(seg_image[:,:,i])
+        plt.imshow(seg_image[:,:,k])
         plt.axis('off')
         plt.title('Original')
         
