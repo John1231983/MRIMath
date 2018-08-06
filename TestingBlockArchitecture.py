@@ -15,6 +15,7 @@ from Exploratory_Stuff.BlockDataHandler import BlockDataHandler
 #from keras.callbacks import CSVLogger,ReduceLROnPlateau
 from keras.layers import Dense
 from keras.models import Sequential
+from keras.callbacks import CSVLogger
 #from keras.optimizers import SGD
 #import os
 from Utils.EmailHandler import EmailHandler
@@ -42,47 +43,60 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d_%H_%M')
     
-    
-    nmfComp = BasicNMFComputer(block_dim=8, num_components=10)
-    dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = 10)
-    dataHandler.loadData("flair")
+    print('Loading the data! This could take some time...')
+    mode = "t1ce"
+    nmfComp = ProbabilisticNMFComputer(block_dim=8, num_components=8)
+    dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = 15)
+    dataHandler.loadData(mode)
     dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
     labels = dataHandler.labels
     dataHandler.clear()
     
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
-    dataHandler.setNumPatients(1)
-    dataHandler.loadData("flair")
+    dataHandler.setNumPatients(2)
+    dataHandler.loadData(mode)
     dataHandler.preprocessForNetwork()
     x_val = dataHandler.X
     val_labels = dataHandler.labels
     dataHandler.clear()
     
-        
+    print('Building the model now!')
     model = Sequential()
-    model.add(Dense(500, input_dim=dataHandler.nmfComp.num_components))
+    model.add(Dense(1000, input_dim=dataHandler.nmfComp.num_components))
+    model.add(LeakyReLU())
+    model.add(Dense(500))
     model.add(LeakyReLU())
     model.add(Dense(250))
     model.add(LeakyReLU())
-    model.add(Dense(150))
-    model.add(LeakyReLU())
-    model.add(Dense(75))
-    model.add(LeakyReLU())
-    model.add(Dense(25))
+    model.add(Dense(100))
     model.add(LeakyReLU())
     model.add(Dense(labels.shape[1], activation='softmax'))
+    
+    
 # Compile model
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-# Fit the mode
+    
+    
+    
+    model_directory = "/home/daniel/eclipse-workspace/MRIMath/Models/" + date_string + "_" + mode
+    if not os.path.exists(model_directory):
+        os.makedirs(model_directory)
+    log_info_filename = 'model_loss_log.csv'
+    csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=',')
+    
+    print('Training network!')
     model.fit(x_train,
                labels,
-                epochs=10,
+                epochs=200,
                 validation_data=(x_val, val_labels),
-                batch_size=10)
+                callbacks = [csv_logger],
+                batch_size=x_train.shape[0])
+    
+    
+    model.save(model_directory + '/model.h5')
     
     test_data_dir = "Data/BRATS_2018/HGG_Testing"
-    mode = "flair"
     image = None
     seg_image = None
     for subdir in os.listdir(test_data_dir):
