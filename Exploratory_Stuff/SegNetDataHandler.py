@@ -9,6 +9,12 @@ class SegNetDataHandler(DataHandler):
     
     def __init__(self,dataDirectory, nmfComp, W = 240, H = 240, num_patients = 3):
         super().__init__(dataDirectory, nmfComp, W, H, num_patients)
+        
+        
+    def performNMFOnSlice(self, image, seg_image, i):
+        # image[:,:,i] = self.preprocess(image[:,:,i])        
+        W, H = self.nmfComp.run(image[:,:,i])
+        return self.processData(image, W,H, seg_image[:,:,i])
     
     def processData(self, image, W, H, seg_image):
         X = []
@@ -145,5 +151,5 @@ class SegNetDataHandler(DataHandler):
         self.X = np.array( self.X )
         self.X = self.X.reshape(n_imgs,self.nmfComp.num_components)
         #self.labels = np.array( self.labels )
-        self.labels = self.labels.reshape(n_imgs,self.W,self.H,1)
+        self.labels = self.labels.reshape(n_imgs,self.W*self.H,1)
         # self.labels = self.labels.reshape(n_imgs, self.W*self.H,2)

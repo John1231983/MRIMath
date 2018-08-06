@@ -32,7 +32,6 @@ from Mylayers import MaxPoolingWithArgmax2D, MaxUnpooling2D
 
 from NMFComputer.BasicNMFComputer import BasicNMFComputer
 
-from NMFComputer.ProbabilisticNMFComputer import ProbabilisticNMFComputer
 import sys
 import os
 DATA_DIR = os.path.abspath("../")
@@ -46,7 +45,7 @@ def main():
     date_string = now.strftime('%Y-%m-%d_%H_%M')
     
     
-    dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", ProbabilisticNMFComputer(block_dim=10), num_patients = 1)
+    dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", BasicNMFComputer(block_dim=8), num_patients = 1)
     dataHandler.loadData("flair")
     dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
@@ -54,6 +53,7 @@ def main():
     dataHandler.clear()
 
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
+    dataHandler.setNumPatients(1)
     dataHandler.loadData("flair")
     dataHandler.preprocessForNetwork()
     x_val = dataHandler.X
@@ -61,6 +61,7 @@ def main():
     dataHandler.clear()
     
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Testing")
+    dataHandler.setNumPatients(1)
     dataHandler.loadData("flair")
     dataHandler.preprocessForNetwork()
     x_test = dataHandler.X
@@ -129,7 +130,7 @@ def main():
     conv_13 = Activation("relu")(conv_13)
 
     pool_5, mask_5 = MaxPoolingWithArgmax2D(pool_size)(conv_13)
-    print("Build enceder done..")
+    print("Build encoder done..")
 
     # decoder
 

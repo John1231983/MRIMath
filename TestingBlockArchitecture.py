@@ -30,7 +30,7 @@ from NMFComputer.BasicNMFComputer import BasicNMFComputer
 import matplotlib.pyplot as plt
 from keras.layers.advanced_activations import LeakyReLU, PReLU
 
-from NMFComputer.ProbabilisticNMFComputer import ProbabilisticNMFComputer
+from NMFComputer.SKNMFComputer import SKNMFComputer
 import sys
 import os
 DATA_DIR = os.path.abspath("../")
@@ -45,8 +45,8 @@ def main():
     
     print('Loading the data! This could take some time...')
     mode = "t1ce"
-    nmfComp = ProbabilisticNMFComputer(block_dim=8, num_components=8)
-    dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = 15)
+    nmfComp = BasicNMFComputer(block_dim=8, num_components=10)
+    dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = 40)
     dataHandler.loadData(mode)
     dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
@@ -54,7 +54,7 @@ def main():
     dataHandler.clear()
     
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
-    dataHandler.setNumPatients(2)
+    dataHandler.setNumPatients(8)
     dataHandler.loadData(mode)
     dataHandler.preprocessForNetwork()
     x_val = dataHandler.X
@@ -64,6 +64,8 @@ def main():
     print('Building the model now!')
     model = Sequential()
     model.add(Dense(1000, input_dim=dataHandler.nmfComp.num_components))
+    model.add(LeakyReLU())
+    model.add(Dense(750))
     model.add(LeakyReLU())
     model.add(Dense(500))
     model.add(LeakyReLU())
@@ -85,17 +87,25 @@ def main():
     log_info_filename = 'model_loss_log.csv'
     csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=',')
     
+    model_info_filename = 'model_info.txt'
+    model_info_file = open(model_directory + '/' + model_info_filename, "w") 
+    model_info_file.write('Number of Patients: ' + dataHandler.num_patients + '\n')
+    model_info_file.write('Block Dimensions: ' + dataHandler.nmfComp.block_dim + '\n')
+    model_info_file.write('Number of Components (k): ' + dataHandler.nmfComp.num_components + '\n')
+    model_info_file.write('\n\n')
+    model.summary(print_fn=lambda x: model_info_file.write(x + '\n'))
+    model_info_file.close();
+
     print('Training network!')
     model.fit(x_train,
                labels,
-                epochs=200,
+                epochs=500,
                 validation_data=(x_val, val_labels),
                 callbacks = [csv_logger],
                 batch_size=x_train.shape[0])
     
     
     model.save(model_directory + '/model.h5')
-    
     test_data_dir = "Data/BRATS_2018/HGG_Testing"
     image = None
     seg_image = None
@@ -105,6 +115,7 @@ def main():
                 image = nib.load(test_data_dir + "/" + subdir + "/" + path).get_data()
                 seg_image = nib.load(test_data_dir+ "/" + subdir + "/" + path.replace(mode, "seg")).get_data()
                 break
+            
     m = nmfComp.block_dim
     inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
 

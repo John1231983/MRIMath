@@ -115,9 +115,7 @@ class DataHandler:
         return -1
 
     def performNMFOnSlice(self, image, seg_image, i):
-        # image[:,:,i] = self.preprocess(image[:,:,i])        
-        W, H = self.nmfComp.run(image[:,:,i])
-        return self.processData(W,H, seg_image[:,:,i])
+        pass
     
     def processData(self, W, H, seg_image):
         pass
