@@ -14,7 +14,7 @@ class SegNetDataHandler(DataHandler):
     def performNMFOnSlice(self, image, seg_image, i):
         # image[:,:,i] = self.preprocess(image[:,:,i])        
         W, H = self.nmfComp.run(image[:,:,i])
-        return self.processData(image, W,H, seg_image[:,:,i])
+        return self.processData(image[:,:,i], W,H, seg_image[:,:,i])
     
     def processData(self, image, W, H, seg_image):
         X = []
@@ -77,8 +77,12 @@ class SegNetDataHandler(DataHandler):
                 reg_1_and_2_and_3_and_4_and_5_and_6_image[i:i+m, j:j+m] *= region_1_and_2_and_3_and_4_and_5_and_6[ind]
                 ind = ind + 1
                 """
-        #seg_image[seg_image > 0] = 1
+        seg_image[seg_image > 0] = 1
         """
+        
+        seg_image[seg_image > 0] = 1
+        seg_image = self.label_map(seg_image)
+
         X.append(reg_1_and_2_and_3_image)
         y.append(seg_image)
         
@@ -145,11 +149,18 @@ class SegNetDataHandler(DataHandler):
         """
         return X, y
     
+    def label_map(self, labels):
+        label_map = np.zeros([self.W, self.H, 2])    
+        for r in range(self.W):
+            for c in range(self.W):
+                label_map[r, c, labels[r][c]] = 1
+        return label_map
+    
     
     def preprocessForNetwork(self):
         n_imgs = len(self.X)
         self.X = np.array( self.X )
-        self.X = self.X.reshape(n_imgs,self.nmfComp.num_components)
-        #self.labels = np.array( self.labels )
-        self.labels = self.labels.reshape(n_imgs,self.W*self.H,1)
+        self.X = self.X.reshape(n_imgs,self.W, self.H,1)
+        self.labels = np.array( self.labels )
+        self.labels = self.labels.reshape(n_imgs,self.W*self.H,2)
         # self.labels = self.labels.reshape(n_imgs, self.W*self.H,2)

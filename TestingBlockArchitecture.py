@@ -46,7 +46,7 @@ def main():
     print('Loading the data! This could take some time...')
     mode = "t1ce"
     nmfComp = BasicNMFComputer(block_dim=8, num_components=10)
-    dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = 40)
+    dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = 1)
     dataHandler.loadData(mode)
     dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
@@ -54,7 +54,7 @@ def main():
     dataHandler.clear()
     
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
-    dataHandler.setNumPatients(8)
+    dataHandler.setNumPatients(1)
     dataHandler.loadData(mode)
     dataHandler.preprocessForNetwork()
     x_val = dataHandler.X
@@ -89,9 +89,9 @@ def main():
     
     model_info_filename = 'model_info.txt'
     model_info_file = open(model_directory + '/' + model_info_filename, "w") 
-    model_info_file.write('Number of Patients: ' + dataHandler.num_patients + '\n')
-    model_info_file.write('Block Dimensions: ' + dataHandler.nmfComp.block_dim + '\n')
-    model_info_file.write('Number of Components (k): ' + dataHandler.nmfComp.num_components + '\n')
+    model_info_file.write('Number of Patients: ' + str(dataHandler.num_patients) + '\n')
+    model_info_file.write('Block Dimensions: ' + str(dataHandler.nmfComp.block_dim) + '\n')
+    model_info_file.write('Number of Components (k): ' + str(dataHandler.nmfComp.num_components) + '\n')
     model_info_file.write('\n\n')
     model.summary(print_fn=lambda x: model_info_file.write(x + '\n'))
     model_info_file.close();

@@ -198,7 +198,7 @@ def main():
     
     segnet.fit(x_train, x_seg_train,
                 epochs=10,
-                batch_size=128,
+                batch_size=10,
                 shuffle=True,
                 validation_data=(x_val, x_seg_val),
                 )
@@ -236,12 +236,7 @@ def main():
         ax.get_yaxis().set_visible(False)
     plt.show()
     
-    model = Sequential()
-    model.add(Dense(100, input_shape = (310,)))
-    model.add(PReLU())
-    model.add(Dense(250))
-    model.add(PReLU())
-    model.add(Dense(5, activation='softmax'))
+
     
     
 
