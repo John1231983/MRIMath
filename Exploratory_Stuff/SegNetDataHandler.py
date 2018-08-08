@@ -5,6 +5,7 @@ Created on Aug 1, 2018
 '''
 from Exploratory_Stuff.DataHandler import DataHandler
 import numpy as np
+import cv2
 class SegNetDataHandler(DataHandler):
     
     def __init__(self,dataDirectory, nmfComp, W = 240, H = 240, num_patients = 3):
@@ -80,18 +81,27 @@ class SegNetDataHandler(DataHandler):
         seg_image[seg_image > 0] = 1
         """
         
+        dims = tuple([self.W, self.W])
         seg_image[seg_image > 0] = 1
-        seg_image = self.label_map(seg_image)
-
+        #seg_image = self.label_map(seg_image, 2)
+        
+        image = cv2.resize(image,dims)
+        X.append(image)
+        y.append(seg_image)
+        
+        reg_1_and_2_and_3_image = cv2.resize(reg_1_and_2_and_3_image,dims)
         X.append(reg_1_and_2_and_3_image)
         y.append(seg_image)
         
+        reg_1_and_2_and_3_and_4_image = cv2.resize(reg_1_and_2_and_3_and_4_image,dims)
         X.append(reg_1_and_2_and_3_and_4_image)
         y.append(seg_image)
         
+        reg_1_and_2_and_3_and_4_and_5_image = cv2.resize(reg_1_and_2_and_3_and_4_and_5_image,dims)
         X.append(reg_1_and_2_and_3_and_4_and_5_image)
         y.append(seg_image)
 
+        reg_1_and_2_and_3_and_4_and_5_and_6_image = cv2.resize(reg_1_and_2_and_3_and_4_and_5_and_6_image,dims)
         X.append(reg_1_and_2_and_3_and_4_and_5_and_6_image)
         y.append(seg_image)
         
@@ -149,11 +159,12 @@ class SegNetDataHandler(DataHandler):
         """
         return X, y
     
-    def label_map(self, labels):
-        label_map = np.zeros([self.W, self.H, 2])    
+    def label_map(self, labels, n_labels):
+        label_map = np.zeros([self.W, self.H, n_labels])    
         for r in range(self.W):
             for c in range(self.W):
                 label_map[r, c, labels[r][c]] = 1
+        label_map = label_map.reshape(self.W * self.H, n_labels)
         return label_map
     
     
@@ -162,5 +173,5 @@ class SegNetDataHandler(DataHandler):
         self.X = np.array( self.X )
         self.X = self.X.reshape(n_imgs,self.W, self.H,1)
         self.labels = np.array( self.labels )
-        self.labels = self.labels.reshape(n_imgs,self.W*self.H,2)
+        #self.labels = self.labels.reshape(n_imgs,self.W*self.H,2)
         # self.labels = self.labels.reshape(n_imgs, self.W*self.H,2)

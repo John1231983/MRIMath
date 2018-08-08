@@ -118,7 +118,8 @@ def main():
             
     m = nmfComp.block_dim
     inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
-
+    
+    """
     for k in inds:
         seg_est = np.zeros(shape=(dataHandler.W, dataHandler.H))
         img = dataHandler.preprocess(image[:,:,k])
@@ -149,7 +150,7 @@ def main():
         plt.axis('off')
         plt.title('Estimate Segment')
         plt.show()
-        
+    """
         
 # evaluate the model
 
