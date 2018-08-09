@@ -40,7 +40,6 @@ class BasicNMFComputer(NMFComputer):
         return W, H, WH, V_over_WH
     
     def computeNMF(self, V):
-        #sigma = np.var(V)
         #plot =[]
         avg_V = V.mean()
         n, m = V.shape
@@ -49,14 +48,9 @@ class BasicNMFComputer(NMFComputer):
         WH = W.dot(H)
 
         V_over_WH = V / WH
-        #W = np.abs(np.random.uniform(low=0, size=(V.shape[0], self.num_components)))
-        #H = np.abs(np.random.uniform(low=0, size=(self.num_components, V.shape[1])))
     
         for _ in range(0, self.num_iterations):
             W, H, WH, V_over_WH = self.update(V, W, H, V_over_WH)
-            #lamda_H = sigma/np.var(H)
-            #lamda_W  = sigma/np.var(W)
-
             #plot.append(self.cost(V, W, H))
         #self.plotCost(plot)
         return W, H

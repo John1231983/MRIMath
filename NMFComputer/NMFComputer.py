@@ -42,6 +42,7 @@ class NMFComputer():
         cols = np.hsplit(matrix, matrix.shape[0]/self.block_dim)
         row_split = [np.vsplit(c,matrix.shape[0]/self.block_dim) for c in cols]
         blocks = [item for sublist in row_split for item in sublist]
+        #[self.showHistogram(block) for block in blocks if np.count_nonzero(block) > 0]
         hist_image = [np.histogram(block,bins=self.num_hist_bins)[0] for block in blocks] 
         return np.array(hist_image).transpose()
     
@@ -63,9 +64,17 @@ class NMFComputer():
         pass
     
     def showHistogram(self, block):
-        hist, bin_edges = np.histogram(block,bins=self.num_hist_bins)
+        fig = plt.figure()
+        plt.gray();
+        fig.add_subplot(1,2,1)
+        plt.imshow(block)
+        plt.axis('off')
+        plt.title('Original')
+        fig.add_subplot(1,2,2)
+        hist, bin_edges = np.histogram(block,bins=list(range(self.num_hist_bins)))
         plt.bar(bin_edges[:-1], hist, width = 1)
-        plt.xlim(min(bin_edges), max(bin_edges))
+        plt.title('Histogram')
+        #plt.xlim(min(bin_edges), max(bin_edges))
         plt.show()  
         
     def run(self, image):

@@ -13,7 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from Utils.TimerModule import TimerModule
 from Exploratory_Stuff.BlockDataHandler import BlockDataHandler
 #from keras.callbacks import CSVLogger,ReduceLROnPlateau
-from keras.layers import Dense
+from keras.layers import Dense, BatchNormalization, Conv1D
 from keras.models import Sequential
 from keras.callbacks import CSVLogger
 #from keras.optimizers import SGD
@@ -45,8 +45,8 @@ def main():
     
     print('Loading the data! This could take some time...')
     mode = "t1ce"
-    nmfComp = BasicNMFComputer(block_dim=8, num_components=10)
-    dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = 1)
+    nmfComp = BasicNMFComputer(block_dim=8, num_components=8)
+    dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = 12)
     dataHandler.loadData(mode)
     dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
@@ -54,7 +54,7 @@ def main():
     dataHandler.clear()
     
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
-    dataHandler.setNumPatients(1)
+    dataHandler.setNumPatients(3)
     dataHandler.loadData(mode)
     dataHandler.preprocessForNetwork()
     x_val = dataHandler.X
@@ -64,14 +64,22 @@ def main():
     print('Building the model now!')
     model = Sequential()
     model.add(Dense(1000, input_dim=dataHandler.nmfComp.num_components))
+    model.add(BatchNormalization())
     model.add(LeakyReLU())
     model.add(Dense(750))
+    model.add(BatchNormalization())
     model.add(LeakyReLU())
     model.add(Dense(500))
+    model.add(BatchNormalization())
     model.add(LeakyReLU())
     model.add(Dense(250))
+    model.add(BatchNormalization())
     model.add(LeakyReLU())
     model.add(Dense(100))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+    model.add(Dense(50))
+    model.add(BatchNormalization())
     model.add(LeakyReLU())
     model.add(Dense(labels.shape[1], activation='softmax'))
     
@@ -99,7 +107,7 @@ def main():
     print('Training network!')
     model.fit(x_train,
                labels,
-                epochs=500,
+                epochs=200,
                 validation_data=(x_val, val_labels),
                 callbacks = [csv_logger],
                 batch_size=x_train.shape[0])
@@ -119,7 +127,7 @@ def main():
     m = nmfComp.block_dim
     inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
     
-    """
+    
     for k in inds:
         seg_est = np.zeros(shape=(dataHandler.W, dataHandler.H))
         img = dataHandler.preprocess(image[:,:,k])
@@ -150,7 +158,7 @@ def main():
         plt.axis('off')
         plt.title('Estimate Segment')
         plt.show()
-    """
+    
         
 # evaluate the model
 

@@ -83,9 +83,8 @@ class SegNetDataHandler(DataHandler):
         
         dims = tuple([self.W, self.W])
         seg_image[seg_image > 0] = 1
-        #seg_image = self.label_map(seg_image, 2)
+        seg_image = self.label_map(seg_image, 1)
         
-        image = cv2.resize(image,dims)
         X.append(image)
         y.append(seg_image)
         
@@ -163,6 +162,7 @@ class SegNetDataHandler(DataHandler):
         label_map = np.zeros([self.W, self.H, n_labels])    
         for r in range(self.W):
             for c in range(self.W):
+                print(str(r) + "," + str(c))
                 label_map[r, c, labels[r][c]] = 1
         label_map = label_map.reshape(self.W * self.H, n_labels)
         return label_map
@@ -173,5 +173,6 @@ class SegNetDataHandler(DataHandler):
         self.X = np.array( self.X )
         self.X = self.X.reshape(n_imgs,self.W, self.H,1)
         self.labels = np.array( self.labels )
-        #self.labels = self.labels.reshape(n_imgs,self.W*self.H,2)
+        self.labels = self.labels.reshape(n_imgs,self.W*self.H,1)
+        #self.labels = np.clip(self.labels, 0, 1)
         # self.labels = self.labels.reshape(n_imgs, self.W*self.H,2)

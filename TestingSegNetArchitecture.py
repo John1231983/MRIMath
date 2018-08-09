@@ -39,6 +39,7 @@ DATA_DIR = os.path.abspath("../")
 sys.path.append(DATA_DIR)
 
 def main():
+
     hardwareHandler = HardwareHandler()
     emailHandler = EmailHandler()
     timer = TimerModule()
@@ -52,7 +53,7 @@ def main():
     x_train = dataHandler.X
     x_seg_train = dataHandler.labels
     dataHandler.clear()
-
+    
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
     dataHandler.setNumPatients(1)
     dataHandler.loadData("flair")
@@ -68,13 +69,17 @@ def main():
     x_test = dataHandler.X
     x_seg_test = dataHandler.labels
     dataHandler.clear()
+    
+    
+    print(x_train.shape)
+    print(x_seg_train.shape)
 
     
-    input_shape = (dataHandler.W, dataHandler.H, 1)
+    input_shape = (dataHandler.W,dataHandler.H, 1)
+    n_labels = 1
 
-    n_labels = 2
-    
     segnet = createSegNet(input_shape=input_shape, n_labels=n_labels)
+
     segnet.compile(optimizer='adadelta', loss='categorical_crossentropy')
 
     
@@ -82,7 +87,7 @@ def main():
                 epochs=10,
                 batch_size=5,
                 shuffle=True,
-                validation_data=(x_val, x_seg_val),
+                #validation_data=(x_val, x_seg_val),
                 )
     
     decoded_imgs = segnet.predict(x_test)
@@ -119,56 +124,5 @@ def main():
     plt.show()
     
 
-    
-    
-
-    """
-    
-    num_epochs = 30  
-    batchSize = 128 
-    lrate = 0.1e-3
-    momentum = 0.9
-    decay_rate = lrate / num_epochs
-    
-    training = dataHandler.X
-    training_labels = dataHandler.labels
-    
-    #decay = lrate/num_epochs   
-    sgd = SGD(lr=lrate, momentum=momentum, decay=decay_rate, nesterov=True)
-    
-    # Declaring the two callbacks I use - still having issues using the model checkpoint one
-    # Also considering using the Early Termination...
-    # csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=',')
-    #reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.1e-9)
-    
-    # Grab the number of available GPUS on the device you're running on - in the case of the HPC, it's 4
-    # And on your local lap top, probably 1
-    # Based on the result, your model may be converted to a multiple GPU model
-    G = hardwareHandler.getAvailableGPUs()
-    print('Using ' + str(G) + ' GPUs to train the network!')
-    if G > 1:
-        parallel_model = multi_gpu_model(model, G)
-        parallel_model.compile(optimizer=sgd, loss='binary_crossentropy',metrics = ['accuracy'])
-        timer.startTimer()   # this is for timing/profiling purposes    
-        parallel_model.fit(training, training_labels,
-            epochs=num_epochs,
-            batch_size=batchSize * G,
-            shuffle=True)
-            #validation_data=(testing, testing_labels),
-            #callbacks=[csv_logger, reduce_lr])
-        timer.stopTimer()
-        model.set_weights(parallel_model.get_weights())
-    
-    else:
-        model.compile(optimizer=sgd, loss='binary_crossentropy',metrics = ['accuracy'])
-        timer.startTimer()
-        model.fit(training, training_labels,
-            epochs=num_epochs,
-            batch_size=batchSize * G,
-            shuffle=True)
-            #validation_data=(testing, testing_labels),
-            #callbacks=[csv_logger, reduce_lr])
-        timer.stopTimer()
-"""  
 if __name__ == "__main__":
    main() 
