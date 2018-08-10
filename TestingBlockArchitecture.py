@@ -35,6 +35,7 @@ import sys
 import os
 DATA_DIR = os.path.abspath("../")
 sys.path.append(DATA_DIR)
+from numpy import genfromtxt
 
 def main():
     hardwareHandler = HardwareHandler()
@@ -45,8 +46,10 @@ def main():
     
     print('Loading the data! This could take some time...')
     mode = "t1ce"
+    num_training_patients = 25;
+    num_validation_patients = 3;
     nmfComp = BasicNMFComputer(block_dim=8, num_components=8)
-    dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = 12)
+    dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = num_training_patients)
     dataHandler.loadData(mode)
     dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
@@ -54,7 +57,7 @@ def main():
     dataHandler.clear()
     
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
-    dataHandler.setNumPatients(3)
+    dataHandler.setNumPatients(num_validation_patients)
     dataHandler.loadData(mode)
     dataHandler.preprocessForNetwork()
     x_val = dataHandler.X
@@ -97,7 +100,9 @@ def main():
     
     model_info_filename = 'model_info.txt'
     model_info_file = open(model_directory + '/' + model_info_filename, "w") 
-    model_info_file.write('Number of Patients: ' + str(dataHandler.num_patients) + '\n')
+    model_info_file.write('Number of Patients (training): ' + str(num_training_patients) + '\n')
+    model_info_file.write('Number of Patients (validation): ' + str(num_validation_patients) + '\n')
+
     model_info_file.write('Block Dimensions: ' + str(dataHandler.nmfComp.block_dim) + '\n')
     model_info_file.write('Number of Components (k): ' + str(dataHandler.nmfComp.num_components) + '\n')
     model_info_file.write('\n\n')
@@ -107,10 +112,10 @@ def main():
     print('Training network!')
     model.fit(x_train,
                labels,
-                epochs=200,
+                epochs=50,
                 validation_data=(x_val, val_labels),
                 callbacks = [csv_logger],
-                batch_size=x_train.shape[0])
+                batch_size=int(x_train.shape[0]/5))
     
     
     model.save(model_directory + '/model.h5')
@@ -130,8 +135,8 @@ def main():
     
     for k in inds:
         seg_est = np.zeros(shape=(dataHandler.W, dataHandler.H))
-        img = dataHandler.preprocess(image[:,:,k])
-        _, H = nmfComp.run(img)
+        #img = dataHandler.preprocess(image[:,:,k])
+        _, H = nmfComp.run(image[:,:,k])
         H_cols = np.hsplit(H, H.shape[1])
         labels = [model.predict(x.T) for x in H_cols]
         #labels = model.predict(H.T)
@@ -144,7 +149,7 @@ def main():
         fig = plt.figure()
         plt.gray();
         a=fig.add_subplot(1,3,1)
-        plt.imshow(img)
+        plt.imshow(image[:,:,k])
         plt.axis('off')
         plt.title('Original')
 

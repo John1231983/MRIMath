@@ -18,7 +18,7 @@ class BlockDataHandler(DataHandler):
         X = []
         y = []
         m = self.nmfComp.block_dim
-        max_background_blocks = int(0.15*H.shape[1])
+        max_background_blocks = int(0.25*H.shape[1])
         num_background_blocks = 0
         #seg_image[seg_image > 0] = 1
         H = np.nan_to_num(H)
@@ -37,7 +37,7 @@ class BlockDataHandler(DataHandler):
         return X, y
     
     def performNMFOnSlice(self, image, seg_image, i):
-        # image[:,:,i] = self.preprocess(image[:,:,i])        
+        #image[:,:,i] = self.preprocess(image[:,:,i])        
         W, H = self.nmfComp.run(image[:,:,i])
         return self.processData(W,H, seg_image[:,:,i])
     
