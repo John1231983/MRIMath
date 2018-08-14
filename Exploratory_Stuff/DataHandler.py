@@ -94,6 +94,7 @@ class DataHandler:
                     image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
                     seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + path.replace(mode, "seg")).get_data()
                     inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0.01*self.W*self.H]
+                    temp = [self.performNMFOnSlice(image, seg_image, i) for i in inds]
                     with Pool(processes=8) as pool:
                         temp = pool.map(partial(self.performNMFOnSlice, image, seg_image), inds)
                     foo = [i[0] for i in temp]

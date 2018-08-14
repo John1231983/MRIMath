@@ -29,6 +29,7 @@ import numpy as np
 from NMFComputer.BasicNMFComputer import BasicNMFComputer
 import matplotlib.pyplot as plt
 from keras.layers.advanced_activations import LeakyReLU, PReLU
+import matplotlib.patches as patches
 
 from NMFComputer.SKNMFComputer import SKNMFComputer
 import sys
@@ -36,7 +37,8 @@ import os
 DATA_DIR = os.path.abspath("../")
 sys.path.append(DATA_DIR)
 def main():
-    loss_data= genfromtxt("Models/2018-08-08_20_58_t1ce/model_loss_log.csv",delimiter=',')
+    """
+    loss_data= genfromtxt("Models/2018-08-13_17_59_t1ce/model_loss_log.csv",delimiter=',')
     plt.figure()
     plt.plot(loss_data[:,1])
     #plt.plot(loss_data[:,1])
@@ -44,41 +46,75 @@ def main():
     plt.ylabel("Accuracy") 
     plt.title("Blocknet Loss Curve")
     plt.show()
-    nmfComp = BasicNMFComputer(block_dim=8, num_components=100)
+    """
+    block_dim=8
+    num_components=5
+    nmfComp = BasicNMFComputer(block_dim=block_dim, num_components=num_components)
     dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = 25)
     mode = "t1ce"
-    model = load_model("Models/2018-08-09_21_01_t1ce/model.h5")
-    test_data_dir = "Data/BRATS_2018/HGG_Testing"
+    model = load_model("Models/2018-08-13_17_59_t1ce/model.h5")
+    test_data_dir = "Data/BRATS_2018/HGG"
     image = None
     seg_image = None
-    
     for subdir in os.listdir(test_data_dir):
         for path in os.listdir(test_data_dir+ "/" + subdir):
             if mode in path:
                 image = nib.load(test_data_dir + "/" + subdir + "/" + path).get_data()
                 seg_image = nib.load(test_data_dir+ "/" + subdir + "/" + path.replace(mode, "seg")).get_data()
                 break
+        break
     
     m = nmfComp.block_dim
     inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
     
     for k in inds:
         seg_est = np.zeros(shape=(dataHandler.W, dataHandler.H))
-        _, H = nmfComp.run(image[:,:,k])
+        W, H = nmfComp.run(image[:,:,k])
         H_cols = np.hsplit(H, H.shape[1])
-        labels = [model.predict(x.T) for x in H_cols]
-        ind = 0
-        for i in range(0, dataHandler.W, m):
-            for j in range(0, dataHandler.H, m):
-                label = 0
-                if np.max(labels[ind]) > 0.95:
-                    print(np.max(labels[ind]))
-                    label = np.argmax(labels[ind])
-                else:
-                    label = 0
-                seg_est[j:j+m, i:i+m] = np.full((m, m), label)
-                ind = ind+1
+        W_cols = np.hsplit(W, W.shape[1])
         
+        
+        
+        #labels = [model.predict(x.T) for x in H_cols]
+        ind = 0
+        for i in range(75, dataHandler.W, m):
+            for j in range(75, dataHandler.H, m):
+                fig = plt.figure()
+                
+                ax=fig.add_subplot(1,4,1)
+                plt.gray()
+                plt.imshow(image[:,:,k])
+                rect = patches.Rectangle((i,j),m,m,linewidth=1,edgecolor='r',facecolor='none')
+                ax.add_patch(rect)
+                plt.axis('off')
+                plt.title('Original Image')
+
+
+
+                fig.add_subplot(1,4,2)
+                
+                plt.gray()
+                plt.imshow(image[:,:,k][j:j+m, i:i+m])
+                plt.axis('off')
+                plt.title('Block')
+                
+                fig.add_subplot(1,4,3)
+                plt.bar(list(range(nmfComp.num_components)), H_cols[ind].T.tolist()[0], align='center')
+                plt.ylabel('Regions')
+                plt.title('Regional Distribution')
+                
+                fig.add_subplot(1,4,4)
+                for i in range(nmfComp.num_components):
+                    plt.bar(list(range(nmfComp.num_hist_bins)), W_cols[i].T.tolist()[0], label='Region ' + str(i))
+                    plt.xlabel('Grayscale Value')
+                    plt.title('Grayscale Regional Distribution')
+                    plt.legend()
+                plt.show()
+
+                
+                #seg_est[j:j+m, i:i+m] = np.full((m, m), np.argmax(labels[ind]))
+                ind = ind+1
+        """
         fig = plt.figure()
         plt.gray();
         a=fig.add_subplot(1,3,1)
@@ -96,5 +132,6 @@ def main():
         plt.axis('off')
         plt.title('Estimate Segment')
         plt.show()
+        """
 if __name__ == "__main__":
    main() 

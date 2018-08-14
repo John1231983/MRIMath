@@ -9,7 +9,7 @@ import numpy as np
 from functools import partial
 import matplotlib.pyplot as plt
 from numpy import linalg
-
+np.random.seed(1)
 
 class BasicNMFComputer(NMFComputer):
 
@@ -25,34 +25,24 @@ class BasicNMFComputer(NMFComputer):
         V_WH = V-WH
         return linalg.norm(V_WH, 'fro')
     
-    def update(self, V, W, H, V_over_WH):
-        epsilon = 1e-9
-        H *= (np.dot(V_over_WH.T, W) / W.sum(axis=0)).T
-
-        WH = W.dot(H) + epsilon
-        V_over_WH = V / WH
-        
-        W *= np.dot(V_over_WH, H.T) / H.sum(axis=1)
-
-        WH = W.dot(H) + epsilon
-        V_over_WH = V / WH
-        
-        return W, H, WH, V_over_WH
+    def update(self, V, W, H):
+        H *= (np.dot(W.T, V))/ np.dot(np.dot(W.T, W), H)
+        W *= (np.dot(V, H.T))/ np.dot(np.dot(W, H), H.T)
+        return W, H
     
     def computeNMF(self, V):
-        #plot =[]
+        cost =[]
         avg_V = V.mean()
         n, m = V.shape
         W = np.random.random(n * self.num_components).reshape(n, self.num_components) * avg_V
         H = np.random.random(self.num_components * m).reshape(self.num_components, m) * avg_V
-        WH = W.dot(H)
 
-        V_over_WH = V / WH
     
         for _ in range(0, self.num_iterations):
-            W, H, WH, V_over_WH = self.update(V, W, H, V_over_WH)
-            #plot.append(self.cost(V, W, H))
-        #self.plotCost(plot)
+            W, H  = self.update(V, W, H)
+            cost.append(self.cost(V, W, H))
+        #self.plotCost(cost)
+        #self.plotHistograms(W, H)
         return W, H
     
     def plotCost(self, data):
@@ -61,6 +51,24 @@ class BasicNMFComputer(NMFComputer):
         plt.ylabel('Frobenius Norm')
         plt.title('NMF Loss')
         plt.show()
+        
+    def plotHistograms(self, W, H, N = 2):
+        fig = plt.figure()
+        fig.add_subplot(1,N+1,1)
+        W_cols = np.hsplit(W, W.shape[1])
+        H_cols = np.hsplit(H, H.shape[1])
+        for i in range(self.num_components):
+            plt.bar(list(range(self.num_hist_bins)), W_cols[i].T.tolist()[0], label='Region ' + str(i))
+        plt.xlabel('Grayscale Value')
+        plt.title('Grayscale Regional Distribution')
+        plt.legend()
+
+        for i in range(2,N+2):
+            fig.add_subplot(1,N+1,i)
+            plt.bar(list(range(self.num_components)), H_cols[i].T.tolist()[0])
+        plt.ylabel('Regions')
+        plt.show()
+        
 
             
 

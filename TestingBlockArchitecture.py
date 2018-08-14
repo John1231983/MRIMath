@@ -46,8 +46,8 @@ def main():
     
     print('Loading the data! This could take some time...')
     mode = "t1ce"
-    num_training_patients = 25;
-    num_validation_patients = 3;
+    num_training_patients = 5;
+    num_validation_patients = 1;
     nmfComp = BasicNMFComputer(block_dim=8, num_components=8)
     dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = num_training_patients)
     dataHandler.loadData(mode)

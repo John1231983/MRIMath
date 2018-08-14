@@ -18,8 +18,11 @@ class BlockDataHandler(DataHandler):
         X = []
         y = []
         m = self.nmfComp.block_dim
-        max_background_blocks = int(0.25*H.shape[1])
+        max_background_blocks = int(0.1*H.shape[1])
+        max_2_blocks = int(0.2*H.shape[1])
         num_background_blocks = 0
+        num_2_blocks = 0
+
         #seg_image[seg_image > 0] = 1
         H = np.nan_to_num(H)
         cols = np.hsplit(seg_image, seg_image.shape[0]/m)
@@ -30,6 +33,10 @@ class BlockDataHandler(DataHandler):
             if block == 0:
                 num_background_blocks = num_background_blocks + 1
                 if num_background_blocks > max_background_blocks:
+                    continue
+            elif block == 2:
+                num_2_blocks = num_2_blocks +1
+                if num_2_blocks > max_2_blocks:
                     continue
             y.append(block)
             X.append(H_cols[i])
