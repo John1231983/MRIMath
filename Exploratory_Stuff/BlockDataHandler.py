@@ -7,6 +7,7 @@ from Exploratory_Stuff.DataHandler import DataHandler
 import numpy as np
 from keras.utils import np_utils
 from scipy.stats import mode
+import matplotlib.pyplot as plt
 
 class BlockDataHandler(DataHandler):
     
@@ -19,11 +20,7 @@ class BlockDataHandler(DataHandler):
         y = []
         m = self.nmfComp.block_dim
         max_background_blocks = int(0.1*H.shape[1])
-        max_2_blocks = int(0.2*H.shape[1])
         num_background_blocks = 0
-        num_2_blocks = 0
-
-        #seg_image[seg_image > 0] = 1
         H = np.nan_to_num(H)
         cols = np.hsplit(seg_image, seg_image.shape[0]/m)
         row_split = [np.vsplit(c,seg_image.shape[0]/m) for c in cols]
@@ -34,18 +31,46 @@ class BlockDataHandler(DataHandler):
                 num_background_blocks = num_background_blocks + 1
                 if num_background_blocks > max_background_blocks:
                     continue
-            elif block == 2:
-                num_2_blocks = num_2_blocks +1
-                if num_2_blocks > max_2_blocks:
-                    continue
             y.append(block)
             X.append(H_cols[i])
                         
         return X, y
-    
+     
+    def showRegions(self, W, H, image, seg_image):
+        regions = np.argmax(H, axis=0)
+        N = H.shape[0]
+        m = self.nmfComp.block_dim
+        fig = plt.figure()
+        plt.gray();
+        fig.add_subplot(1,N+1,1)
+        plt.imshow(image)
+        plt.axis('off')
+        plt.title('Original')
+        
+        for i in range(1,N+1):
+            region = regions.copy();
+            region_image = image.copy()
+            region[regions > i] = 0
+            region[regions < i] = 0
+            region = region.astype(bool)
+            fig.add_subplot(1,N+2,i+1)
+            ind = 0
+            for j in range(0, seg_image.shape[0], m):
+                for k in range(0, seg_image.shape[1], m):
+                    region_image[k:k+m, j:j+m] *= region[ind]
+                    ind = ind+1
+            plt.imshow(region_image)
+            plt.axis('off')
+            plt.title(str(i-1))
+        fig.add_subplot(1,N+2,N+2)
+        plt.imshow(seg_image)
+        plt.axis('off')
+        plt.title('Segment')
+        #plt.show()
     def performNMFOnSlice(self, image, seg_image, i):
         #image[:,:,i] = self.preprocess(image[:,:,i])        
         W, H = self.nmfComp.run(image[:,:,i])
+        #self.showRegions(W, H, image[:,:,i], seg_image[:,:,i])
         return self.processData(W,H, seg_image[:,:,i])
     
     def preprocessForNetwork(self):

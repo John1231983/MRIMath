@@ -26,8 +26,8 @@ class BasicNMFComputer(NMFComputer):
         return linalg.norm(V_WH, 'fro')
     
     def update(self, V, W, H):
-        H *= (np.dot(W.T, V))/ np.dot(np.dot(W.T, W), H)
-        W *= (np.dot(V, H.T))/ np.dot(np.dot(W, H), H.T)
+        H *= np.nan_to_num((np.dot(W.T, V))/ np.dot(np.dot(W.T, W), H))
+        W *= np.nan_to_num((np.dot(V, H.T))/ np.dot(np.dot(W, H), H.T))
         return W, H
     
     def computeNMF(self, V):

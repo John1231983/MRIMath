@@ -45,7 +45,7 @@ def main():
     date_string = now.strftime('%Y-%m-%d_%H_%M')
     
     print('Loading the data! This could take some time...')
-    mode = "t1ce"
+    mode = "flair"
     num_training_patients = 5;
     num_validation_patients = 1;
     nmfComp = BasicNMFComputer(block_dim=8, num_components=8)

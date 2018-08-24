@@ -67,13 +67,14 @@ class DataHandler:
         if num_patients > 0:
             self.num_patients = num_patients
     def preprocess(self, image):
+        
         sitk_image = sitk.GetImageFromArray(image)
-        # sitk_image = sitk.IntensityWindowing(sitk_image, np.percentile(image, 1), np.percentile(image, 99))
+        #sitk_image = sitk.IntensityWindowing(sitk_image, np.percentile(image, 1), np.percentile(image, 99))
         sitk_image = sitk.Cast( sitk_image, sitk.sitkFloat64 )
 
         corrected_image = sitk.N4BiasFieldCorrection(sitk_image, sitk_image > 0);
         corrected_image = sitk.GetArrayFromImage(corrected_image)
-        # corrected_image = exposure.equalize_hist(corrected_image)
+        #corrected_image = exposure.equalize_hist(corrected_image)
         return corrected_image
         
     def clear(self):
