@@ -46,7 +46,7 @@ def main():
     
     print('Loading the data! This could take some time...')
     mode = "flair"
-    num_training_patients = 5;
+    num_training_patients = 1;
     num_validation_patients = 1;
     nmfComp = BasicNMFComputer(block_dim=8, num_components=8)
     dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = num_training_patients)
@@ -135,21 +135,24 @@ def main():
     
     for k in inds:
         seg_est = np.zeros(shape=(dataHandler.W, dataHandler.H))
+        img = image[:,:,k]
         #img = dataHandler.preprocess(image[:,:,k])
-        _, H = nmfComp.run(image[:,:,k])
+        _, H = nmfComp.run(img)
         H_cols = np.hsplit(H, H.shape[1])
-        labels = [model.predict(x.T) for x in H_cols]
+        est_labels = [model.predict(x.T) for x in H_cols]
+        gt_labels = dataHandler.getLabels(seg_image[:,:,k])
+        print( str(np.linalg.norm(np.array(gt_labels) - np.argmax(np.array(est_labels), axis=2), 'fro')))
         #labels = model.predict(H.T)
         ind = 0
         for i in range(0, dataHandler.W, m):
             for j in range(0, dataHandler.H, m):
-                seg_est[j:j+m, i:i+m] = np.full((m, m), np.argmax(labels[ind]))
+                seg_est[i:i+m, j:j+m] = np.full((m, m), np.argmax(est_labels[ind]))
                 ind = ind+1
         
         fig = plt.figure()
         plt.gray();
         a=fig.add_subplot(1,3,1)
-        plt.imshow(image[:,:,k])
+        plt.imshow(img)
         plt.axis('off')
         plt.title('Original')
 

@@ -42,6 +42,7 @@ class NMFComputer():
         rows = np.vsplit(matrix, matrix.shape[0]/self.block_dim)
         col_split = [np.hsplit(r,matrix.shape[0]/self.block_dim) for r in rows]
         blocks = [item for sublist in col_split for item in sublist]
+        #blocks = [block for block in blocks if np.count_nonzero(block) > 0]
         #[self.showHistogram(block) for block in blocks if np.count_nonzero(block) > 0]
         hist_image = [np.histogram(block,bins=self.num_hist_bins)[0] for block in blocks] 
         return np.array(hist_image).transpose()

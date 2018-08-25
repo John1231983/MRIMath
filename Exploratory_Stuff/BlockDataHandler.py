@@ -18,24 +18,29 @@ class BlockDataHandler(DataHandler):
     def processData(self, W, H, seg_image):
         X = []
         y = []
-        m = self.nmfComp.block_dim
+        
         max_background_blocks = int(0.1*H.shape[1])
         num_background_blocks = 0
         H = np.nan_to_num(H)
-        cols = np.hsplit(seg_image, seg_image.shape[0]/m)
-        row_split = [np.vsplit(c,seg_image.shape[0]/m) for c in cols]
-        blocks = [int(mode(block, axis=None)[0][0]) for sublist in row_split for block in sublist]
+        
+        labels = self.getLabels(seg_image)
         H_cols = np.hsplit(H, H.shape[1])
-        for i, block in enumerate(blocks):
-            if block == 0:
+        for i, label in enumerate(labels):
+            if label == 0:
                 num_background_blocks = num_background_blocks + 1
                 if num_background_blocks > max_background_blocks:
                     continue
-            y.append(block)
+            y.append(label)
             X.append(H_cols[i])
                         
         return X, y
      
+    def getLabels(self, seg_image):
+        m = self.nmfComp.block_dim
+        cols = np.vsplit(seg_image, seg_image.shape[0]/m)
+        row_split = [np.hsplit(c,seg_image.shape[0]/m) for c in cols]
+        labels = [np.argmax(np.bincount(block[0])) for sublist in row_split for block in sublist]
+        return labels
     def showRegions(self, W, H, image, seg_image):
         regions = np.argmax(H, axis=0)
         N = H.shape[0]
@@ -49,15 +54,15 @@ class BlockDataHandler(DataHandler):
         
         for i in range(1,N+1):
             region = regions.copy();
-            region_image = image.copy()
+            region_image = np.zeros((240,240))
             region[regions > i] = 0
             region[regions < i] = 0
-            region = region.astype(bool)
+            #region = region.astype(bool)
             fig.add_subplot(1,N+2,i+1)
             ind = 0
             for j in range(0, seg_image.shape[0], m):
                 for k in range(0, seg_image.shape[1], m):
-                    region_image[k:k+m, j:j+m] *= region[ind]
+                    region_image[j:j+m, k:k+m] = region[ind]
                     ind = ind+1
             plt.imshow(region_image)
             plt.axis('off')

@@ -31,25 +31,11 @@ import matplotlib.pyplot as plt
 from keras.layers.advanced_activations import LeakyReLU, PReLU
 import matplotlib.patches as patches
 
-from NMFComputer.SKNMFComputer import SKNMFComputer
-import sys
-import os
-import math
 DATA_DIR = os.path.abspath("../")
 sys.path.append(DATA_DIR)
 def main():
-    """
-    loss_data= genfromtxt("Models/2018-08-13_17_59_t1ce/model_loss_log.csv",delimiter=',')
-    plt.figure()
-    plt.plot(loss_data[:,1])
-    #plt.plot(loss_data[:,1])
-    plt.xlabel("Epochs") 
-    plt.ylabel("Accuracy") 
-    plt.title("Blocknet Loss Curve")
-    plt.show()
-    """
-    block_dim=16
-    num_components=5
+    block_dim=8
+    num_components=8
     nmfComp = BasicNMFComputer(block_dim=block_dim, num_components=num_components)
     dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = 0)
     mode = "flair"
@@ -65,11 +51,9 @@ def main():
                 break
         break
     
-    #m = nmfComp.block_dim
     inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0.01*seg_image[:,:,i].size]
     
     for k in inds:
-        #seg_est = np.zeros(shape=(dataHandler.W, dataHandler.H))
         #image[:,:,k] = dataHandler.preprocess(image[:,:,k])
         W, H = nmfComp.run(image[:,:,k])
         H_cols = np.hsplit(H, H.shape[1])
@@ -79,17 +63,10 @@ def main():
         col_split = [np.hsplit(r,image[:,:,k].shape[0]/nmfComp.block_dim) for r in rows]
         blocks = [item for sublist in col_split for item in sublist]
         m = len(blocks)
-        #j = 0
-        #labels = [model.predict(x.T) for x in H_cols]
         for i in range(len(blocks)):
             if np.count_nonzero(blocks[i]) <= 0:
                 continue
-            """
-            if i % int(math.sqrt(m)) == 0 and i != 0:
-                j = j + 1
-            """
-            #if np.count_nonzero(image[:,:,k][i:i+m, j:j+m]) <= 0:
-            #    continue
+            
             fig = plt.figure()
             
             ax=fig.add_subplot(1,4,1)
@@ -110,7 +87,6 @@ def main():
             plt.title('Block')
             
             fig.add_subplot(1,4,3)
-            #plt.hist(H_cols[ind].T.tolist()[0], density=True, bins=nmfComp.num_components)
 
             plt.bar(list(range(nmfComp.num_components)), H_cols[i].T.tolist()[0], align='center')
             plt.ylabel('Regions')
