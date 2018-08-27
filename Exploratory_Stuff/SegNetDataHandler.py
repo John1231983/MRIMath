@@ -6,9 +6,14 @@ Created on Aug 1, 2018
 from Exploratory_Stuff.DataHandler import DataHandler
 import numpy as np
 import cv2
+from keras.utils import np_utils
+import os
+import nibabel as nib
+import matplotlib.pyplot as plt
+from skimage.transform import resize
 class SegNetDataHandler(DataHandler):
     
-    def __init__(self,dataDirectory, nmfComp, W = 240, H = 240, num_patients = 3):
+    def __init__(self,dataDirectory, nmfComp, W = 128, H = 128, num_patients = 3):
         super().__init__(dataDirectory, nmfComp, W, H, num_patients)
         
         
@@ -16,10 +21,61 @@ class SegNetDataHandler(DataHandler):
         # image[:,:,i] = self.preprocess(image[:,:,i])        
         W, H = self.nmfComp.run(image[:,:,i])
         return self.processData(image[:,:,i], W,H, seg_image[:,:,i])
-    
-    def processData(self, image, W, H, seg_image):
-        X = []
-        y = []
+    def loadData(self, mode):
+
+        J = 0
+        for subdir in os.listdir(self.dataDirectory):
+            if J > self.num_patients:
+                break
+            for path in os.listdir(self.dataDirectory + "/" + subdir):
+                if mode in path:
+                    image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
+                    seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + path.replace(mode, "seg")).get_data()
+                    inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
+                    for i in inds:
+                        self.processData(image[:,:,i], seg_image[:,:,i])
+                    J = J + 1
+                    break
+
+    def processData(self, image, seg_image):
+        #image = self.preprocess(image)
+
+        rmin,rmax, cmin, cmax = self.bbox(image)
+        
+        image = image[rmin:rmax, cmin:cmax]
+        #image = resize(image, (self.W, self.H))
+        image = cv2.resize(image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR)
+        
+        seg_image = seg_image[rmin:rmax, cmin:cmax]
+        #seg_image = resize(seg_image, (self.W, self.H))
+        seg_image = cv2.resize(seg_image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR)
+
+        
+        seg_image = seg_image.reshape(seg_image.shape[0] * seg_image.shape[1])
+        
+        seg_image[seg_image > 0] = 1
+        self.X.append(image/255)
+        self.labels.append(seg_image)
+        
+        """
+        
+        fig = plt.figure()
+        plt.gray();   
+        
+        a=fig.add_subplot(1,2,1)
+        plt.imshow(image)
+        plt.axis('off')
+        plt.title('Original')
+        
+        a=fig.add_subplot(1,2,2)
+        plt.imshow(seg_image)
+        plt.axis('off')
+        plt.title('Segment')
+        plt.show()
+        
+        """
+        
+        """
         indices = np.argmax(W, axis=0)
         #H = H[indices > 0]
         regions = np.argmax(H, axis=0)
@@ -78,7 +134,6 @@ class SegNetDataHandler(DataHandler):
                 reg_1_and_2_and_3_and_4_and_5_and_6_image[i:i+m, j:j+m] *= region_1_and_2_and_3_and_4_and_5_and_6[ind]
                 ind = ind + 1
                 """
-        seg_image[seg_image > 0] = 1
         """
         
         dims = tuple([self.W, self.W])
@@ -106,7 +161,6 @@ class SegNetDataHandler(DataHandler):
         
         
         
-        """
         fig = plt.figure()
         plt.gray();   
         
@@ -156,23 +210,19 @@ class SegNetDataHandler(DataHandler):
 
         plt.show()
         """
-        return X, y
-    
-    def label_map(self, labels, n_labels):
-        label_map = np.zeros([self.W, self.H, n_labels])    
-        for r in range(self.W):
-            for c in range(self.W):
-                print(str(r) + "," + str(c))
-                label_map[r, c, labels[r][c]] = 1
-        label_map = label_map.reshape(self.W * self.H, n_labels)
-        return label_map
-    
+        
+        #return X, y
+
+
+    def getNumLabels(self):
+        return self.labels[0].shape[1]
     
     def preprocessForNetwork(self):
         n_imgs = len(self.X)
         self.X = np.array( self.X )
         self.X = self.X.reshape(n_imgs,self.W, self.H,1)
         self.labels = np.array( self.labels )
-        self.labels = self.labels.reshape(n_imgs,self.W*self.H,1)
+        #self.labels = self.labels.reshape(n_imgs, self.W, self.H)
+        self.labels = np_utils.to_categorical(self.labels)        
         #self.labels = np.clip(self.labels, 0, 1)
         # self.labels = self.labels.reshape(n_imgs, self.W*self.H,2)

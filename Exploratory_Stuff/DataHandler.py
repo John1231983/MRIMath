@@ -54,7 +54,7 @@ class DataHandler:
     nmfComp = None
     num_patients = 0
     
-    def __init__(self, dataDirectory, nmfComp, W = 240, H = 240, num_patients = 3):
+    def __init__(self, dataDirectory, nmfComp, W = 100, H = 100, num_patients = 3):
         self.dataDirectory = dataDirectory
         self.X = []
         self.labels = []
@@ -66,6 +66,7 @@ class DataHandler:
     def setNumPatients(self, num_patients):
         if num_patients > 0:
             self.num_patients = num_patients
+            
     def preprocess(self, image):
         
         sitk_image = sitk.GetImageFromArray(image)
@@ -82,29 +83,7 @@ class DataHandler:
         self.labels = []
         
     def loadData(self, mode):
-        timer = TimerModule()
-        timer.startTimer()
-        J = 0
-        for subdir in os.listdir(self.dataDirectory):
-            if J > self.num_patients:
-                timer.stopTimer()
-                print(timer.getElapsedTime())
-                break
-            for path in os.listdir(self.dataDirectory + "/" + subdir):
-                if mode in path:
-                    image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
-                    seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + path.replace(mode, "seg")).get_data()
-                    inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0.01*self.W*self.H]
-                    temp = [self.performNMFOnSlice(image, seg_image, i) for i in inds]
-                    with Pool(processes=8) as pool:
-                        temp = pool.map(partial(self.performNMFOnSlice, image, seg_image), inds)
-                    foo = [i[0] for i in temp]
-                    bar = [i[1] for i in temp]
-
-                    self.X.extend([item for sublist in foo for item in sublist])
-                    self.labels.extend([item for sublist in bar for item in sublist])
-                    J = J + 1
-                    break
+        pass
 
     
     def setDataDirectory(self, dataDirectory):
@@ -124,6 +103,13 @@ class DataHandler:
     
     def preprocessForNetwork(self):
         pass
+    
+    def bbox(self, img):
+        rows = np.any(img, axis=1)
+        cols = np.any(img, axis=0)
+        rmin, rmax = np.where(rows)[0][[0, -1]]
+        cmin, cmax = np.where(cols)[0][[0, -1]]
+        return rmin,rmax, cmin,cmax
 
 
     

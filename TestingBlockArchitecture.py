@@ -33,6 +33,7 @@ from keras.layers.advanced_activations import LeakyReLU, PReLU
 from NMFComputer.SKNMFComputer import SKNMFComputer
 import sys
 import os
+import cv2
 DATA_DIR = os.path.abspath("../")
 sys.path.append(DATA_DIR)
 from numpy import genfromtxt
@@ -46,9 +47,9 @@ def main():
     
     print('Loading the data! This could take some time...')
     mode = "flair"
-    num_training_patients = 1;
+    num_training_patients = 5;
     num_validation_patients = 1;
-    nmfComp = BasicNMFComputer(block_dim=8, num_components=8)
+    nmfComp = BasicNMFComputer(block_dim=16, num_components=8)
     dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = num_training_patients)
     dataHandler.loadData(mode)
     dataHandler.preprocessForNetwork()
@@ -92,7 +93,7 @@ def main():
     
     
     
-    model_directory = "/home/daniel/eclipse-workspace/MRIMath/Models/" + date_string + "_" + mode
+    model_directory = "/home/daniel/eclipse-workspace/MRIMath/Models/blocknet_" + date_string + "_" + mode
     if not os.path.exists(model_directory):
         os.makedirs(model_directory)
     log_info_filename = 'model_loss_log.csv'
@@ -130,17 +131,25 @@ def main():
                 break
             
     m = nmfComp.block_dim
-    inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
+    inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 500]
     
     
     for k in inds:
         seg_est = np.zeros(shape=(dataHandler.W, dataHandler.H))
         img = image[:,:,k]
+        seg_img = seg_image[:,:,k]
+        rmin,rmax, cmin, cmax = dataHandler.bbox(image)
+        img = img[rmin:rmax, cmin:cmax]
+        img = cv2.resize(img, dsize=(dataHandler.W, dataHandler.H), interpolation=cv2.INTER_LINEAR)
+        seg_img = seg_img[rmin:rmax, cmin:cmax]
+        seg_img = cv2.resize(seg_img, dsize=(dataHandler.W, dataHandler.H), interpolation=cv2.INTER_LINEAR)
+
+        
         #img = dataHandler.preprocess(image[:,:,k])
         _, H = nmfComp.run(img)
         H_cols = np.hsplit(H, H.shape[1])
         est_labels = [model.predict(x.T) for x in H_cols]
-        gt_labels = dataHandler.getLabels(seg_image[:,:,k])
+        gt_labels = dataHandler.getLabels(seg_img)
         print( str(np.linalg.norm(np.array(gt_labels) - np.argmax(np.array(est_labels), axis=2), 'fro')))
         #labels = model.predict(H.T)
         ind = 0
