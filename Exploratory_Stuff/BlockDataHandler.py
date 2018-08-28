@@ -20,22 +20,37 @@ class BlockDataHandler(DataHandler):
         
         
     def processData(self, image, seg_image):
-
+        X = []
+        y = []
+        
         rmin,rmax, cmin, cmax = self.bbox(image)
         
         image = image[rmin:rmax, cmin:cmax]
-        image = cv2.resize(image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR)
+        image = cv2.resize(image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR_EXACT)
 
         seg_image = seg_image[rmin:rmax, cmin:cmax]
-        seg_image = cv2.resize(seg_image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR)
+        seg_image = cv2.resize(seg_image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR_EXACT)
         
         W, H = self.nmfComp.run(image)
         labels = self.getLabels(seg_image)
-
+        
         H = np.nan_to_num(H)
         H_cols = np.hsplit(H, H.shape[1])
+        
+        
+        max_num_background_blocks = np.count_nonzero(labels)
+        num_background_blocks = 0
+        for i, label in enumerate(labels):
+            if label == 0:
+                num_background_blocks = num_background_blocks + 1
+                if num_background_blocks > max_num_background_blocks:
+                    continue
+            X.append(H_cols[i])
+            y.append(label)
+
+
                    
-        return H_cols, labels
+        return X, y
      
     def loadData(self, mode):
         timer = TimerModule()
@@ -50,7 +65,7 @@ class BlockDataHandler(DataHandler):
                 if mode in path:
                     image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
                     seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + path.replace(mode, "seg")).get_data()
-                    inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 500]
+                    inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
                     if inds is []:
                         continue
                     temp = [self.processData(image[:,:,i], seg_image[:,:,i]) for i in inds]
@@ -75,8 +90,7 @@ class BlockDataHandler(DataHandler):
         m = self.nmfComp.block_dim
         cols = np.vsplit(seg_image, seg_image.shape[0]/m)
         row_split = [np.hsplit(c,seg_image.shape[0]/m) for c in cols]
-        labels = [np.argmax(np.bincount(block[0])) for sublist in row_split for block in sublist]
-        print(labels)
+        labels = [block[0][int(m/2)] for sublist in row_split for block in sublist]
         return labels
     
     def showRegions(self, W, H, image, seg_image):

@@ -13,7 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from Utils.TimerModule import TimerModule
 from Exploratory_Stuff.BlockDataHandler import BlockDataHandler
 #from keras.callbacks import CSVLogger,ReduceLROnPlateau
-from keras.layers import Dense, BatchNormalization, Conv1D
+from keras.layers import Dense, BatchNormalization, Conv1D, Dropout
 from keras.models import Sequential
 from keras.callbacks import CSVLogger
 #from keras.optimizers import SGD
@@ -28,7 +28,7 @@ import nibabel as nib
 import numpy as np
 from NMFComputer.BasicNMFComputer import BasicNMFComputer
 import matplotlib.pyplot as plt
-from keras.layers.advanced_activations import LeakyReLU, PReLU
+from keras.layers.advanced_activations import PReLU
 
 from NMFComputer.SKNMFComputer import SKNMFComputer
 import sys
@@ -47,9 +47,9 @@ def main():
     
     print('Loading the data! This could take some time...')
     mode = "flair"
-    num_training_patients = 5;
-    num_validation_patients = 1;
-    nmfComp = BasicNMFComputer(block_dim=16, num_components=8)
+    num_training_patients = 20;
+    num_validation_patients = 2;
+    nmfComp = BasicNMFComputer(block_dim=8, num_components=8)
     dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = num_training_patients)
     dataHandler.loadData(mode)
     dataHandler.preprocessForNetwork()
@@ -67,24 +67,44 @@ def main():
     
     print('Building the model now!')
     model = Sequential()
-    model.add(Dense(1000, input_dim=dataHandler.nmfComp.num_components))
+    model.add(Dense(2048, input_dim=dataHandler.nmfComp.num_components))
     model.add(BatchNormalization())
-    model.add(LeakyReLU())
-    model.add(Dense(750))
+    model.add(PReLU())
+    model.add(Dropout(0.5))
+    
+    model.add(Dense(1024))
     model.add(BatchNormalization())
-    model.add(LeakyReLU())
-    model.add(Dense(500))
+    model.add(PReLU())
+    model.add(Dropout(0.5))
+    
+    model.add(Dense(512))
     model.add(BatchNormalization())
-    model.add(LeakyReLU())
-    model.add(Dense(250))
+    model.add(PReLU())
+    model.add(Dropout(0.5))
+
+    model.add(Dense(256))
     model.add(BatchNormalization())
-    model.add(LeakyReLU())
-    model.add(Dense(100))
+    model.add(PReLU())
+    model.add(Dropout(0.5))
+
+    model.add(Dense(128))
     model.add(BatchNormalization())
-    model.add(LeakyReLU())
-    model.add(Dense(50))
+    model.add(PReLU())
+    model.add(Dropout(0.5))
+
+    model.add(Dense(64))
     model.add(BatchNormalization())
-    model.add(LeakyReLU())
+    model.add(PReLU())
+    model.add(Dropout(0.5))
+    
+    model.add(Dense(32))
+    model.add(BatchNormalization())
+    model.add(PReLU())
+    model.add(Dropout(0.5))
+
+    model.add(Dense(16))
+    model.add(BatchNormalization())
+    model.add(PReLU())
     model.add(Dense(labels.shape[1], activation='softmax'))
     
     
@@ -113,10 +133,10 @@ def main():
     print('Training network!')
     model.fit(x_train,
                labels,
-                epochs=50,
+                epochs=100,
                 validation_data=(x_val, val_labels),
                 callbacks = [csv_logger],
-                batch_size=int(x_train.shape[0]/5))
+                batch_size=x_train.shape[0])
     
     
     model.save(model_directory + '/model.h5')
@@ -131,7 +151,7 @@ def main():
                 break
             
     m = nmfComp.block_dim
-    inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 500]
+    inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
     
     
     for k in inds:
