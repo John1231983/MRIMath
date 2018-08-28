@@ -30,7 +30,7 @@ class BlockDataHandler(DataHandler):
 
         seg_image = seg_image[rmin:rmax, cmin:cmax]
         seg_image = cv2.resize(seg_image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR_EXACT)
-        
+        seg_image[seg_image > 0] = 1
         W, H = self.nmfComp.run(image)
         labels = self.getLabels(seg_image)
         
