@@ -65,9 +65,10 @@ class ExtendedBlockDataHandler(DataHandler):
                         valid_label_indices[i] = self.getLabels(seg_image[:,:,i]) 
                     for mode in self.modes:
                         image = nib.load(self.dataDirectory + "/" + subdir + "/" + path.replace("seg",mode)).get_data()
-                        print(image.shape)
                         temp = [self.processData(image[:,:,i], valid_label_indices[i]) for i in inds]
-                        foo.extend([i for i in temp])
+                        bar = [i for i in temp]
+                        foo.extend([item for sublist in bar for item in sublist])
+                        print(len(foo))
                         J = J + 1
                     chunks = [foo[x:x+int(len(foo)/len(self.modes))] for x in range(0, len(foo), int(len(foo)/len(self.modes)))]
                     for i in range((int(len(foo)/len(self.modes)))):

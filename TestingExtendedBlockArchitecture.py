@@ -66,6 +66,14 @@ def main():
     val_labels = dataHandler.labels
     dataHandler.clear()
     
+    dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Testing")
+    dataHandler.setNumPatients(1)
+    dataHandler.loadData(mode)
+    dataHandler.preprocessForNetwork()
+    x_test = dataHandler.X
+    test_labels = dataHandler.labels
+    dataHandler.clear()
+    
     print('Building the model now!')
     model = Sequential()
     model.add(Dense(2048, input_dim=len(dataHandler.modes)*dataHandler.nmfComp.num_components))
