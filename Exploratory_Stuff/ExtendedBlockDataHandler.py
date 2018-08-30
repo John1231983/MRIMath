@@ -1,5 +1,5 @@
 '''
-Created on Aug 1, 2018
+Created on Aug 29, 2018
 
 @author: daniel
 '''
@@ -12,14 +12,15 @@ import os
 import nibabel as nib
 from Utils.TimerModule import TimerModule
 import cv2 
-
-class BlockDataHandler(DataHandler):
-    
+from multiprocessing import Pool
+from functools import partial
+class ExtendedBlockDataHandler(DataHandler):
+    modes = ["flair", "t1ce"]
     def __init__(self, dataDirectory, nmfComp, W = 240, H = 240, num_patients = 3):
         super().__init__(dataDirectory, nmfComp, W, H, num_patients)
         
         
-    def processData(self, image, seg_image):
+    def processData(self, image, label_indices):
         X = []
         y = []
         """
@@ -33,28 +34,20 @@ class BlockDataHandler(DataHandler):
         #seg_image[seg_image > 0] = 1
         """
         W, H = self.nmfComp.run(image)
-        labels = self.getLabels(seg_image)
         
         H = np.nan_to_num(H)
         H_cols = np.hsplit(H, H.shape[1])
         
         
-        max_num_background_blocks = np.count_nonzero(seg_image)
-        num_background_blocks = 0
-        for i, label in enumerate(labels):
-            
-            if label == 0:
-                num_background_blocks = num_background_blocks + 1
-                if num_background_blocks > max_num_background_blocks:
-                    continue
+        for i in label_indices:
             X.append(H_cols[i])
-            y.append(label)
 
 
                    
-        return X, y
+        return X
      
     def loadData(self, mode):
+        foo = []
         timer = TimerModule()
         timer.startTimer()
         J = 0
@@ -64,36 +57,41 @@ class BlockDataHandler(DataHandler):
                 print(timer.getElapsedTime())
                 break
             for path in os.listdir(self.dataDirectory + "/" + subdir):
-                if mode in path:
-                    image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
-                    seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + path.replace(mode, "seg")).get_data()
+                if "seg" in path:
+                    seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
                     inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
-                    if inds is []:
-                        continue
-                    temp = [self.processData(image[:,:,i], seg_image[:,:,i]) for i in inds]
-                    foo = [i[0] for i in temp]
-                    bar = [i[1] for i in temp]
-                    self.X.extend([item for sublist in foo for item in sublist])
-                    self.labels.extend([item for sublist in bar for item in sublist])
-                    """
-                    temp = [self.performNMFOnSlice(image, seg_image, i) for i in inds]
-                    with Pool(processes=8) as pool:
-                        temp = pool.map(partial(self.performNMFOnSlice, image, seg_image), inds)
-                    foo = [i[0] for i in temp]
-                    bar = [i[1] for i in temp]
+                    valid_label_indices = {}
+                    for i in inds:
+                        valid_label_indices[i] = self.getLabels(seg_image[:,:,i]) 
+                    for mode in self.modes:
+                        image = nib.load(self.dataDirectory + "/" + subdir + "/" + path.replace("seg",mode)).get_data()
+                        print(image.shape)
+                        temp = [self.processData(image[:,:,i], valid_label_indices[i]) for i in inds]
+                        foo.extend([i for i in temp])
+                        J = J + 1
+                    chunks = [foo[x:x+int(len(foo)/len(self.modes))] for x in range(0, len(foo), int(len(foo)/len(self.modes)))]
+                    for i in range((int(len(foo)/len(self.modes)))):
+                        self.X.append(np.concatenate((chunks[0][i], chunks[1][i]), axis=None))
+                
 
-                    self.X.extend([item for sublist in foo for item in sublist])
-                    self.labels.extend([item for sublist in bar for item in sublist])
-                    """
-                    J = J + 1
-                    break
+
 
     def getLabels(self, seg_image):
         m = self.nmfComp.block_dim
         cols = np.vsplit(seg_image, seg_image.shape[0]/m)
         row_split = [np.hsplit(c,seg_image.shape[0]/m) for c in cols]
         labels = [mode(block[0])[0] for sublist in row_split for block in sublist]
-        return labels
+        num_background_blocks = 0
+        max_num_background_blocks = 0.01*len(labels)
+        inds = []
+        for i, label in enumerate(labels):
+            if label == 0:
+                num_background_blocks = num_background_blocks + 1
+                if num_background_blocks > max_num_background_blocks:
+                    continue
+            self.labels.append(label)
+            inds.append(i)
+        return inds
     
     def showRegions(self, W, H, image, seg_image):
         regions = np.argmax(H, axis=0)
@@ -134,9 +132,9 @@ class BlockDataHandler(DataHandler):
     
     def preprocessForNetwork(self):
         n_imgs = len(self.X)
-        print(n_imgs)
+
         self.X = np.array( self.X )
-        self.X = self.X.reshape(n_imgs,self.nmfComp.num_components)
+        self.X = self.X.reshape(n_imgs,len(self.modes)*self.nmfComp.num_components)
         #self.labels = np.array( self.labels )
         self.labels = np_utils.to_categorical(self.labels)
         #self.labels = self.labels.reshape(n_imgs,self.W,self.H,1)

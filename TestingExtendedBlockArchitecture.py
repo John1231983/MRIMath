@@ -51,7 +51,7 @@ def main():
     num_training_patients = 1;
     num_validation_patients = 1;
     nmfComp = BasicNMFComputer(block_dim=8, num_components=8)
-    dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = num_training_patients)
+    dataHandler = ExtendedBlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = num_training_patients)
     dataHandler.loadData(mode)
     dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
@@ -68,7 +68,7 @@ def main():
     
     print('Building the model now!')
     model = Sequential()
-    model.add(Dense(2048, input_dim=dataHandler.nmfComp.num_components))
+    model.add(Dense(2048, input_dim=len(dataHandler.modes)*dataHandler.nmfComp.num_components))
     model.add(BatchNormalization())
     model.add(PReLU())
     model.add(Dropout(0.5))

@@ -1,8 +1,9 @@
 '''
-Created on Aug 1, 2018
+Created on Aug 29, 2018
 
 @author: daniel
 '''
+
 from Exploratory_Stuff.DataHandler import DataHandler
 import numpy as np
 import cv2
@@ -11,9 +12,9 @@ import os
 import nibabel as nib
 import matplotlib.pyplot as plt
 from skimage.transform import resize
-class SegNetDataHandler(DataHandler):
+class UNetDataHandler(DataHandler):
     
-    def __init__(self,dataDirectory, nmfComp, W = 240, H = 240, num_patients = 3):
+    def __init__(self,dataDirectory, nmfComp, W = 128, H = 128, num_patients = 3):
         super().__init__(dataDirectory, nmfComp, W, H, num_patients)
         
         
@@ -37,8 +38,38 @@ class SegNetDataHandler(DataHandler):
                     J = J + 1
                     break
 
-    def processData(self, image, seg_image):
-        #image = self.preprocess(image)
+    def processData(self, image, seg_image, num_class = 2):
+        image = self.preprocess(image)
+        rmin,rmax, cmin, cmax = self.bbox(image)
+        
+        image = image[rmin:rmax, cmin:cmax]
+        #image = resize(image, (self.W, self.H))
+        img = cv2.resize(image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR)
+        
+        seg_image = seg_image[rmin:rmax, cmin:cmax]
+        #seg_image = resize(seg_image, (self.W, self.H))
+        mask = cv2.resize(seg_image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR)
+        flag_multi_class= False
+        if(flag_multi_class):
+            img = img / 255
+            mask = mask.reshape((1,240,240))
+            mask = mask[:,:,0]
+            new_mask = np.zeros(mask.shape + (num_class,))
+            for i in range(num_class):
+                #for one pixel in the image, find the class in mask and convert it into one-hot vector
+                #index = np.where(mask == i)
+                #index_mask = (index[0],index[1],index[2],np.zeros(len(index[0]),dtype = np.int64) + i) if (len(mask.shape) == 4) else (index[0],index[1],np.zeros(len(index[0]),dtype = np.int64) + i)
+                #new_mask[index_mask] = 1
+                new_mask[mask == i,i] = 1
+            new_mask = np.reshape(new_mask,(new_mask.shape[0],new_mask.shape[1]*new_mask.shape[2],new_mask.shape[3])) if flag_multi_class else np.reshape(new_mask,(new_mask.shape[0]*new_mask.shape[1],new_mask.shape[2]))
+            mask = new_mask
+        elif(np.max(img) > 1):
+            img = img / 255
+            #mask = mask /255
+            mask[mask > 0] = 1
+            #mask[mask <= 0.5] = 0
+        self.X.append(img)
+        self.labels.append(mask)
         """
         rmin,rmax, cmin, cmax = self.bbox(image)
         
@@ -51,14 +82,7 @@ class SegNetDataHandler(DataHandler):
         seg_image = cv2.resize(seg_image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR)
 
         """
-        seg_image = seg_image.reshape(seg_image.shape[0] * seg_image.shape[1])
-        
-        #seg_image[seg_image > 0] = 1
-        
-        self.X.append(image)
-        self.labels.append(seg_image)
-        
-        
+
         """
         fig = plt.figure()
         plt.gray();   
@@ -224,7 +248,7 @@ class SegNetDataHandler(DataHandler):
         self.X = np.array( self.X )
         self.X = self.X.reshape(n_imgs,self.W, self.H,1)
         self.labels = np.array( self.labels )
-        #self.labels = self.labels.reshape(n_imgs, self.W, self.H)
-        self.labels = np_utils.to_categorical(self.labels)        
+        self.labels = self.labels.reshape(n_imgs, self.W, self.H, 1)
+        #self.labels = np_utils.to_categorical(self.labels)        
         #self.labels = np.clip(self.labels, 0, 1)
         # self.labels = self.labels.reshape(n_imgs, self.W*self.H,2)

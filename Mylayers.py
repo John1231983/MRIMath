@@ -1,8 +1,3 @@
-'''
-Created on Jul 30, 2018
-
-@author: daniel
-'''
 # -*- coding: utf-8 -*-
 from keras import backend as K
 from keras.layers import Layer

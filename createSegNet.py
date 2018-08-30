@@ -12,13 +12,15 @@ def createSegNet(input_shape, n_labels, kernel=3, output_mode="softmax"):
     img_w = input_shape[1]
     encoding_layers = [
         
-        Convolution2D(32, kernel, padding='same', input_shape=( img_h, img_w,1)),
+        
+        Convolution2D(32, (kernel, kernel), padding='same'),
         BatchNormalization(),
         PReLU(),
-        Convolution2D(32, kernel, padding='same'),
+        Convolution2D(32, (kernel, kernel), padding='same'),
         BatchNormalization(),
         PReLU(),
         MaxPooling2D(),
+        
         
         Convolution2D(64, (kernel, kernel), padding='same'),
         BatchNormalization(),
@@ -43,14 +45,11 @@ def createSegNet(input_shape, n_labels, kernel=3, output_mode="softmax"):
         BatchNormalization(),
         PReLU(),
         MaxPooling2D(),
+
         
-        Convolution2D(512, (kernel, kernel), padding='same'),
-        BatchNormalization(),
-        PReLU(),
-        Convolution2D(512, (kernel, kernel), padding='same'),
-        BatchNormalization(),
-        PReLU(),
-        MaxPooling2D(),
+
+        
+                
         
         #MaxPooling2D(size=(1,1)),
     ]
@@ -63,14 +62,8 @@ def createSegNet(input_shape, n_labels, kernel=3, output_mode="softmax"):
     
     decoding_layers = [
         
-        UpSampling2D(),
-        Convolution2D(512, (kernel, kernel), padding='same'),
-        BatchNormalization(),
-        PReLU(),
-        Convolution2D(512, (kernel, kernel), padding='same'),
-        BatchNormalization(),
-        PReLU(),
-        
+
+
         UpSampling2D(),
         Convolution2D(256, (kernel, kernel), padding='same'),
         BatchNormalization(),
@@ -110,7 +103,7 @@ def createSegNet(input_shape, n_labels, kernel=3, output_mode="softmax"):
     segnet.decoding_layers = decoding_layers
     for l in segnet.decoding_layers:
         segnet.add(l)
-        print(l.input_shape,l.output_shape,l)
+        #print(l.input_shape,l.output_shape,l)
 
 
     segnet.add(Reshape((n_labels, img_h * img_w)))
