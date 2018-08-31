@@ -15,14 +15,13 @@ import cv2
 from multiprocessing import Pool
 from functools import partial
 class ExtendedBlockDataHandler(DataHandler):
-    modes = ["flair", "t1ce"]
+    modes = ["flair", "t1ce", "t1", "t2"]
     def __init__(self, dataDirectory, nmfComp, W = 240, H = 240, num_patients = 3):
         super().__init__(dataDirectory, nmfComp, W, H, num_patients)
         
         
     def processData(self, image, label_indices):
         X = []
-        y = []
         """
         rmin,rmax, cmin, cmax = self.bbox(image)
         
@@ -33,46 +32,48 @@ class ExtendedBlockDataHandler(DataHandler):
         seg_image = cv2.resize(seg_image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR_EXACT)
         #seg_image[seg_image > 0] = 1
         """
-        W, H = self.nmfComp.run(image)
-        
+        _, H = self.nmfComp.run(image)
         H = np.nan_to_num(H)
         H_cols = np.hsplit(H, H.shape[1])
         
         
         for i in label_indices:
             X.append(H_cols[i])
-
-
                    
         return X
      
-    def loadData(self, mode):
-        foo = []
-        timer = TimerModule()
-        timer.startTimer()
+    def processData2(self, image):
+        _, H = self.nmfComp.run(image)
+        H = np.nan_to_num(H)
+        H_cols = np.hsplit(H, H.shape[1])   
+        return H_cols
+    
+        
+    def loadData(self):
         J = 0
         for subdir in os.listdir(self.dataDirectory):
             if J > self.num_patients:
-                timer.stopTimer()
-                print(timer.getElapsedTime())
                 break
-            for path in os.listdir(self.dataDirectory + "/" + subdir):
-                if "seg" in path:
-                    seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
-                    inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
-                    valid_label_indices = {}
-                    for i in inds:
-                        valid_label_indices[i] = self.getLabels(seg_image[:,:,i]) 
-                    for mode in self.modes:
-                        image = nib.load(self.dataDirectory + "/" + subdir + "/" + path.replace("seg",mode)).get_data()
+            data_dirs = os.listdir(self.dataDirectory + "/" + subdir)
+            seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + [s for s in data_dirs if "seg" in s][0]).get_data()
+            inds = [i for i in list(range(90)) if np.count_nonzero(seg_image[:,:,i]) > 0]
+            valid_label_indices = {}
+            for i in inds:
+                valid_label_indices[i] = self.getLabels(seg_image[:,:,i]) 
+            foo = []
+
+            for path in data_dirs:
+                for mode in self.modes:
+                    if mode in path:
+                        image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
                         temp = [self.processData(image[:,:,i], valid_label_indices[i]) for i in inds]
                         bar = [i for i in temp]
                         foo.extend([item for sublist in bar for item in sublist])
-                        print(len(foo))
-                        J = J + 1
-                    chunks = [foo[x:x+int(len(foo)/len(self.modes))] for x in range(0, len(foo), int(len(foo)/len(self.modes)))]
-                    for i in range((int(len(foo)/len(self.modes)))):
-                        self.X.append(np.concatenate((chunks[0][i], chunks[1][i]), axis=None))
+                        break;
+            J = J + 1
+            chunks = [foo[x:x+int(len(foo)/len(self.modes))] for x in range(0, len(foo), int(len(foo)/len(self.modes)))]
+            for i in range((int(len(foo)/len(self.modes)))):
+                self.X.append(np.concatenate((chunks[0][i], chunks[1][i], chunks[2][i],chunks[3][i]), axis=None))
                 
 
 
@@ -131,6 +132,7 @@ class ExtendedBlockDataHandler(DataHandler):
         #self.showRegions(W, H, image[:,:,i], seg_image[:,:,i])
         return self.processData(W,H, seg_image[:,:,i])
     
+
     def preprocessForNetwork(self):
         n_imgs = len(self.X)
 

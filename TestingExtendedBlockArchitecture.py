@@ -47,12 +47,11 @@ def main():
     date_string = now.strftime('%Y-%m-%d_%H_%M')
     
     print('Loading the data! This could take some time...')
-    mode = "flair"
-    num_training_patients = 1;
-    num_validation_patients = 1;
+    num_training_patients = 30;
+    num_validation_patients = 3;
     nmfComp = BasicNMFComputer(block_dim=8, num_components=8)
     dataHandler = ExtendedBlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = num_training_patients)
-    dataHandler.loadData(mode)
+    dataHandler.loadData()
     dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
     labels = dataHandler.labels
@@ -60,18 +59,10 @@ def main():
     
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
     dataHandler.setNumPatients(num_validation_patients)
-    dataHandler.loadData(mode)
+    dataHandler.loadData()
     dataHandler.preprocessForNetwork()
     x_val = dataHandler.X
     val_labels = dataHandler.labels
-    dataHandler.clear()
-    
-    dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Testing")
-    dataHandler.setNumPatients(1)
-    dataHandler.loadData(mode)
-    dataHandler.preprocessForNetwork()
-    x_test = dataHandler.X
-    test_labels = dataHandler.labels
     dataHandler.clear()
     
     print('Building the model now!')
@@ -122,7 +113,7 @@ def main():
     
     
     
-    model_directory = "/home/daniel/eclipse-workspace/MRIMath/Models/blocknet_" + date_string + "_" + mode
+    model_directory = "/home/daniel/eclipse-workspace/MRIMath/Models/extended_blocknet_" + date_string
     if not os.path.exists(model_directory):
         os.makedirs(model_directory)
     log_info_filename = 'model_loss_log.csv'
@@ -142,69 +133,59 @@ def main():
     print('Training network!')
     model.fit(x_train,
                labels,
-                epochs=100,
+                epochs=500,
                 validation_data=(x_val, val_labels),
                 callbacks = [csv_logger],
                 batch_size=x_train.shape[0])
     
     
     model.save(model_directory + '/model.h5')
-    test_data_dir = "Data/BRATS_2018/HGG_Testing"
+    test_data_dir = "Data/BRATS_2018/HGG"
     image = None
     seg_image = None
-    for subdir in os.listdir(test_data_dir):
-        for path in os.listdir(test_data_dir+ "/" + subdir):
-            if mode in path:
-                image = nib.load(test_data_dir + "/" + subdir + "/" + path).get_data()
-                seg_image = nib.load(test_data_dir+ "/" + subdir + "/" + path.replace(mode, "seg")).get_data()
-                break
-            
     m = nmfComp.block_dim
-    inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
     
-    
-    for k in inds:
+    for subdir in os.listdir(test_data_dir):
         seg_est = np.zeros(shape=(dataHandler.W, dataHandler.H))
-        img = image[:,:,k]
-        seg_img = seg_image[:,:,k]
-        rmin,rmax, cmin, cmax = dataHandler.bbox(image)
-        img = img[rmin:rmax, cmin:cmax]
-        img = cv2.resize(img, dsize=(dataHandler.W, dataHandler.H), interpolation=cv2.INTER_LINEAR)
-        seg_img = seg_img[rmin:rmax, cmin:cmax]
-        seg_img = cv2.resize(seg_img, dsize=(dataHandler.W, dataHandler.H), interpolation=cv2.INTER_LINEAR)
+        data_dirs = os.listdir(test_data_dir + "/" + subdir)
+        seg_image = nib.load(test_data_dir + "/" + subdir + "/" +  [s for s in data_dirs if "seg" in s][0]).get_data()
+        inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
+        for k in inds:
+            X_test = []
 
-        
-        #img = dataHandler.preprocess(image[:,:,k])
-        _, H = nmfComp.run(img)
-        H_cols = np.hsplit(H, H.shape[1])
-        est_labels = [model.predict(x.T) for x in H_cols]
-        gt_labels = dataHandler.getLabels(seg_img)
-        print( str(np.linalg.norm(np.array(gt_labels) - np.argmax(np.array(est_labels), axis=2), 'fro')))
-        #labels = model.predict(H.T)
-        ind = 0
-        for i in range(0, dataHandler.W, m):
-            for j in range(0, dataHandler.H, m):
-                seg_est[i:i+m, j:j+m] = np.full((m, m), np.argmax(est_labels[ind]))
-                ind = ind+1
-        
-        fig = plt.figure()
-        plt.gray();
-        a=fig.add_subplot(1,3,1)
-        plt.imshow(img)
-        plt.axis('off')
-        plt.title('Original')
+            foo = []
+            for path in data_dirs:
+                for mode in dataHandler.modes:
+                    if mode in path:
+                        image = nib.load(test_data_dir + "/" + subdir + "/" + path).get_data()
+                        foo.extend(dataHandler.processData2(image[:,:,k]))
+                        
+            chunks = [foo[x:x+int(len(foo)/len(dataHandler.modes))] for x in range(0, len(foo), int(len(foo)/len(dataHandler.modes)))]
+            for i in range((int(len(foo)/len(dataHandler.modes)))):
+                X_test.append(np.concatenate((chunks[0][i], chunks[1][i], chunks[2][i], chunks[3][i]), axis=None))
 
-        a=fig.add_subplot(1,3,2)
-        plt.imshow(seg_image[:,:,k])
-        plt.axis('off')
-        plt.title('GT Segment')
-        
-        a=fig.add_subplot(1,3,3)
-        plt.imshow(seg_est)
-        plt.axis('off')
-        plt.title('Estimate Segment')
-        plt.show()
+            print(len(X_test))
+            est_labels = [model.predict(x.reshape((1, -1))) for x in X_test]
+            #labels = model.predict(H.T)
+            ind = 0
+            for i in range(0, dataHandler.W, m):
+                for j in range(0, dataHandler.H, m):
+                    seg_est[i:i+m, j:j+m] = np.full((m, m), np.argmax(est_labels[ind]))
+                    ind = ind+1
+            fig = plt.figure()
+            plt.gray();
     
+            a=fig.add_subplot(1,2,1)
+            plt.imshow(seg_image[:,:,k])
+            plt.axis('off')
+            plt.title('GT Segment')
+            
+            a=fig.add_subplot(1,2,2)
+            plt.imshow(seg_est)
+            plt.axis('off')
+            plt.title('Estimate Segment')
+            plt.show()
+
         
 # evaluate the model
 

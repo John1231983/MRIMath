@@ -31,7 +31,7 @@ class BasicNMFComputer(NMFComputer):
         return W, H
     
     def computeNMF(self, V):
-        cost =[]
+        #cost =[]
         avg_V = V.mean()
         n, m = V.shape
         W = np.random.random(n * self.num_components).reshape(n, self.num_components) * avg_V
@@ -40,7 +40,7 @@ class BasicNMFComputer(NMFComputer):
     
         for _ in range(0, self.num_iterations):
             W, H  = self.update(V, W, H)
-            cost.append(self.cost(V, W, H))
+            #cost.append(self.cost(V, W, H))
         #self.plotCost(cost)
         #self.plotHistograms(W, H)
         return W, H
