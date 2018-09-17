@@ -140,7 +140,7 @@ def main():
     sgd = SGD(lr=lrate, momentum=momentum, nesterov=True)
     segnet.compile(optimizer="adam", loss=dice_coef_loss, metrics=[dice_coef])
 
-    model_directory = "/home/daniel/eclipse-workspace/MRIMath/Models/segnet_" + date_string 
+    model_directory = "Models/segnet_" + date_string 
     if not os.path.exists(model_directory):
         os.makedirs(model_directory)
     log_info_filename = 'model_loss_log.csv'
