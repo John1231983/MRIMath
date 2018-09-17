@@ -12,11 +12,12 @@ import os
 import nibabel as nib
 from Utils.TimerModule import TimerModule
 import cv2 
-
+from imblearn.over_sampling import SMOTE
+from collections import Counter
 class BlockDataHandler(DataHandler):
     
-    def __init__(self, dataDirectory, nmfComp, W = 240, H = 240, num_patients = 3):
-        super().__init__(dataDirectory, nmfComp, W, H, num_patients)
+    def __init__(self, dataDirectory, nmfComp, W = 240, H = 240, num_patients = 3, load_mode = "training" ):
+        super().__init__(dataDirectory, nmfComp, W, H, num_patients, load_mode)
         
         
     def processData(self, image, seg_image):
@@ -33,6 +34,7 @@ class BlockDataHandler(DataHandler):
         #seg_image[seg_image > 0] = 1
         """
         W, H = self.nmfComp.run(image)
+        seg_image[seg_image > 0] = 1
         labels = self.getLabels(seg_image)
         
         H = np.nan_to_num(H)
@@ -134,10 +136,17 @@ class BlockDataHandler(DataHandler):
     
     def preprocessForNetwork(self):
         n_imgs = len(self.X)
-        print(n_imgs)
         self.X = np.array( self.X )
         self.X = self.X.reshape(n_imgs,self.nmfComp.num_components)
         #self.labels = np.array( self.labels )
+        """
+        if self.load_mode is "training":
+            sm = SMOTE(random_state=42)
+            self.X, self.labels = sm.fit_sample(self.X, np.array(self.labels).ravel())
+            print(self.X.shape)
+        """
         self.labels = np_utils.to_categorical(self.labels)
+
+        
         #self.labels = self.labels.reshape(n_imgs,self.W,self.H,1)
         # self.labels = self.labels.reshape(n_imgs, self.W*self.H,2)

@@ -3,7 +3,7 @@ import sys
 import shutil
 import random
 # Root directory of the project
-ROOT_DIR = os.path.abspath("Mask_RCNN")
+ROOT_DIR = os.path.abspath("../Mask_RCNN")
 print(ROOT_DIR)
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
@@ -31,13 +31,13 @@ if not os.path.exists(COCO_MODEL_PATH):
 def main():
     config = MRIMathConfig()
     config.display()
-    
+    print(MODEL_DIR)
     random.seed(12345)
-    data_dir = "Data/BRATS_2018/HGG"
-    val_dir = "Data/BRATS_2018/HGG_Validation"
+    data_dir = "../Data/BRATS_2018/HGG"
+    val_dir = "../Data/BRATS_2018/HGG_Validation"
     if not os.path.exists(val_dir):
         os.makedirs(val_dir)
-    test_dir = "Data/BRATS_2018/HGG_Testing"
+    test_dir = "../Data/BRATS_2018/HGG_Testing"
     if not os.path.exists(test_dir):
         os.makedirs(test_dir)
     list_imgs = os.listdir(data_dir)

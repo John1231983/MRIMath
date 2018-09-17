@@ -47,17 +47,19 @@ def main():
     date_string = now.strftime('%Y-%m-%d_%H_%M')
     
     print('Loading the data! This could take some time...')
-    mode = "flair"
-    num_training_patients = 1;
+    mode = "t1ce_bf_corrected"
+    num_training_patients = 5;
     num_validation_patients = 1;
     nmfComp = BasicNMFComputer(block_dim=8, num_components=8)
     dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = num_training_patients)
+    
     dataHandler.loadData(mode)
     dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
     labels = dataHandler.labels
     dataHandler.clear()
     
+    dataHandler.setLoadingMode("validation")
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
     dataHandler.setNumPatients(num_validation_patients)
     dataHandler.loadData(mode)
@@ -134,10 +136,11 @@ def main():
     print('Training network!')
     model.fit(x_train,
                labels,
-                epochs=100,
+                epochs=30,
                 validation_data=(x_val, val_labels),
                 callbacks = [csv_logger],
-                batch_size=x_train.shape[0])
+                class_weight = {0:1, 1:1000},
+                batch_size=int(x_train.shape[0]/25))
     
     
     model.save(model_directory + '/model.h5')
@@ -159,19 +162,14 @@ def main():
         seg_est = np.zeros(shape=(dataHandler.W, dataHandler.H))
         img = image[:,:,k]
         seg_img = seg_image[:,:,k]
-        rmin,rmax, cmin, cmax = dataHandler.bbox(image)
-        img = img[rmin:rmax, cmin:cmax]
-        img = cv2.resize(img, dsize=(dataHandler.W, dataHandler.H), interpolation=cv2.INTER_LINEAR)
-        seg_img = seg_img[rmin:rmax, cmin:cmax]
-        seg_img = cv2.resize(seg_img, dsize=(dataHandler.W, dataHandler.H), interpolation=cv2.INTER_LINEAR)
-
+        
         
         #img = dataHandler.preprocess(image[:,:,k])
         _, H = nmfComp.run(img)
         H_cols = np.hsplit(H, H.shape[1])
         est_labels = [model.predict(x.T) for x in H_cols]
         gt_labels = dataHandler.getLabels(seg_img)
-        print( str(np.linalg.norm(np.array(gt_labels) - np.argmax(np.array(est_labels), axis=2), 'fro')))
+        #print( str(np.linalg.norm(np.array(gt_labels) - np.argmax(np.array(est_labels), axis=2), 'fro')))
         #labels = model.predict(H.T)
         ind = 0
         for i in range(0, dataHandler.W, m):

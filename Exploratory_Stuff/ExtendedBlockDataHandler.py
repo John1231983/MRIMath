@@ -14,10 +14,13 @@ from Utils.TimerModule import TimerModule
 import cv2 
 from multiprocessing import Pool
 from functools import partial
+from imblearn.over_sampling import SMOTE
+
 class ExtendedBlockDataHandler(DataHandler):
-    modes = ["flair", "t1ce", "t1", "t2"]
-    def __init__(self, dataDirectory, nmfComp, W = 240, H = 240, num_patients = 3):
-        super().__init__(dataDirectory, nmfComp, W, H, num_patients)
+    modes = None
+    def __init__(self, dataDirectory, nmfComp, W = 240, H = 240, num_patients = 3, modes = ["flair", "t1ce", "t1", "t2"], load_mode = "training"):
+        super().__init__(dataDirectory, nmfComp, W, H, num_patients, load_mode)
+        self.modes = modes
         
         
     def processData(self, image, label_indices):
@@ -56,7 +59,7 @@ class ExtendedBlockDataHandler(DataHandler):
                 break
             data_dirs = os.listdir(self.dataDirectory + "/" + subdir)
             seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + [s for s in data_dirs if "seg" in s][0]).get_data()
-            inds = [i for i in list(range(90)) if np.count_nonzero(seg_image[:,:,i]) > 0]
+            inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
             valid_label_indices = {}
             for i in inds:
                 valid_label_indices[i] = self.getLabels(seg_image[:,:,i]) 
@@ -135,10 +138,13 @@ class ExtendedBlockDataHandler(DataHandler):
 
     def preprocessForNetwork(self):
         n_imgs = len(self.X)
-
         self.X = np.array( self.X )
         self.X = self.X.reshape(n_imgs,len(self.modes)*self.nmfComp.num_components)
+        print(self.X.shape)
         #self.labels = np.array( self.labels )
+        if self.load_mode is "training":
+            sm = SMOTE(random_state=42)
+            self.X, self.labels = sm.fit_sample(self.X, np.array(self.labels).ravel())
+            print(self.X.shape)
+            
         self.labels = np_utils.to_categorical(self.labels)
-        #self.labels = self.labels.reshape(n_imgs,self.W,self.H,1)
-        # self.labels = self.labels.reshape(n_imgs, self.W*self.H,2)

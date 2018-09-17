@@ -45,6 +45,15 @@ import os
 DATA_DIR = os.path.abspath("../")
 sys.path.append(DATA_DIR)
 
+def dice_coef(y_true, y_pred, smooth=1):
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    intersection = K.sum(y_true_f * y_pred_f)
+    return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+
+def dice_coef_loss(y_true, y_pred):
+    return -dice_coef(y_true, y_pred)
+
 def main():
 
     hardwareHandler = HardwareHandler()
@@ -53,12 +62,11 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d_%H_%M')
     
-    num_training_patients = 1
-    num_validation_patients = 1
-    mode = "flair"
+    num_training_patients = 25
+    num_validation_patients = 2
     
-    dataHandler = UNetDataHandler("Data/BRATS_2018/HGG", BasicNMFComputer(block_dim=8), num_patients = num_training_patients)
-    dataHandler.loadData("flair")
+    dataHandler = UNetDataHandler("Data/BRATS_2018/HGG", BasicNMFComputer(block_dim=8), num_patients = num_training_patients, modes = ["flair"])
+    dataHandler.loadData()
     dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
     x_seg_train = dataHandler.labels
@@ -66,7 +74,7 @@ def main():
     
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
     dataHandler.setNumPatients(num_validation_patients)
-    dataHandler.loadData(mode)
+    dataHandler.loadData()
     dataHandler.preprocessForNetwork()
     x_val = dataHandler.X
     x_seg_val = dataHandler.labels
@@ -74,30 +82,30 @@ def main():
     
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Testing")
     dataHandler.setNumPatients(1)
-    dataHandler.loadData("flair")
+    dataHandler.loadData()
     dataHandler.preprocessForNetwork()
     x_test = dataHandler.X
     x_seg_test = dataHandler.labels
     dataHandler.clear()
     
 
-    input_shape = (dataHandler.W,dataHandler.H, 1)
+    input_shape = (dataHandler.W,dataHandler.H, len(dataHandler.modes))
     
     unet = createUNet(input_shape =input_shape)
     lrate = 0.1
     momentum = 0.9
     #decay = lrate/num_epochs   
     sgd = SGD(lr=lrate, momentum=momentum, nesterov=True)
-    unet.compile(optimizer=sgd, loss='binary_crossentropy', metrics=['accuracy'])
+    unet.compile(optimizer="adam", loss=dice_coef_loss, metrics=[dice_coef])
 
-    model_directory = "/home/daniel/eclipse-workspace/MRIMath/Models/unet_" + date_string + "_" + mode
+    model_directory = "/home/daniel/eclipse-workspace/MRIMath/Models/unet_" + date_string
     if not os.path.exists(model_directory):
         os.makedirs(model_directory)
     log_info_filename = 'model_loss_log.csv'
     csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=',')
     
     unet.fit(x_train, x_seg_train,
-                epochs=5,
+                epochs=10,
                 batch_size=10,
                 shuffle=True,
                 validation_data=(x_val, x_seg_val),

@@ -6,7 +6,7 @@ from keras.layers.normalization import BatchNormalization
 from keras.layers.advanced_activations import PReLU
 
 
-def createSegNet(input_shape, n_labels, kernel=3, output_mode="softmax"):
+def createSegNet(input_shape, n_labels, kernel=3, output_mode="sigmoid"):
     segnet = Sequential()
     img_h  = input_shape[0]
     img_w = input_shape[1]
@@ -30,26 +30,7 @@ def createSegNet(input_shape, n_labels, kernel=3, output_mode="softmax"):
         PReLU(),
         MaxPooling2D(),
         
-        Convolution2D(128, (kernel, kernel), padding='same'),
-        BatchNormalization(),
-        PReLU(),
-        Convolution2D(128, (kernel, kernel), padding='same'),
-        BatchNormalization(),
-        PReLU(),
-        MaxPooling2D(),
-        
-        Convolution2D(256, (kernel, kernel), padding='same'),
-        BatchNormalization(),
-        PReLU(),
-        Convolution2D(256, (kernel, kernel), padding='same'),
-        BatchNormalization(),
-        PReLU(),
-        MaxPooling2D(),
 
-        
-
-        
-                
         
         #MaxPooling2D(size=(1,1)),
     ]
@@ -63,23 +44,6 @@ def createSegNet(input_shape, n_labels, kernel=3, output_mode="softmax"):
     decoding_layers = [
         
 
-
-        UpSampling2D(),
-        Convolution2D(256, (kernel, kernel), padding='same'),
-        BatchNormalization(),
-        PReLU(),
-        Convolution2D(256, (kernel, kernel), padding='same'),
-        BatchNormalization(),
-        PReLU(),
-        
-        UpSampling2D(),
-        Convolution2D(128, (kernel, kernel), padding='same'),
-        BatchNormalization(),
-        PReLU(),
-        Convolution2D(128, (kernel, kernel), padding='same'),
-        BatchNormalization(),
-        PReLU(),
-        
         UpSampling2D(),
         Convolution2D(64, (kernel, kernel), padding='same'),
         BatchNormalization(),

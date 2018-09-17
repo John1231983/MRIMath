@@ -11,31 +11,74 @@ import os
 import nibabel as nib
 import matplotlib.pyplot as plt
 from skimage.transform import resize
+import SimpleITK as sitk
 class SegNetDataHandler(DataHandler):
-    
-    def __init__(self,dataDirectory, nmfComp, W = 240, H = 240, num_patients = 3):
+    modes = None
+
+    def __init__(self,dataDirectory, nmfComp, W = 240, H = 240, num_patients = 3, modes = ["flair", "t1ce", "t1", "t2"]):
         super().__init__(dataDirectory, nmfComp, W, H, num_patients)
+        self.modes = modes
         
+    def windowIntensity(self, image, min_percent=1, max_percent=99):
+    
+        sitk_image = sitk.GetImageFromArray(image)
+        #sitk_image = sitk.IntensityWindowing(sitk_image, np.percentile(image, 1), np.percentile(image, 99))
+        sitk_image = sitk.Cast( sitk_image, sitk.sitkFloat64 )
+        corrected_image = sitk.IntensityWindowing(sitk_image, np.percentile(image, min_percent), np.percentile(image, max_percent))
+    
+        corrected_image = sitk.GetArrayFromImage(corrected_image)
+        #corrected_image = exposure.equalize_hist(corrected_image)
+        return corrected_image
         
     def performNMFOnSlice(self, image, seg_image, i):
         # image[:,:,i] = self.preprocess(image[:,:,i])        
         W, H = self.nmfComp.run(image[:,:,i])
         return self.processData(image[:,:,i], W,H, seg_image[:,:,i])
-    def loadData(self, mode):
+    def loadData(self):
 
+       
         J = 0
         for subdir in os.listdir(self.dataDirectory):
             if J > self.num_patients:
                 break
-            for path in os.listdir(self.dataDirectory + "/" + subdir):
-                if mode in path:
-                    image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
-                    seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + path.replace(mode, "seg")).get_data()
-                    inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0.02*seg_image[:,:,i].size]
-                    for i in inds:
-                        self.processData(image[:,:,i], seg_image[:,:,i])
-                    J = J + 1
-                    break
+            data_dirs = os.listdir(self.dataDirectory + "/" + subdir)
+            seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + [s for s in data_dirs if "seg" in s][0]).get_data()
+            
+            inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
+            foo = {}
+
+            for mode in self.modes:
+                for path in data_dirs:
+                    if mode + ".nii" in path:
+                        image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
+                        foo[mode] = image
+            for i in inds:
+                j = 0
+                img = np.zeros((self.W, self.H, len(self.modes)))
+                for mode in self.modes:
+                    # proc_img, rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
+                    img[:,:,j] = foo[mode][:,:,i]
+                    
+                    #img[:,:,j] = proc_img
+                    j = j+1
+                self.X.append(img)
+                seg_img = seg_image[:,:,i]
+                seg_img[seg_img > 0] = 1
+                #seg_img = seg_img[rmin:rmax, cmin:cmax]
+                #seg_image = cv2.resize(image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR)
+                seg_img = seg_img.reshape(seg_img.shape[0] * seg_img.shape[1])
+                self.labels.append(seg_img)
+            J = J+1
+                    
+                        
+                        
+    def processImage(self, image):
+        rmin,rmax, cmin, cmax = self.bbox(image)
+        image = image[rmin:rmax, cmin:cmax]
+        resized_image = cv2.resize(image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR)
+        return resized_image, rmin, rmax, cmin, cmax
+        
+        
 
     def processData(self, image, seg_image):
         #image = self.preprocess(image)
@@ -222,9 +265,10 @@ class SegNetDataHandler(DataHandler):
     def preprocessForNetwork(self):
         n_imgs = len(self.X)
         self.X = np.array( self.X )
-        self.X = self.X.reshape(n_imgs,self.W, self.H,1)
+        self.X = self.X 
+        self.X = self.X.reshape(n_imgs,self.W, self.H,len(self.modes))
         self.labels = np.array( self.labels )
         #self.labels = self.labels.reshape(n_imgs, self.W, self.H)
-        self.labels = np_utils.to_categorical(self.labels)        
+        #self.labels = np_utils.to_categorical(self.labels)        
         #self.labels = np.clip(self.labels, 0, 1)
         # self.labels = self.labels.reshape(n_imgs, self.W*self.H,2)

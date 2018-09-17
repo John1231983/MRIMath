@@ -47,16 +47,18 @@ def main():
     date_string = now.strftime('%Y-%m-%d_%H_%M')
     
     print('Loading the data! This could take some time...')
-    num_training_patients = 30;
-    num_validation_patients = 3;
+    num_training_patients = 12;
+    num_validation_patients = 1;
     nmfComp = BasicNMFComputer(block_dim=8, num_components=8)
-    dataHandler = ExtendedBlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = num_training_patients)
+    dataHandler = ExtendedBlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = num_training_patients, modes = ["flair", "t1ce_bf_corrected", "t1_bf_corrected", "t2_bf_corrected"])
     dataHandler.loadData()
     dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
     labels = dataHandler.labels
     dataHandler.clear()
     
+    dataHandler.setLoadingMode("validation")
+
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
     dataHandler.setNumPatients(num_validation_patients)
     dataHandler.loadData()

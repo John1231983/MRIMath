@@ -10,10 +10,12 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import nibabel as nib
+from imblearn.over_sampling import SMOTE
+
 import cv2
 def main():
     print('Loading the data! This could take some time...')
-    mode = "flair"
+    mode = "t1ce_bf_corrected"
     num_training_patients = 5;
     num_validation_patients = 1;
     nmfComp = BasicNMFComputer(block_dim=8, num_components=8)
@@ -24,6 +26,8 @@ def main():
     x_train_size = len(x_train)
     x_train = np.array(x_train).reshape(x_train_size,-1)
     labels = dataHandler.labels
+    sm = SMOTE()
+    x_train, labels = sm.fit_sample(x_train, np.array(labels).ravel())
     model = svm.SVC()
     model.fit(x_train, labels)
     

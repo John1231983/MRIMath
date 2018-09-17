@@ -53,8 +53,8 @@ class DataHandler:
     labels = []
     nmfComp = None
     num_patients = 0
-    
-    def __init__(self, dataDirectory, nmfComp, W = 100, H = 100, num_patients = 3):
+    load_mode = None
+    def __init__(self, dataDirectory, nmfComp, W = 100, H = 100, num_patients = 3, load_mode = "training"):
         self.dataDirectory = dataDirectory
         self.X = []
         self.labels = []
@@ -62,6 +62,7 @@ class DataHandler:
         self.H = H
         self.nmfComp = nmfComp
         self.setNumPatients(num_patients)
+        self.setLoadingMode(load_mode)
     
     def setNumPatients(self, num_patients):
         if num_patients > 0:
@@ -84,7 +85,12 @@ class DataHandler:
         
     def loadData(self, mode):
         pass
-
+    
+    def setLoadingMode(self, load_mode):
+        if load_mode is "training" or load_mode is "validation" or load_mode is "testing":
+            self.load_mode = load_mode
+        else:
+            self.load_mode = "training"
     
     def setDataDirectory(self, dataDirectory):
         self.dataDirectory = dataDirectory

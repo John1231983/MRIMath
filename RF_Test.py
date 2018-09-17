@@ -15,13 +15,15 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import nibabel as nib
+from imblearn.over_sampling import SMOTE
+
 import cv2
 def main():
     print('Loading the data! This could take some time...')
-    mode = "flair"
-    num_training_patients = 1;
+    mode = "t1ce_bf_corrected"
+    num_training_patients = 7;
     num_validation_patients = 1;
-    nmfComp = BasicNMFComputer(block_dim=8, num_components=25)
+    nmfComp = BasicNMFComputer(block_dim=8, num_components=20)
     dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = num_training_patients)
     dataHandler.loadData(mode)
     #dataHandler.preprocessForNetwork()
@@ -29,7 +31,9 @@ def main():
     x_train_size = len(x_train)
     x_train = np.array(x_train).reshape(x_train_size,-1)
     labels = dataHandler.labels
-    model = RandomForestClassifier()
+    sm = SMOTE()
+    x_train, labels = sm.fit_sample(x_train, np.array(labels).ravel())
+    model = RandomForestClassifier(class_weight="balanced")
     model.fit(x_train, labels)
     
     """
