@@ -3,7 +3,7 @@ Created on Aug 1, 2018
 
 @author: daniel
 '''
-from Exploratory_Stuff.DataHandler import DataHandler
+from DataHandlers.DataHandler import DataHandler
 import numpy as np
 import cv2
 from keras.utils import np_utils
