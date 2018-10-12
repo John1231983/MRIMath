@@ -15,7 +15,7 @@ from skimage.transform import resize
 import SimpleITK as sitk
 class UNetDataHandler(DataHandler):
     modes = None
-    def __init__(self,dataDirectory, nmfComp, W = 240, H = 240, num_patients = 3, modes = ["flair", "t1ce", "t1", "t2"]):
+    def __init__(self,dataDirectory, nmfComp, W = 128, H = 128, num_patients = 3, modes = ["flair", "t1ce", "t1", "t2"]):
         super().__init__(dataDirectory, nmfComp, W, H, num_patients)
         self.modes = modes
     
@@ -34,36 +34,69 @@ class UNetDataHandler(DataHandler):
         # image[:,:,i] = self.preprocess(image[:,:,i])        
         W, H = self.nmfComp.run(image[:,:,i])
         return self.processData(image[:,:,i], W,H, seg_image[:,:,i])
+    
+    def processImage(self, image):
+        rmin,rmax, cmin, cmax = self.bbox(image)
+        image = image[rmin:rmax, cmin:cmax]
+        resized_image = cv2.resize(image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR)
+        return resized_image, rmin, rmax, cmin, cmax
+        
     def loadData(self):
-    
-           
-            J = 0
-            for subdir in os.listdir(self.dataDirectory):
-                if J > self.num_patients:
-                    break
-                data_dirs = os.listdir(self.dataDirectory + "/" + subdir)
-                seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + [s for s in data_dirs if "seg" in s][0]).get_data()
-                inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
-                foo = {}
-    
+
+        J = 0
+        for subdir in os.listdir(self.dataDirectory):
+            if J > self.num_patients:
+                break
+            data_dirs = os.listdir(self.dataDirectory + "/" + subdir)
+            seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + [s for s in data_dirs if "seg" in s][0]).get_data()
+            
+            inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
+            foo = {}
+
+            for mode in self.modes:
+                for path in data_dirs:
+                    if mode + ".nii" in path:
+                        image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_fdata()
+                        foo[mode] = image
+            for i in inds:
+                j = 0
+                img = np.zeros((self.W, self.H, len(self.modes)))
                 for mode in self.modes:
-                    for path in data_dirs:
-                        if mode in path:
-                            image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
-                            foo[mode] = image
-                for i in inds:
-                    j = 0
-                    img = np.zeros((self.W, self.H, len(self.modes)))
-                    for mode in self.modes:
-                        #proc_img, rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
-                        #img[:,:,j] = foo[mode][:,:,i]
-                        img[:,:,j] = self.windowIntensity(foo[mode][:,:,i])
-                        j = j+1
-                    self.X.append(img)
-                    seg_img = seg_image[:,:,i]
-                    seg_img[seg_img > 0] = 1
-                    self.labels.append(seg_img)
-                J = J+1
+                    proc_img, rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
+                    #img[:,:,j] = foo[mode][:,:,i]
+                    img[:,:,j] = proc_img
+                    j = j+1
+                self.X.append(img)
+                
+                seg_img = seg_image[:,:,i]
+                seg_img[seg_img > 0] = 1
+                seg_img = seg_img[rmin:rmax, cmin:cmax]
+                seg_img = cv2.resize(seg_img, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR)
+                #proc_img = exposure.equalize_hist(proc_img)
+                """
+                fig = plt.figure()
+                plt.gray();   
+                
+                fig.add_subplot(1,3,1)
+                plt.imshow(img[:,:,j-1])
+                plt.axis('off')
+                plt.title('Original')
+                
+                fig.add_subplot(1,3,2)
+                plt.imshow(window_proc_img)
+                plt.axis('off')
+                plt.title('Windowed')
+                
+                
+                fig.add_subplot(1,3,3)
+                plt.imshow(seg_img)
+                plt.axis('off')
+                plt.title('Segment')
+                plt.show()
+                """
+                seg_img = seg_img.reshape(seg_img.shape[0] * seg_img.shape[1])
+                self.labels.append(seg_img)
+            J = J+1
 
     def processData(self, image, seg_image, num_class = 2):
         #image = self.preprocess(image)

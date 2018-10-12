@@ -29,7 +29,7 @@ from createSegNet import createSegNet
 from createSegnetWithIndexPooling import createSegNetWithIndexPooling
 from keras.models import load_model
 from Mylayers import MaxPoolingWithArgmax2D, MaxUnpooling2D
-
+import math
 
 #from keras.utils.training_utils import multi_gpu_model
 #import keras.backend as K
@@ -38,13 +38,19 @@ from keras.optimizers import SGD
 from keras.callbacks import CSVLogger
 
 from NMFComputer.BasicNMFComputer import BasicNMFComputer
-
+import cv2
 import sys
 import os
 DATA_DIR = os.path.abspath("../")
 sys.path.append(DATA_DIR)
 
 
+def dice_and_iou(y_true, y_pred):
+    alpha = 0.9
+    beta = 1 - alpha
+    dice = dice_coef_loss(y_true, y_pred)
+    iou = iou_loss(y_true, y_pred)
+    return alpha*dice + beta*iou
 
 def computeDice(im1, im2):
     im1 = np.asarray(im1).astype(np.bool)
@@ -55,8 +61,10 @@ def computeDice(im1, im2):
 
     # Compute Dice coefficient
     intersection = np.logical_and(im1, im2)
-
-    return 2. * intersection.sum() / (im1.sum() + im2.sum())
+    dice = 2. * intersection.sum() / (im1.sum() + im2.sum())
+    if math.isnan(dice):
+        return 0
+    return dice
 
 def computeDice2(im1, im2):
 
@@ -66,8 +74,10 @@ def computeDice2(im1, im2):
 
     # Compute Dice coefficient
     intersection = im1 * im2
-
-    return 2. * intersection.sum() / (im1.sum() + im2.sum())
+    dice = 2. * intersection.sum() / (im1.sum() + im2.sum())
+    if math.isinf(dice):
+        return 0
+    return dice
 def dice_coef(y_true, y_pred, smooth=1):
     y_true_f = K.flatten(y_true)
 
@@ -79,7 +89,6 @@ def dice_coef_loss(y_true, y_pred):
     return -dice_coef(y_true, y_pred)
 
 def iou(y_true, y_pred):
-
     y_true = K.flatten(y_true)
     y_pred = K.flatten(y_pred)
     intersection = K.sum(y_true * y_pred)
@@ -101,8 +110,8 @@ def main():
     num_training_patients = 30
     num_validation_patients = 3
     
-    modes = ["flair_bf_corrected"]
-    dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG_Testing", BasicNMFComputer(block_dim=8), num_patients = num_training_patients, modes = ["flair"])
+    modes = ["flair"]
+    dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", num_patients = num_training_patients, modes = ["flair"])
     dataHandler.loadData()
     dataHandler.preprocessForNetwork()
     x_test = dataHandler.X
@@ -113,7 +122,7 @@ def main():
     input_shape = (dataHandler.W,dataHandler.H, len(modes))
     
 
-    segnet = load_model("Models/segnet_2018-09-16-16:57/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 'MaxUnpooling2D':MaxUnpooling2D, 'dice_coef_loss': dice_coef_loss, 'dice_coef':dice_coef, 'iou_loss': iou_loss, 'iou':iou})
+    segnet = load_model("Models/segnet_2018-10-03-20:51/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 'MaxUnpooling2D':MaxUnpooling2D, 'dice_coef_loss': dice_coef_loss, 'dice_coef':dice_coef, 'dice_and_iou': dice_and_iou, 'iou_loss': iou_loss, 'iou':iou})
     
     decoded_imgs = segnet.predict(x_test)
       
@@ -121,6 +130,8 @@ def main():
     N = len(decoded_imgs)
     for i in range(len(decoded_imgs)):
         decoded_imgs[i][decoded_imgs[i] < 0.5] = 0
+        kernel = np.ones((3,3),np.uint8)
+        decoded_imgs[i] = cv2.morphologyEx(decoded_imgs[i],cv2.MORPH_OPEN,kernel)
         dice = computeDice(x_seg_test[i], np.squeeze(decoded_imgs[i]))
         avg_dice = avg_dice + dice
     print(str(avg_dice/N))

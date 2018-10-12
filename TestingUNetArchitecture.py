@@ -31,7 +31,7 @@ import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
 from createUNet import createUNet
-
+import tensorflow as tf
 #from keras.utils.training_utils import multi_gpu_model
 #import keras.backend as K
 #import tensorflow as tf
@@ -39,20 +39,132 @@ from keras.optimizers import SGD
 from keras.callbacks import CSVLogger
 
 from NMFComputer.BasicNMFComputer import BasicNMFComputer
-
+from Canny_Tensorflow import TF_Canny
 import sys
 import os
 DATA_DIR = os.path.abspath("../")
 sys.path.append(DATA_DIR)
-
-def dice_coef(y_true, y_pred, smooth=1):
+def dice_coef(y_true, y_pred, smooth=1e-3):        
     y_true_f = K.flatten(y_true)
     y_pred_f = K.flatten(y_pred)
     intersection = K.sum(y_true_f * y_pred_f)
     return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
 
+
 def dice_coef_loss(y_true, y_pred):
-    return -dice_coef(y_true, y_pred)
+    return 1 - dice_coef(y_true, y_pred)
+
+def iou(y_true, y_pred):
+    y_true = K.flatten(y_true)
+    y_pred = K.flatten(y_pred)
+    intersection = K.sum(y_true * y_pred)
+    union = K.sum(y_true) + K.sum(y_pred) - intersection
+    return 1. * intersection / union
+
+def iou_loss(y_true, y_pred):
+    return 1 - iou(y_true, y_pred)
+
+def hamming_dist(y_true, y_pred):
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    return K.mean(y_true_f*(1-y_pred_f) + y_pred_f*(1-y_true_f))
+
+    
+def diced_ham_loss(y_true, y_pred, alpha=1, beta=0.0):
+    dice = dice_coef_loss(y_true, y_pred)
+    ham = hamming_dist(y_true, y_pred)
+    return alpha*dice + beta*ham
+
+def computeHausdorff(A, B):
+    A = tf.where(A>0.5)
+    B = tf.where(B>0.5)
+    
+    
+    #A = K.print_tensor(A, "A = ")
+    #B = K.print_tensor(B, "B = ")
+
+    A = A[:,tf.newaxis,:]
+    B = B[tf.newaxis,:,:]
+    
+    h_ab = K.abs(A-B)
+    h_ab = tf.reduce_sum(h_ab,axis = -1)
+    h_ab = K.max(K.min(h_ab, axis=0))
+    
+    h_ba = K.abs(B-A)
+    h_ba = tf.reduce_sum(h_ba,axis = -1)
+    h_ba = K.max(K.min(h_ba, axis=0))
+    
+    return tf.maximum(h_ab, h_ba)
+
+def hausdorff_dist(y_true, y_pred):
+    
+    y_true = K.reshape(y_true, [K.tf.shape(y_true)[0],128,128,1])
+    y_true =  TF_Canny(y_true)
+    """
+    y_true = tf.map_fn(lambda x: pad_up_to(tf.where(x>0.5),[150,1],K.min(x)), y_true, dtype = tf.int64, infer_shape = False)
+    y_true = K.cast(y_true, dtype = tf.float32)
+    """
+    
+    y_pred = K.reshape(y_pred, [K.tf.shape(y_pred)[0],128,128,1])
+    y_pred = TF_Canny(y_pred)
+    
+    res = tf.map_fn(lambda x: computeHausdorff(x[0], x[1]), (y_true,y_pred), dtype = tf.int64, infer_shape = False)
+    #res = K.print_tensor(res, "Results: ")
+    #print(res.get_shape())
+    res.set_shape((None,))
+    res = K.cast(res,dtype = tf.float32)
+    res = tf.nn.l2_normalize(res)
+    return res
+    """
+    y_pred = tf.map_fn(lambda x: pad_up_to(tf.where(x>0.5),[150,1],K.min(x)), y_pred, dtype = tf.int64, infer_shape = False)
+    y_pred = K.cast(y_pred, dtype = tf.float32)
+    """
+
+    """
+    y_pred = y_pred[:,tf.newaxis,:]
+    y_true = y_true[tf.newaxis,:,:]
+    
+    h_ab = K.abs(y_pred-y_true)
+    h_ab = tf.reduce_sum(h_ab,axis = -1)
+    h_ab = K.print_tensor(K.min(h_ab, axis=0), message = "h_ab: ")
+    h_ab = K.max(K.min(h_ab, axis=0))
+    
+    h_ba = K.abs(y_true-y_pred)
+    h_ba = tf.reduce_sum(h_ba,axis = -1)
+    h_ba = K.max(K.min(h_ba, axis=0))
+    
+    return tf.maximum(h_ab, h_ba)
+    """
+    
+    #h_ab = K.print_tensor(h_ab, "distance = ")
+    
+    """
+    diff_y_pred_y_true = K.tf.matmul(y_pred, 1/y_true)
+    diff_y_pred_y_true = K.min(K.log(diff_y_pred_y_true + K.epsilon()), axis=0)
+
+    diff_y_true_y_pred = K.tf.matmul(1/y_pred, y_true)
+    diff_y_true_y_pred = K.min(K.log(diff_y_true_y_pred + K.epsilon()), axis=0)
+    
+    dist_a = K.max(diff_y_pred_y_true)
+    dist_b = K.max(diff_y_true_y_pred)
+    
+    dist = K.tf.maximum(dist_a, dist_b)
+    """
+    #dist = K.print_tensor(dist, "dist = ")
+    #dist = pairwise_l2_norm2(y_pred, y_true)
+
+    #return h_ab
+    
+    
+
+
+
+def combinedHausdorffAndDice(y_pred, y_true):
+    alpha = 0.5
+    beta = 1 - alpha
+    dice = dice_coef_loss(y_true, y_pred)
+    hd = hausdorff_dist(y_true, y_pred)
+    return alpha*dice + beta*hd
 
 def main():
 
@@ -62,8 +174,8 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d_%H_%M')
     
-    num_training_patients = 25
-    num_validation_patients = 2
+    num_training_patients = 50
+    num_validation_patients = 5
     
     dataHandler = UNetDataHandler("Data/BRATS_2018/HGG", BasicNMFComputer(block_dim=8), num_patients = num_training_patients, modes = ["flair"])
     dataHandler.loadData()
@@ -96,7 +208,7 @@ def main():
     momentum = 0.9
     #decay = lrate/num_epochs   
     sgd = SGD(lr=lrate, momentum=momentum, nesterov=True)
-    unet.compile(optimizer="adam", loss=dice_coef_loss, metrics=[dice_coef])
+    unet.compile(optimizer="adam", loss=combinedHausdorffAndDice, metrics=[dice_coef])
 
     model_directory = "/home/daniel/eclipse-workspace/MRIMath/Models/unet_" + date_string
     if not os.path.exists(model_directory):
@@ -106,7 +218,7 @@ def main():
     
     unet.fit(x_train, x_seg_train,
                 epochs=10,
-                batch_size=10,
+                batch_size=20,
                 shuffle=True,
                 validation_data=(x_val, x_seg_val),
                 callbacks = [csv_logger],
