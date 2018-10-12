@@ -16,7 +16,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from Utils.TimerModule import TimerModule
-from Exploratory_Stuff.UNetDataHandler import UNetDataHandler
+from DataHandlers.UNetDataHandler import UNetDataHandler
 #from keras.callbacks import CSVLogger,ReduceLROnPlateau
 from keras.layers import Conv2D, Activation, MaxPooling2D, Reshape, Dense, Flatten, BatchNormalization, Dropout, LeakyReLU, PReLU,concatenate
 from keras.models import Sequential, Model, Input

@@ -15,11 +15,10 @@ import sys
 import os
 from dask.array.tests.test_numpy_compat import dtype
 from dask.array.routines import nonzero
-from TestingUNetArchitecture import combinedHausdorffAndDice
 from tensorflow.python.framework import ops
 
 from Utils.TimerModule import TimerModule
-from Exploratory_Stuff.SegNetDataHandler import SegNetDataHandler
+from DataHandlers.SegNetDataHandler import SegNetDataHandler
 #from keras.callbacks import CSVLogger,ReduceLROnPlateau
 #from keras.optimizers import SGD
 #import os
@@ -38,7 +37,6 @@ from keras.callbacks import CSVLogger
 from keras.preprocessing.image import ImageDataGenerator
 
 from NMFComputer.BasicNMFComputer import BasicNMFComputer
-from Canny_Tensorflow import TF_Canny
 import sys
 import os
 import cv2
