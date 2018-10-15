@@ -3,18 +3,16 @@ Created on Aug 29, 2018
 
 @author: daniel
 '''
-from keras.models import Model, Sequential
+from keras.models import Model
 from keras.layers import Input
-from keras.layers.core import Dense, Dropout, Activation, Flatten, Reshape, Permute
-from keras.layers.convolutional import Convolution2D, MaxPooling2D, UpSampling2D, ZeroPadding2D
+from keras.layers.core import Activation, Reshape, Permute, Dropout
+from keras.layers.convolutional import Convolution2D
 from keras.layers.normalization import BatchNormalization
 from keras.layers.advanced_activations import PReLU
 from keras import regularizers
 
 from Mylayers import MaxPoolingWithArgmax2D, MaxUnpooling2D
-from rdflib.plugins.sparql.parser import Drop
 
-import keras.backend
 
 
 def createSegNetWithIndexPooling(input_shape, n_labels, kernel=3, pool_size=(2, 2), output_mode="sigmoid", depth = 2):
@@ -140,7 +138,7 @@ def create2LayerSegNetWithIndexPooling(input_shape, n_labels, kernel=3, pool_siz
     #conv_11 = Dropout(0.5)(conv_11)
     conv_11 = BatchNormalization()(conv_11)
     conv_11 = PReLU()(conv_11)
-    conv_12 = Convolution2D(32, (kernel, kernel), padding="same",kernel_regularizer=regularizers.l2(0.05))(conv_11)
+    conv_12 = Convolution2D(32, (kernel, kernel), padding="same")(conv_11)
     #conv_12 = Dropout(0.5)(conv_12)
     conv_12 = BatchNormalization()(conv_12)
     conv_12 = PReLU()(conv_12)

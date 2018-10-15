@@ -3,17 +3,14 @@ Created on Aug 29, 2018
 
 @author: daniel
 '''
-from Exploratory_Stuff.DataHandler import DataHandler
+from DataHandlers.DataHandler import DataHandler
 import numpy as np
 from keras.utils import np_utils
 from scipy.stats import mode
 import matplotlib.pyplot as plt
 import os
 import nibabel as nib
-from Utils.TimerModule import TimerModule
 import cv2 
-from multiprocessing import Pool
-from functools import partial
 from imblearn.over_sampling import SMOTE
 
 class ExtendedBlockDataHandler(DataHandler):
@@ -25,16 +22,6 @@ class ExtendedBlockDataHandler(DataHandler):
         
     def processData(self, image, label_indices):
         X = []
-        """
-        rmin,rmax, cmin, cmax = self.bbox(image)
-        
-        image = image[rmin:rmax, cmin:cmax]
-        image = cv2.resize(image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR_EXACT)
-
-        seg_image = seg_image[rmin:rmax, cmin:cmax]
-        seg_image = cv2.resize(seg_image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR_EXACT)
-        #seg_image[seg_image > 0] = 1
-        """
         _, H = self.nmfComp.run(image)
         H = np.nan_to_num(H)
         H_cols = np.hsplit(H, H.shape[1])

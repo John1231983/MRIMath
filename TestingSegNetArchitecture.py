@@ -17,9 +17,13 @@ import sys
 import os
 np.set_printoptions(threshold=np.inf)
 
-from CustomLosses import combinedHausdorffAndChamfer
+from CustomLosses import combinedDiceAndChamfer
 from CustomLosses import dice_coef
 from CustomLosses import chamfer_dist
+
+from CustomLosses import dice_coef_loss
+
+#from CustomLosses import chamfer_dist
 DATA_DIR = os.path.abspath("../")
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(DATA_DIR)
@@ -27,7 +31,6 @@ sys.path.append(DATA_DIR)
 
      
 def main():
-
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
@@ -54,7 +57,7 @@ def main():
     
     #n_labels = x_seg_train.shape[2]
     n_labels = 1
-    segnet = createSegNetWithIndexPooling(input_shape=input_shape, n_labels=n_labels, depth=2)
+    segnet = createSegNetWithIndexPooling(input_shape=input_shape, n_labels=n_labels, depth=3)
     lrate = 0.1
     momentum = 0.9
     #decay = lrate/num_epochs   
@@ -91,7 +94,7 @@ def main():
     """
     segnet.fit(x_train, x_seg_train,
                 epochs=50,
-                batch_size=10,
+                batch_size=5,
                 shuffle=True,
                 validation_data=(x_val, x_seg_val),
                 callbacks = [csv_logger]

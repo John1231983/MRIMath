@@ -1,7 +1,6 @@
 
 from keras.models import Model, Input
 from keras.layers import Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, concatenate
-from keras import backend as keras
 
 
 def createUNet(input_shape = (240,240,1)):
