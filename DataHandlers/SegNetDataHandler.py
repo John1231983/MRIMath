@@ -15,6 +15,7 @@ import SimpleITK as sitk
 from skimage import exposure
 class SegNetDataHandler(DataHandler):
     modes = None
+    mode = None # training, testing, or validation
 
     def __init__(self,dataDirectory, W = 128, H = 128, num_patients = 3, modes = ["flair", "t1ce", "t1", "t2"]):
         super().__init__(dataDirectory, W, H, num_patients)
@@ -26,7 +27,7 @@ class SegNetDataHandler(DataHandler):
         corrected_image = sitk.IntensityWindowing(sitk_image, np.percentile(image, min_percent), 
                                                   np.percentile(image, max_percent))
         corrected_image = sitk.GetArrayFromImage(corrected_image)
-        corrected_image = exposure.equalize_hist(corrected_image)
+        #corrected_image = exposure.equalize_hist(corrected_image)
         return corrected_image
         
 
@@ -48,42 +49,69 @@ class SegNetDataHandler(DataHandler):
                         foo[mode] = image
             for i in inds:
                 j = 0
+                augment_list = []
                 img = np.zeros((self.W, self.H, len(self.modes)))
                 for mode in self.modes:
                     proc_img, rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
                     proc_img = self.windowIntensity(proc_img)
-                    #img[:,:,j] = foo[mode][:,:,i]
                     img[:,:,j] = proc_img
+                    augment_list.append(img[:,:,j])
                     j = j+1
-                self.X.append(img)
                 
                 seg_img = seg_image[:,:,i]
                 seg_img[seg_img > 0] = 1
                 seg_img = seg_img[rmin:rmax, cmin:cmax]
                 seg_img = cv2.resize(seg_img, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR)
-                """
-                fig = plt.figure()
-                plt.gray();   
+                augment_list.append(seg_img)
                 
-                fig.add_subplot(1,3,1)
-                plt.imshow(img[:,:,j-1])
-                plt.axis('off')
-                plt.title('Original')
+                if self.mode == "training":
+                    num_augmentations = 2
+                    for i in range(num_augmentations):
+                        augmented_data = self.augmentData(augment_list)
+                        aug_images = np.squeeze(np.array(augmented_data[:-1]))
+                        self.X.append(aug_images)
+                        """
+                        
+                        fig = plt.figure()
+                        plt.gray();   
+                        
+                        fig.add_subplot(2,2,1)
+                        plt.imshow(img[:,:,0])
+                        plt.axis('off')
+                        plt.title('Original FLAIR')
+                        
+                        fig.add_subplot(2,2,2)
+                        plt.imshow(seg_img)
+                        plt.axis('off')
+                        plt.title('Original Segment')
+                        
+                        fig.add_subplot(2,2,3)
+                        plt.imshow(augmented_data[0])
+                        plt.axis('off')
+                        plt.title('Augmented FLAIR')
+                        
+                        fig.add_subplot(2,2,4)
+                        plt.imshow(augmented_data[1])
+                        plt.axis('off')
+                        plt.title('Augmented Segment')
+                        
+                        plt.show()
+                        """
+                        
+                        aug_seg = augmented_data[-1]
+                        aug_seg = aug_seg.reshape(aug_seg.shape[0] * aug_seg.shape[1])
+                        self.labels.append(aug_seg)
                 
-                fig.add_subplot(1,3,2)
-                plt.imshow(window_proc_img)
-                plt.axis('off')
-                plt.title('Windowed')
-                
-                
-                fig.add_subplot(1,3,3)
-                plt.imshow(seg_img)
-                plt.axis('off')
-                plt.title('Segment')
-                plt.show()
-                """
-                seg_img = seg_img.reshape(seg_img.shape[0] * seg_img.shape[1])
-                self.labels.append(seg_img)
+                    seg_img = seg_img.reshape(seg_img.shape[0] * seg_img.shape[1])
+                    #print(img.shape)
+                    self.X.append(np.squeeze(img))
+                    self.labels.append(seg_img)
+                else:
+                    seg_img = seg_img.reshape(seg_img.shape[0] * seg_img.shape[1])
+                    #print(img.shape)
+                    self.X.append(np.squeeze(img))
+                    self.labels.append(seg_img)
+    
             J = J+1
                     
                         
@@ -94,7 +122,12 @@ class SegNetDataHandler(DataHandler):
         resized_image = cv2.resize(image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR)
         return resized_image, rmin, rmax, cmin, cmax
         
-        
+    
+    def setMode(self, mode):
+        self.mode = mode
+    
+    def getMode(self):
+        return self.mode
 
     def processData(self, image, seg_image):
         seg_image = seg_image.reshape(seg_image.shape[0] * seg_image.shape[1])
@@ -107,6 +140,7 @@ class SegNetDataHandler(DataHandler):
     def preprocessForNetwork(self):
         n_imgs = len(self.X)
         self.X = np.array( self.X )
-        self.X = self.X / 255
+
+        #self.X = self.X / 255
         self.X = self.X.reshape(n_imgs,self.W, self.H,len(self.modes))
         self.labels = np.array( self.labels )

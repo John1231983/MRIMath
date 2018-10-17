@@ -10,7 +10,7 @@ import numpy as np
 from datetime import datetime
 from createSegnetWithIndexPooling import createSegNetWithIndexPooling
 
-from keras.optimizers import SGD
+from keras.optimizers import SGD, Adam
 from keras.callbacks import CSVLogger
 
 import sys
@@ -34,10 +34,11 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 1
-    num_validation_patients = 1
+    num_training_patients = 150
+    num_validation_patients = 15
     modes = ["flair"]
     dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", num_patients = num_training_patients, modes = modes)
+    dataHandler.setMode("training")
     dataHandler.loadData()
     dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
@@ -46,6 +47,7 @@ def main():
     
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
     dataHandler.setNumPatients(num_validation_patients)
+    dataHandler.setMode("validation")
     dataHandler.loadData()
     dataHandler.preprocessForNetwork()
     x_val = dataHandler.X
@@ -60,9 +62,11 @@ def main():
     segnet = createSegNetWithIndexPooling(input_shape=input_shape, n_labels=n_labels, depth=3)
     lrate = 0.1
     momentum = 0.9
-    #decay = lrate/num_epochs   
-    sgd = SGD(lr=lrate, momentum=momentum, nesterov=True)
-    segnet.compile(optimizer="adam", loss=chamfer_dist, metrics=[dice_coef])
+    num_epochs = 50
+    decay = lrate/num_epochs
+    adam = Adam(lr = 0.1)
+    sgd = SGD(lr=lrate, momentum=momentum, decay=decay, nesterov=True)
+    segnet.compile(optimizer=sgd, loss=dice_coef_loss, metrics=[dice_coef])
 
     model_directory = "Models/segnet_" + date_string 
     if not os.path.exists(model_directory):
@@ -93,8 +97,8 @@ def main():
     
     """
     segnet.fit(x_train, x_seg_train,
-                epochs=50,
-                batch_size=5,
+                epochs=num_epochs,
+                batch_size=50,
                 shuffle=True,
                 validation_data=(x_val, x_seg_val),
                 callbacks = [csv_logger]
