@@ -53,69 +53,63 @@ class SegNetDataHandler(DataHandler):
                 img = np.zeros((self.W, self.H, len(self.modes)))
                 for mode in self.modes:
                     proc_img, rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
-                    #proc_img = self.windowIntensity(proc_img)
+                    proc_img = self.windowIntensity(proc_img)
                     img[:,:,j] = proc_img
-                    augment_list.append(img[:,:,j])
                     j = j+1
-                
                 seg_img = seg_image[:,:,i]
                 seg_img[seg_img > 0] = 1
                 seg_img = seg_img[rmin:rmax, cmin:cmax]
                 seg_img = cv2.resize(seg_img, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR)
-                augment_list.append(seg_img)
-                
-                if self.mode == "training":
-                    num_augmentations = 2
-                    for i in range(num_augmentations):
-                        augmented_data = self.augmentData(augment_list)
-                        aug_images = np.squeeze(np.array(augmented_data[:-1]))
-                        self.X.append(aug_images)
-                        """
-                        
-                        fig = plt.figure()
-                        plt.gray();   
-                        
-                        fig.add_subplot(2,2,1)
-                        plt.imshow(img[:,:,0])
-                        plt.axis('off')
-                        plt.title('Original FLAIR')
-                        
-                        fig.add_subplot(2,2,2)
-                        plt.imshow(seg_img)
-                        plt.axis('off')
-                        plt.title('Original Segment')
-                        
-                        fig.add_subplot(2,2,3)
-                        plt.imshow(augmented_data[0])
-                        plt.axis('off')
-                        plt.title('Augmented FLAIR')
-                        
-                        fig.add_subplot(2,2,4)
-                        plt.imshow(augmented_data[1])
-                        plt.axis('off')
-                        plt.title('Augmented Segment')
-                        
-                        plt.show()
-                        """
-                        
-                        aug_seg = augmented_data[-1]
-                        aug_seg = aug_seg.reshape(aug_seg.shape[0] * aug_seg.shape[1])
-                        self.labels.append(aug_seg)
-                
-                    seg_img = seg_img.reshape(seg_img.shape[0] * seg_img.shape[1])
-                    #print(img.shape)
-                    self.X.append(np.squeeze(img))
-                    self.labels.append(seg_img)
-                else:
-                    seg_img = seg_img.reshape(seg_img.shape[0] * seg_img.shape[1])
-                    #print(img.shape)
-                    self.X.append(np.squeeze(img))
-                    self.labels.append(seg_img)
+                #print(img.shape)
+                self.X.append(np.squeeze(img))
+                self.labels.append(seg_img)
     
             J = J+1
+        if self.mode == "training":
+            N = len(self.X)
+            for ind in range(N):
+                augment_list = []
+                augment_list.append(self.X[ind])
+                augment_list.append(self.labels[ind])
+                augmented_data = self.augmentData(augment_list)
+                aug_images = np.squeeze(np.array(augmented_data[:-1]))
+                self.X.append(aug_images)
+                aug_seg = augmented_data[-1]
+                self.labels.append(aug_seg)
+                """
+                
+                fig = plt.figure()
+                plt.gray();   
+                
+                fig.add_subplot(2,2,1)
+                plt.imshow(self.X[ind][:,:,0])
+                plt.axis('off')
+                plt.title('Original FLAIR')
+                
+                fig.add_subplot(2,2,2)
+                plt.imshow(self.labels[ind])
+                plt.axis('off')
+                plt.title('Original Segment')
+                
+                fig.add_subplot(2,2,3)
+                plt.imshow(augmented_data[0])
+                plt.axis('off')
+                plt.title('Augmented FLAIR')
+                
+                fig.add_subplot(2,2,4)
+                plt.imshow(augmented_data[1])
+                plt.axis('off')
+                plt.title('Augmented Segment')
+                
+                plt.show()
+                """
+                
+                
+
                     
                         
-                        
+    def augmentData(self):
+                           
     def processImage(self, image):
         rmin,rmax, cmin, cmax = self.bbox(image)
         image = image[rmin:rmax, cmin:cmax]
@@ -141,4 +135,5 @@ class SegNetDataHandler(DataHandler):
         n_imgs = len(self.X)
         self.X = np.array( self.X )
         self.X = self.X.reshape(n_imgs,self.W, self.H,len(self.modes))
+        self.labels = [label.reshape(label.shape[0], label.shape[1]) for label in self.labels]
         self.labels = np.array( self.labels )

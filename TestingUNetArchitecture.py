@@ -29,10 +29,11 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d_%H_%M')
     
-    num_training_patients = 100
-    num_validation_patients = 10
+    num_training_patients = 10
+    num_validation_patients = 1
     
     dataHandler = UNetDataHandler("Data/BRATS_2018/HGG", num_patients = num_training_patients, modes = ["flair"])
+    dataHandler.setMode("training")
     dataHandler.loadData()
     dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
@@ -41,6 +42,8 @@ def main():
     
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
     dataHandler.setNumPatients(num_validation_patients)
+    dataHandler.setMode("validation")
+
     dataHandler.loadData()
     dataHandler.preprocessForNetwork()
     x_val = dataHandler.X
@@ -59,11 +62,12 @@ def main():
     input_shape = (dataHandler.W,dataHandler.H, len(dataHandler.modes))
     
     unet = createUNet(input_shape =input_shape)
+    num_epochs = 10
     lrate = 0.1
     momentum = 0.9
-    #decay = lrate/num_epochs   
-    sgd = SGD(lr=lrate, momentum=momentum, nesterov=True)
-    unet.compile(optimizer="adam", loss=combinedDiceAndChamfer, metrics=[dice_coef])
+    decay = lrate/num_epochs   
+    sgd = SGD(lr=lrate, momentum=momentum, decay=decay, nesterov=True)
+    unet.compile(optimizer=sgd, loss=combinedDiceAndChamfer, metrics=[dice_coef])
 
     model_directory = "/home/daniel/eclipse-workspace/MRIMath/Models/unet_" + date_string
     if not os.path.exists(model_directory):

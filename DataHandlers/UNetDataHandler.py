@@ -14,6 +14,7 @@ from skimage.transform import resize
 import SimpleITK as sitk
 class UNetDataHandler(DataHandler):
     modes = None
+    mode = None
     def __init__(self,dataDirectory, W = 128, H = 128, num_patients = 3, modes = ["flair", "t1ce", "t1", "t2"]):
         super().__init__(dataDirectory, W, H, num_patients)
         self.modes = modes
@@ -34,6 +35,11 @@ class UNetDataHandler(DataHandler):
         W, H = self.nmfComp.run(image[:,:,i])
         return self.processData(image[:,:,i], W,H, seg_image[:,:,i])
     
+    def setMode(self, mode):
+        self.mode = mode;
+    
+    def getMode(self):
+        return self.mode
     def processImage(self, image):
         rmin,rmax, cmin, cmax = self.bbox(image)
         image = image[rmin:rmax, cmin:cmax]
@@ -41,7 +47,6 @@ class UNetDataHandler(DataHandler):
         return resized_image, rmin, rmax, cmin, cmax
         
     def loadData(self):
-
         J = 0
         for subdir in os.listdir(self.dataDirectory):
             if J > self.num_patients:
@@ -59,21 +64,67 @@ class UNetDataHandler(DataHandler):
                         foo[mode] = image
             for i in inds:
                 j = 0
+                augment_list = []
                 img = np.zeros((self.W, self.H, len(self.modes)))
                 for mode in self.modes:
                     proc_img, rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
-                    #img[:,:,j] = foo[mode][:,:,i]
+                    #proc_img = self.windowIntensity(proc_img)
                     img[:,:,j] = proc_img
+                    augment_list.append(img[:,:,j])
                     j = j+1
-                self.X.append(img)
                 
                 seg_img = seg_image[:,:,i]
                 seg_img[seg_img > 0] = 1
                 seg_img = seg_img[rmin:rmax, cmin:cmax]
                 seg_img = cv2.resize(seg_img, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR)
-                #proc_img = exposure.equalize_hist(proc_img)
-                seg_img = seg_img.reshape(seg_img.shape[0] * seg_img.shape[1])
-                self.labels.append(seg_img)
+                augment_list.append(seg_img)
+                
+                if self.mode == "training":
+                    num_augmentations = 1
+                    for i in range(num_augmentations):
+                        augmented_data = self.augmentData(augment_list)
+                        aug_images = np.squeeze(np.array(augmented_data[:-1]))
+                        self.X.append(aug_images)
+                        """
+                        
+                        fig = plt.figure()
+                        plt.gray();   
+                        
+                        fig.add_subplot(2,2,1)
+                        plt.imshow(img[:,:,0])
+                        plt.axis('off')
+                        plt.title('Original FLAIR')
+                        
+                        fig.add_subplot(2,2,2)
+                        plt.imshow(seg_img)
+                        plt.axis('off')
+                        plt.title('Original Segment')
+                        
+                        fig.add_subplot(2,2,3)
+                        plt.imshow(augmented_data[0])
+                        plt.axis('off')
+                        plt.title('Augmented FLAIR')
+                        
+                        fig.add_subplot(2,2,4)
+                        plt.imshow(augmented_data[1])
+                        plt.axis('off')
+                        plt.title('Augmented Segment')
+                        
+                        plt.show()
+                        """
+                        
+                        aug_seg = augmented_data[-1]
+                        self.labels.append(aug_seg)
+                
+                    #print(img.shape)
+                    self.X.append(np.squeeze(img))
+                    self.labels.append(seg_img)
+                else:
+                    seg_img = seg_img.reshape(seg_img.shape[0] * seg_img.shape[1])
+                    #print(img.shape)
+                    self.X.append(np.squeeze(img))
+                    self.labels.append(seg_img)
+    
             J = J+1
 
     def processData(self, image, seg_image, num_class = 2):
