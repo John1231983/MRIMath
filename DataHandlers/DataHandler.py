@@ -101,17 +101,27 @@ class DataHandler:
     def augmentData(self, data):
         """ data augumentation """
         foo = data
-        # x1, x2, x3, x4, y = tl.prepro.flip_axis_multi([x1, x2, x3, x4, y],  # previous without this, hard-dice=83.7
-        #                         axis=0, is_random=True) # up down
+
         foo = tl.prepro.elastic_transform_multi(list(foo),
-                                alpha=720, sigma=25, is_random=True)
+                                alpha=720, sigma=24, is_random=True)
         
         foo = [np.expand_dims(x, axis=-1) for x in foo]
-
+        
+        foo = tl.prepro.flip_axis_multi(list(foo),
+                        axis=1, is_random=True) # left right
+        
+        foo = tl.prepro.flip_axis_multi(list(foo),
+                axis=0, is_random=True) # up down
+        
+        foo = tl.prepro.brightness_multi(list(foo), 
+                                         0.8, 1, is_random=True)
+        
         foo = tl.prepro.rotation_multi(list(foo), rg=20,
                                 is_random=True, fill_mode='constant') # nearest, constant
+        
         foo = tl.prepro.shift_multi(list(foo), wrg=0.10,
                                 hrg=0.10, is_random=True, fill_mode='constant')
+        
         foo = tl.prepro.shear_multi(foo, 0.05,
                                 is_random=True, fill_mode='constant')
 

@@ -10,7 +10,7 @@ import numpy as np
 from datetime import datetime
 from createSegnetWithIndexPooling import createSegNetWithIndexPooling
 
-from keras.optimizers import SGD, Adam
+from keras.optimizers import SGD, Adam, Adagrad, Adadelta
 from keras.callbacks import CSVLogger
 
 import sys
@@ -34,8 +34,8 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 150
-    num_validation_patients = 15
+    num_training_patients = 50
+    num_validation_patients = 5
     modes = ["flair"]
     dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", num_patients = num_training_patients, modes = modes)
     dataHandler.setMode("training")
@@ -62,11 +62,13 @@ def main():
     segnet = createSegNetWithIndexPooling(input_shape=input_shape, n_labels=n_labels, depth=3)
     lrate = 0.1
     momentum = 0.9
-    num_epochs = 50
+    num_epochs = 75
     decay = lrate/num_epochs
     adam = Adam(lr = 0.1)
+    adagrad = Adagrad()
+    adadelta = Adadelta()
     sgd = SGD(lr=lrate, momentum=momentum, decay=decay, nesterov=True)
-    segnet.compile(optimizer=sgd, loss=dice_coef_loss, metrics=[dice_coef])
+    segnet.compile(optimizer=adam, loss=combinedDiceAndChamfer, metrics=[dice_coef])
 
     model_directory = "Models/segnet_" + date_string 
     if not os.path.exists(model_directory):

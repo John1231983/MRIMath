@@ -53,7 +53,7 @@ class SegNetDataHandler(DataHandler):
                 img = np.zeros((self.W, self.H, len(self.modes)))
                 for mode in self.modes:
                     proc_img, rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
-                    proc_img = self.windowIntensity(proc_img)
+                    #proc_img = self.windowIntensity(proc_img)
                     img[:,:,j] = proc_img
                     augment_list.append(img[:,:,j])
                     j = j+1
@@ -140,7 +140,5 @@ class SegNetDataHandler(DataHandler):
     def preprocessForNetwork(self):
         n_imgs = len(self.X)
         self.X = np.array( self.X )
-
-        #self.X = self.X / 255
         self.X = self.X.reshape(n_imgs,self.W, self.H,len(self.modes))
         self.labels = np.array( self.labels )

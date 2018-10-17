@@ -202,7 +202,7 @@ def combinedHausdorffAndDice(y_pred, y_true):
     return alpha*dice + beta*hd
 
 def combinedDiceAndChamfer(y_pred, y_true):
-    alpha = 1.0
+    alpha = 0.5
     beta = 1 - alpha
     dice = dice_coef_loss(y_true, y_pred)
     cd = chamfer_dist(y_true, y_pred)
