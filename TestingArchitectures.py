@@ -67,12 +67,11 @@ def main():
     timer = TimerModule()
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
-    print(date_string)
     
-    num_training_patients = 1
+    num_testing_patients = 4
     
     modes = ["flair"]
-    dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG_Testing", num_patients = num_training_patients, modes = ["flair"])
+    dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG_Testing", num_patients = num_testing_patients, modes = ["flair"])
     dataHandler.loadData()
     dataHandler.preprocessForNetwork()
     x_test = dataHandler.X
@@ -83,19 +82,19 @@ def main():
     input_shape = (dataHandler.W,dataHandler.H, len(modes))
     
 
-    segnet = load_model("Models/segnet_2018-10-18-20:53/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 'MaxUnpooling2D':MaxUnpooling2D, 'combinedDiceAndChamfer':combinedDiceAndChamfer, 'dice_coef':dice_coef, 'dice_coef_loss':dice_coef_loss})
-    
+    #segnet = load_model("Models/segnet_2018-10-18-20:53/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 'MaxUnpooling2D':MaxUnpooling2D, 'combinedDiceAndChamfer':combinedDiceAndChamfer, 'dice_coef':dice_coef, 'dice_coef_loss':dice_coef_loss})
+    segnet = load_model("Models/segnet_2018-10-19-15:28/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 'MaxUnpooling2D':MaxUnpooling2D, 'combinedDiceAndChamfer':combinedDiceAndChamfer, 'dice_coef':dice_coef, 'dice_coef_loss':dice_coef_loss})
+
     decoded_imgs = segnet.predict(x_test)
     avg_dice = 0
     #N = len(decoded_imgs)
-    N = 100
+    N = len(decoded_imgs)
     for i in range(N):
             decoded_imgs[i][decoded_imgs[i] < 0.5] = 0
             dice = computeDice(x_seg_test[i], np.squeeze(decoded_imgs[i]))
             avg_dice = avg_dice + dice
     print(str(avg_dice/N))
-    n = 100
-    for i in range(n):
+    for i in range(N):
         fig = plt.figure()
         plt.gray();   
         a=fig.add_subplot(1,3,1)

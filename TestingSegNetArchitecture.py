@@ -35,8 +35,8 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 80
-    num_validation_patients = 8
+    num_training_patients = 40
+    num_validation_patients = 4
     modes = ["flair"]
     dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", num_patients = num_training_patients, modes = modes)
     dataHandler.setMode("training")

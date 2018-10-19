@@ -67,12 +67,12 @@ class SegNetDataHandler(DataHandler):
                     img[:,:,j] = self.windowIntensity(proc_img)
                     
                 seg_img = seg_image[:,:,i]
-                seg_img[seg_img > 0] = 1
                 seg_img = seg_img[rmin:rmax, cmin:cmax]
                 seg_img = cv2.resize(seg_img, 
                                      dsize=(self.W, self.H), 
                                      interpolation=cv2.INTER_LINEAR)
-                
+                seg_img[seg_img > 0] = 1
+
 
                 self.X.append(img)
                 self.labels.append(seg_img)
@@ -90,11 +90,11 @@ class SegNetDataHandler(DataHandler):
         hmrf = self.hmrf(img)
         img *= hmrf[:,:,2]
         seg_img = seg_image[:,:,i]
-        seg_img[seg_img > 0] = 1
         seg_img = seg_img[rmin:rmax, cmin:cmax]
         seg_img = cv2.resize(seg_img, 
-                             dsize=(self.W, self.H), 
-                             interpolation=cv2.INTER_LINEAR)
+                     dsize=(self.W, self.H), 
+                     interpolation=cv2.INTER_LINEAR)
+        seg_img[seg_img > 0] = 1
         return np.squeeze(img), seg_img
                     
                         
@@ -141,9 +141,9 @@ class SegNetDataHandler(DataHandler):
     
     def hmrf(self, img):
         nclass = 3
-        beta = 0.1
+        beta = 0.2
         hmrf = TissueClassifierHMRF(verbose=False)
-        _, _, PVE = hmrf.classify(img, nclass, beta, max_iter=50)
+        _, _, PVE = hmrf.classify(img, nclass, beta)
         return np.squeeze(PVE)
         """
         fig = plt.figure()
@@ -204,7 +204,7 @@ class SegNetDataHandler(DataHandler):
         hmrf = pool.map(self.hmrf, self.X)
         for i in range(len(self.X)):
             foo = hmrf[i]
-            self.X[i] *= foo[:,:,2:3]
+            self.X[i] = self.X[i]*foo[:,:,2:3] + self.X[i]*foo[:,:,0:1]
         
         self.X = np.array( self.X )
         self.X = self.X.reshape(n_imgs,self.W, self.H,len(self.modes))
