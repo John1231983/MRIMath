@@ -126,6 +126,7 @@ class DataHandler:
                                 is_random=True, fill_mode='constant')
 
         foo = [np.squeeze(x) for x in foo]
+        
 
         return foo
 

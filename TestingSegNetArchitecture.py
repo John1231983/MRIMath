@@ -10,7 +10,7 @@ import numpy as np
 from datetime import datetime
 from createSegnetWithIndexPooling import createSegNetWithIndexPooling
 
-from keras.optimizers import SGD, Adam, Adagrad, Adadelta
+from keras.optimizers import SGD, Adam, Adagrad, Adadelta, Nadam
 from keras.callbacks import CSVLogger
 
 import sys
@@ -22,6 +22,7 @@ from CustomLosses import dice_coef
 from CustomLosses import chamfer_dist
 
 from CustomLosses import dice_coef_loss
+from keras.preprocessing.image import ImageDataGenerator
 
 #from CustomLosses import chamfer_dist
 DATA_DIR = os.path.abspath("../")
@@ -34,8 +35,8 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 1
-    num_validation_patients = 1
+    num_training_patients = 80
+    num_validation_patients = 8
     modes = ["flair"]
     dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", num_patients = num_training_patients, modes = modes)
     dataHandler.setMode("training")
@@ -57,18 +58,26 @@ def main():
 
     input_shape = (dataHandler.W,dataHandler.H, len(modes))
     
+
+    
     #n_labels = x_seg_train.shape[2]
     n_labels = 1
-    segnet = createSegNetWithIndexPooling(input_shape=input_shape, n_labels=n_labels, depth=3)
+    segnet = createSegNetWithIndexPooling(input_shape=input_shape, 
+                                          n_labels=n_labels, 
+                                          k = 32,
+                                          depth=2)
     lrate = 0.1
     momentum = 0.9
-    num_epochs = 75
+    num_epochs = 50
     decay = lrate/num_epochs
     adam = Adam(lr = 0.1)
+    nadam = Nadam(lr=0.1)
     adagrad = Adagrad()
     adadelta = Adadelta()
+    batch_size = 100
+
     sgd = SGD(lr=lrate, momentum=momentum, decay=decay, nesterov=True)
-    segnet.compile(optimizer=adam, loss=combinedDiceAndChamfer, metrics=[dice_coef])
+    segnet.compile(optimizer=adam, loss=dice_coef_loss, metrics=[dice_coef])
 
     model_directory = "Models/segnet_" + date_string 
     if not os.path.exists(model_directory):
@@ -76,31 +85,11 @@ def main():
     log_info_filename = 'model_loss_log.csv'
     csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=',')
     
-    """
-    
-    image_datagen = ImageDataGenerator(
-    #featurewise_center=True,
-    #featurewise_std_normalization=True,
-    #seed = 1,
-    rotation_range=3,
-    width_shift_range=0.05,
-    height_shift_range=0.05,
-    horizontal_flip=False)
-        
 
     
-    
-    image_datagen.fit(x_train, augment=True, seed=1)
-    batch_size = 50
-    segnet.fit_generator(image_datagen.flow(x_train, x_seg_train, batch_size=batch_size),
-                    steps_per_epoch=len(x_train) / batch_size,
-                    validation_data=(x_val, x_seg_val),
-                    epochs=50)
-    
-    """
     segnet.fit(x_train, x_seg_train,
                 epochs=num_epochs,
-                batch_size=50,
+                batch_size=batch_size,
                 shuffle=True,
                 validation_data=(x_val, x_seg_val),
                 callbacks = [csv_logger]
