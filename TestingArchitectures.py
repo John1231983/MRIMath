@@ -83,7 +83,7 @@ def main():
     
 
     #segnet = load_model("Models/segnet_2018-10-18-20:53/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 'MaxUnpooling2D':MaxUnpooling2D, 'combinedDiceAndChamfer':combinedDiceAndChamfer, 'dice_coef':dice_coef, 'dice_coef_loss':dice_coef_loss})
-    segnet = load_model("Models/segnet_2018-10-19-15:28/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 'MaxUnpooling2D':MaxUnpooling2D, 'combinedDiceAndChamfer':combinedDiceAndChamfer, 'dice_coef':dice_coef, 'dice_coef_loss':dice_coef_loss})
+    segnet = load_model("Models/segnet_2018-10-20-09:01/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 'MaxUnpooling2D':MaxUnpooling2D, 'combinedDiceAndChamfer':combinedDiceAndChamfer, 'dice_coef':dice_coef, 'dice_coef_loss':dice_coef_loss})
 
     decoded_imgs = segnet.predict(x_test)
     avg_dice = 0

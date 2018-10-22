@@ -14,13 +14,19 @@ from skimage.transform import resize
 import SimpleITK as sitk
 from dipy.segment.tissue import TissueClassifierHMRF
 from multiprocessing import Pool
+from Utils.TimerModule import TimerModule
+from functools import partial
 
 class SegNetDataHandler(DataHandler):
     modes = None
     mode = None # training, testing, or validation
     num_augments = 2
 
-    def __init__(self,dataDirectory, W = 128, H = 128, num_patients = 3, modes = ["flair", "t1ce", "t1", "t2"]):
+    def __init__(self,dataDirectory, 
+                 W = 128, 
+                 H = 128, 
+                 num_patients = 3, 
+                 modes = ["flair", "t1ce", "t1", "t2"]):
         super().__init__(dataDirectory, W, H, num_patients)
         self.modes = modes
         
@@ -37,34 +43,35 @@ class SegNetDataHandler(DataHandler):
     def loadData(self):
         main_dir = os.listdir(self.dataDirectory)[0:self.num_patients+1]
         for subdir in main_dir:
-            data_dirs = os.listdir(self.dataDirectory +
-                                    "/" +
-                                     subdir)
-            seg_image = nib.load(self.dataDirectory + 
-                                 "/" +
-                                  subdir +
+            image_dir = self.dataDirectory + "/" + subdir
+            data_dirs = os.listdir(image_dir)
+            seg_image = nib.load(image_dir+
                                    "/" + 
                                    [s for s in data_dirs if "seg" in s][0]).get_fdata(caching = "unchanged",
                                                                                       dtype = np.float32)
             
             inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
             foo = {}
-
             for mode in self.modes:
                 for path in data_dirs:
                     if mode + ".nii" in path:
-                        image = nib.load(self.dataDirectory + 
-                                         "/" + 
-                                         subdir +
+                        foo[mode] = nib.load(image_dir +
                                           "/" + 
                                           path).get_fdata(caching = "unchanged",
                                                           dtype = np.float32)
-                        foo[mode] = image
+                        if len(foo) == len(self.modes):
+                            break
+            data = [self.resizeImages(foo, seg_image,i) for i in inds]
+            train, labels = zip(*data)
+            self.X.extend(train)
+            self.labels.extend(labels)
+
+            """
             for i in inds:
                 img = np.zeros((self.W, self.H, len(self.modes)))
                 for j,mode in enumerate(self.modes):
-                    proc_img, rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
-                    img[:,:,j] = self.windowIntensity(proc_img)
+                    img[:,:,j], rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
+                    #img[:,:,j] = self.windowIntensity(proc_img)
                     
                 seg_img = seg_image[:,:,i]
                 seg_img = seg_img[rmin:rmax, cmin:cmax]
@@ -77,25 +84,24 @@ class SegNetDataHandler(DataHandler):
                 self.X.append(img)
                 self.labels.append(seg_img)
 
+            """
 
                 
                 
     
-    def resizeWindowAndProcess(self, foo, seg_image, i):
+    def resizeImages(self, foo, seg_image, i):
         img = np.zeros((self.W, self.H, len(self.modes)))
         for j,mode in enumerate(self.modes):
-            proc_img, rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
-            img[:,:,j] = self.windowIntensity(proc_img)
+            img[:,:,j], rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
+            #img[:,:,j] = self.windowIntensity(proc_img)
         
-        hmrf = self.hmrf(img)
-        img *= hmrf[:,:,2]
         seg_img = seg_image[:,:,i]
         seg_img = seg_img[rmin:rmax, cmin:cmax]
         seg_img = cv2.resize(seg_img, 
                      dsize=(self.W, self.H), 
                      interpolation=cv2.INTER_LINEAR)
         seg_img[seg_img > 0] = 1
-        return np.squeeze(img), seg_img
+        return img, seg_img
                     
                         
     def augmentImages(self, ind):
@@ -132,19 +138,21 @@ class SegNetDataHandler(DataHandler):
             
             plt.show()
             """
-                           
+    
     def processImage(self, image):
         rmin,rmax, cmin, cmax = self.bbox(image)
         image = image[rmin:rmax, cmin:cmax]
         resized_image = cv2.resize(image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR)
         return resized_image, rmin, rmax, cmin, cmax
     
-    def hmrf(self, img):
-        nclass = 3
-        beta = 0.2
+    def applyHMRF(self, img):
         hmrf = TissueClassifierHMRF(verbose=False)
-        _, _, PVE = hmrf.classify(img, nclass, beta)
-        return np.squeeze(PVE)
+        _, _, PVE = hmrf.classify(img, nclasses=3, beta=0.1)
+        PVE = np.squeeze(PVE)
+        white_matter = PVE[:,:,2:3]
+        csf = PVE[:,:,0:1]
+        return img*white_matter + img*csf
+    
         """
         fig = plt.figure()
         
@@ -153,15 +161,6 @@ class SegNetDataHandler(DataHandler):
         a.set_title('Original')
         plt.axis('off')
 
-        a = fig.add_subplot(2, 3, 2)
-        plt.imshow(np.squeeze(final_segmentation), cmap="gray")
-        a.set_title('Processed')
-        plt.axis('off')
-        
-        a = fig.add_subplot(2, 3, 3)
-        plt.imshow(np.squeeze(seg_img),cmap="gray")
-        a.set_title('GT Segmentation')
-        plt.axis('off')
         
         PVE = np.squeeze(PVE)
         a = fig.add_subplot(2, 3, 4)
@@ -181,6 +180,14 @@ class SegNetDataHandler(DataHandler):
         
         plt.show()
         """
+        #return np.squeeze(PVE)
+
+    def preprocessData(self, img):
+        ### preprocessing HMRF
+
+        img = self.windowIntensity(img)
+        return self.applyHMRF(img)
+
     
     def setMode(self, mode):
         self.mode = mode
@@ -188,25 +195,18 @@ class SegNetDataHandler(DataHandler):
     def getMode(self):
         return self.mode
 
-    def processData(self, image, seg_image):
-        seg_image = seg_image.reshape(seg_image.shape[0] * seg_image.shape[1])
-        self.X.append(image)
-        self.labels.append(seg_image)
 
     def getNumLabels(self):
         return self.labels[0].shape[1]
     
     def preprocessForNetwork(self):
         n_imgs = len(self.X)
-        ### preprocessing HMRF
         
-        pool = Pool(processes=7)
-        hmrf = pool.map(self.hmrf, self.X)
-        for i in range(len(self.X)):
-            foo = hmrf[i]
-            self.X[i] = self.X[i]*foo[:,:,2:3] + self.X[i]*foo[:,:,0:1]
-        
-        self.X = np.array( self.X )
+        pool = Pool(processes=5)
+        self.X = pool.map(self.preprocessData, self.X)
+        pool.close()
+        pool.join()
+        self.X = np.array(self.X)
         self.X = self.X.reshape(n_imgs,self.W, self.H,len(self.modes))
         self.labels = [label.reshape(label.shape[0] * label.shape[1]) for label in self.labels]
         self.labels = np.array( self.labels )

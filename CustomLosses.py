@@ -182,9 +182,9 @@ def chamfer_dist(y_true, y_pred):
                                         dtype=tf.float32)
     
 
-    #finalChamferDistanceSum = tf.nn.l2_normalize(finalChamferDistanceSum)
+    finalChamferDistanceSum = tf.nn.l2_normalize(finalChamferDistanceSum)
     finalChamferDistanceSum = K.mean(finalChamferDistanceSum)
-    finalChamferDistanceSum /= K.max(finalChamferDistanceSum)
+    #finalChamferDistanceSum /= K.max(finalChamferDistanceSum)
     #finalChamferDistanceSum = tf.Print(finalChamferDistanceSum, [finalChamferDistanceSum], summarize=10)
     return finalChamferDistanceSum
 
