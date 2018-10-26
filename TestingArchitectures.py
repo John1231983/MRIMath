@@ -8,43 +8,17 @@ Created on Jul 10, 2018
 #from keras.utils import np_utils
 import sys
 import os
+from keras.utils import np_utils
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-
-from Utils.TimerModule import TimerModule
 from DataHandlers.SegNetDataHandler import SegNetDataHandler
-#from keras.callbacks import CSVLogger,ReduceLROnPlateau
-from keras.layers import Conv2D, Activation, MaxPooling2D, Reshape, Dense, Flatten, BatchNormalization, Dropout, LeakyReLU, PReLU,concatenate
-from keras.models import Sequential, Model, Input
-#from keras.optimizers import SGD
-#import os
-from Utils.EmailHandler import EmailHandler
-from Utils.HardwareHandler import HardwareHandler
-from keras.layers import Input, Dense, Conv2D, MaxPooling2D, UpSampling2D
-from keras.models import Model
-from keras import backend as K
 import numpy as np
-from datetime import datetime
 import matplotlib.pyplot as plt
-from createSegNet import createSegNet
-from createSegnetWithIndexPooling import createSegNetWithIndexPooling
 from keras.models import load_model
 from Mylayers import MaxPoolingWithArgmax2D, MaxUnpooling2D
 import math
-from CustomLosses import combinedDiceAndChamfer
-from CustomLosses import dice_coef
-from CustomLosses import dice_coef_loss
+from CustomLosses import dice_coef, dice_coef_multilabel, dice_coef_loss, combinedDiceAndChamfer
+from dipy.segment.mask import clean_cc_mask
 
-
-#from keras.utils.training_utils import multi_gpu_model
-#import keras.backend as K
-#import tensorflow as tf
-from keras.optimizers import SGD
-from keras.callbacks import CSVLogger
-
-from NMFComputer.BasicNMFComputer import BasicNMFComputer
-import cv2
-import sys
-import os
 DATA_DIR = os.path.abspath("../")
 sys.path.append(DATA_DIR)
 
@@ -62,54 +36,75 @@ def computeDice(im1, im2):
     return dice
 def main():
 
-    hardwareHandler = HardwareHandler()
-    emailHandler = EmailHandler()
-    timer = TimerModule()
-    now = datetime.now()
-    date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_testing_patients = 4
-    
+    num_testing_patients = 1
+    n_labels = 1
+    normalize = True
     modes = ["flair"]
-    dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG_Testing", num_patients = num_testing_patients, modes = ["flair"])
+    dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG_Testing", 
+                                    num_patients = num_testing_patients, 
+                                    modes = modes)
     dataHandler.loadData()
     dataHandler.preprocessForNetwork()
-    x_test = dataHandler.X
+    x_test = np.array(dataHandler.X)
     x_seg_test = dataHandler.labels
     dataHandler.clear()
+
+    segnet = load_model("Models/segnet_2018-10-25-23:27/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 
+                                                                               'MaxUnpooling2D':MaxUnpooling2D, 
+                                                                               'combinedDiceAndChamfer':combinedDiceAndChamfer, 
+                                                                               'dice_coef':dice_coef, 
+                                                                               'dice_coef_loss':dice_coef_loss,
+                                                                           'dice_coef_multilabel' : dice_coef_multilabel})
     
-
-    input_shape = (dataHandler.W,dataHandler.H, len(modes))
     
-
-    #segnet = load_model("Models/segnet_2018-10-18-20:53/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 'MaxUnpooling2D':MaxUnpooling2D, 'combinedDiceAndChamfer':combinedDiceAndChamfer, 'dice_coef':dice_coef, 'dice_coef_loss':dice_coef_loss})
-    segnet = load_model("Models/segnet_2018-10-20-09:01/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 'MaxUnpooling2D':MaxUnpooling2D, 'combinedDiceAndChamfer':combinedDiceAndChamfer, 'dice_coef':dice_coef, 'dice_coef_loss':dice_coef_loss})
-
+    
+    if normalize:
+        mu = np.mean(x_test)
+        sigma = np.std(x_test)
+        x_test -= mu
+        x_test /= sigma
     decoded_imgs = segnet.predict(x_test)
+
+    if n_labels > 1:
+        #x_seg_test = np_utils.to_categorical(x_seg_test)
+        #x_seg_test = np.argmax(x_seg_test, axis=3)
+
+        decoded_imgs = np.argmax(decoded_imgs, axis=2)
+        print(x_seg_test.shape)
+    else:
+        for x in x_seg_test:
+            x[x > 0.5] = 1
+            x[x < 0.5] = 0
+        
+
+    
+
+
+
     avg_dice = 0
-    #N = len(decoded_imgs)
     N = len(decoded_imgs)
+    """
     for i in range(N):
             decoded_imgs[i][decoded_imgs[i] < 0.5] = 0
             dice = computeDice(x_seg_test[i], np.squeeze(decoded_imgs[i]))
             avg_dice = avg_dice + dice
     print(str(avg_dice/N))
+    """
     for i in range(N):
         fig = plt.figure()
         plt.gray();   
-        a=fig.add_subplot(1,3,1)
+        fig.add_subplot(1,3,1)
         plt.imshow(x_test[i,:,:,0])
         plt.axis('off')
         plt.title('Original')
         
-        a=fig.add_subplot(1,3,2)
-        plt.imshow(x_seg_test[i].reshape(dataHandler.W, dataHandler.W))
+        fig.add_subplot(1,3,2)
+        plt.imshow(x_seg_test[i])
         plt.axis('off')
         plt.title('GT Segment')
         
-        a=fig.add_subplot(1,3,3)
-        decoded_imgs[i][decoded_imgs[i] > 0.5] = 1
-        decoded_imgs[i][decoded_imgs[i] < 0.5] = 0
+        fig.add_subplot(1,3,3)
 
         plt.imshow(decoded_imgs[i].reshape(dataHandler.W, dataHandler.W))
         plt.axis('off')

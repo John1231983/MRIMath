@@ -3,7 +3,7 @@ Created on Aug 1, 2018
 
 @author: daniel
 '''
-from Exploratory_Stuff.DataHandler import DataHandler
+from DataHandlers.DataHandler import DataHandler
 import numpy as np
 from keras.utils import np_utils
 from scipy.stats import mode
@@ -14,16 +14,23 @@ from Utils.TimerModule import TimerModule
 import cv2 
 from imblearn.over_sampling import SMOTE
 from collections import Counter
+from multiprocessing import Pool
+from functools import partial
 class BlockDataHandler(DataHandler):
     
+    nmfComp = None
     def __init__(self, dataDirectory, nmfComp, W = 240, H = 240, num_patients = 3, load_mode = "training" ):
-        super().__init__(dataDirectory, nmfComp, W, H, num_patients, load_mode)
+        super().__init__(dataDirectory, W, H, num_patients, load_mode)
+        self.nmfComp = nmfComp
         
         
-    def processData(self, image, seg_image):
+    def processData(self, image, seg_image, ind):
         X = []
         y = []
-        """
+        
+        image = image[:,:,ind]
+        seg_image = seg_image[:,:,ind]
+
         rmin,rmax, cmin, cmax = self.bbox(image)
         
         image = image[rmin:rmax, cmin:cmax]
@@ -32,7 +39,7 @@ class BlockDataHandler(DataHandler):
         seg_image = seg_image[rmin:rmax, cmin:cmax]
         seg_image = cv2.resize(seg_image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR_EXACT)
         #seg_image[seg_image > 0] = 1
-        """
+        
         W, H = self.nmfComp.run(image)
         seg_image[seg_image > 0] = 1
         labels = self.getLabels(seg_image)
@@ -57,37 +64,25 @@ class BlockDataHandler(DataHandler):
         return X, y
      
     def loadData(self, mode):
-        timer = TimerModule()
-        timer.startTimer()
-        J = 0
-        for subdir in os.listdir(self.dataDirectory):
-            if J > self.num_patients:
-                timer.stopTimer()
-                print(timer.getElapsedTime())
-                break
+        main_dir = os.listdir(self.dataDirectory)[0:self.num_patients+1]
+        for subdir in main_dir:
+            image_dir = self.dataDirectory + "/" + subdir
+            data_dirs = os.listdir(image_dir)
+            seg_image = nib.load(image_dir+
+                                   "/" + 
+                                   [s for s in data_dirs if "seg" in s][0]).get_fdata(caching = "unchanged",
+                                                                                      dtype = np.float32)
+            
+            pool = Pool(processes=6)
+            inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
             for path in os.listdir(self.dataDirectory + "/" + subdir):
-                if mode in path:
-                    image = nib.load(self.dataDirectory + "/" + subdir + "/" + path).get_data()
-                    seg_image = nib.load(self.dataDirectory + "/" + subdir + "/" + path.replace(mode, "seg")).get_data()
-                    inds = [i for i in list(range(155)) if np.count_nonzero(seg_image[:,:,i]) > 0]
-                    if inds is []:
-                        continue
-                    temp = [self.processData(image[:,:,i], seg_image[:,:,i]) for i in inds]
-                    foo = [i[0] for i in temp]
-                    bar = [i[1] for i in temp]
+                if mode + ".nii" in path:
+                    image = nib.load(image_dir + "/" + path).get_fdata(caching="unchanged", dtype = np.float32)
+                    temp = [self.processData(image, seg_image, i) for i in inds]
+                    #temp = pool.map(partial(self.processData, image, seg_image), inds)
+                    foo, bar = zip(*temp)
                     self.X.extend([item for sublist in foo for item in sublist])
                     self.labels.extend([item for sublist in bar for item in sublist])
-                    """
-                    temp = [self.performNMFOnSlice(image, seg_image, i) for i in inds]
-                    with Pool(processes=8) as pool:
-                        temp = pool.map(partial(self.performNMFOnSlice, image, seg_image), inds)
-                    foo = [i[0] for i in temp]
-                    bar = [i[1] for i in temp]
-
-                    self.X.extend([item for sublist in foo for item in sublist])
-                    self.labels.extend([item for sublist in bar for item in sublist])
-                    """
-                    J = J + 1
                     break
 
     def getLabels(self, seg_image):
@@ -138,15 +133,6 @@ class BlockDataHandler(DataHandler):
         n_imgs = len(self.X)
         self.X = np.array( self.X )
         self.X = self.X.reshape(n_imgs,self.nmfComp.num_components)
-        #self.labels = np.array( self.labels )
-        """
-        if self.load_mode is "training":
-            sm = SMOTE(random_state=42)
-            self.X, self.labels = sm.fit_sample(self.X, np.array(self.labels).ravel())
-            print(self.X.shape)
-        """
-        self.labels = np_utils.to_categorical(self.labels)
+        self.labels = np.array(self.labels)
 
         
-        #self.labels = self.labels.reshape(n_imgs,self.W,self.H,1)
-        # self.labels = self.labels.reshape(n_imgs, self.W*self.H,2)

@@ -10,16 +10,11 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from Utils.TimerModule import TimerModule
-from Exploratory_Stuff.BlockDataHandler import BlockDataHandler
+from DataHandlers.BlockDataHandler import BlockDataHandler
 #from keras.callbacks import CSVLogger,ReduceLROnPlateau
 from keras.layers import Dense, BatchNormalization, Conv1D, Dropout
 from keras.models import Sequential
 from keras.callbacks import CSVLogger
-#from keras.optimizers import SGD
-#import os
-from Utils.EmailHandler import EmailHandler
-from Utils.HardwareHandler import HardwareHandler
 from datetime import datetime
 #from keras.utils.training_utils import multi_gpu_model
 #import keras.backend as K
@@ -29,27 +24,41 @@ import numpy as np
 from NMFComputer.BasicNMFComputer import BasicNMFComputer
 import matplotlib.pyplot as plt
 from keras.layers.advanced_activations import PReLU
-from Exploratory_Stuff.ExtendedBlockDataHandler import ExtendedBlockDataHandler
- 
-from NMFComputer.SKNMFComputer import SKNMFComputer
-import sys
-import os
-import cv2
+from CustomLosses import dice_coef_loss, dice_coef
+
 DATA_DIR = os.path.abspath("../")
 sys.path.append(DATA_DIR)
-from numpy import genfromtxt
+from keras.optimizers import SGD
+from random import shuffle
+import shutil
 
 def main():
-    hardwareHandler = HardwareHandler()
-    emailHandler = EmailHandler()
-    timer = TimerModule()
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d_%H_%M')
+    num_training_patients = 2;
+    num_validation_patients = 1;
+    dataDirectory = "Data/BRATS_2018/HGG" 
+    validationDataDirectory = "Data/BRATS_2018/HGG_Validation"
+    testingDataDirectory = "Data/BRATS_2018/HGG_Testing"
+
+    ### Move a random subset of files into validation directory
+    if len(os.listdir(validationDataDirectory)) <= 0:
+        listOfDirs = os.listdir(dataDirectory)
+        shuffle(listOfDirs)
+        validation_data = listOfDirs[0:num_validation_patients]
+        for datum in validation_data:
+            shutil.move(dataDirectory + "/" + datum, validationDataDirectory)
+    
+    ### Move a random subset of files into testing directory
+    if len(os.listdir(testingDataDirectory)) <= 0:
+        listOfDirs = os.listdir(dataDirectory)
+        shuffle(listOfDirs)
+        validation_data = listOfDirs[0:num_validation_patients]
+        for datum in validation_data:
+            shutil.move(dataDirectory + "/" + datum, testingDataDirectory)
     
     print('Loading the data! This could take some time...')
-    mode = "t1ce_bf_corrected"
-    num_training_patients = 5;
-    num_validation_patients = 1;
+    mode = "flair"
     nmfComp = BasicNMFComputer(block_dim=8, num_components=8)
     dataHandler = BlockDataHandler("Data/BRATS_2018/HGG", nmfComp, num_patients = num_training_patients)
     
@@ -59,7 +68,6 @@ def main():
     labels = dataHandler.labels
     dataHandler.clear()
     
-    dataHandler.setLoadingMode("validation")
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
     dataHandler.setNumPatients(num_validation_patients)
     dataHandler.loadData(mode)
@@ -70,49 +78,38 @@ def main():
     
     print('Building the model now!')
     model = Sequential()
-    model.add(Dense(2048, input_dim=dataHandler.nmfComp.num_components))
+    model.add(Dense(1024, input_dim=dataHandler.nmfComp.num_components))
     model.add(BatchNormalization())
     model.add(PReLU())
-    model.add(Dropout(0.5))
-    
-    model.add(Dense(1024))
-    model.add(BatchNormalization())
-    model.add(PReLU())
-    model.add(Dropout(0.5))
     
     model.add(Dense(512))
     model.add(BatchNormalization())
     model.add(PReLU())
-    model.add(Dropout(0.5))
-
+    
     model.add(Dense(256))
     model.add(BatchNormalization())
     model.add(PReLU())
-    model.add(Dropout(0.5))
 
     model.add(Dense(128))
     model.add(BatchNormalization())
     model.add(PReLU())
-    model.add(Dropout(0.5))
 
     model.add(Dense(64))
     model.add(BatchNormalization())
     model.add(PReLU())
-    model.add(Dropout(0.5))
+    model.add(Dense(1, activation='sigmoid'))
     
-    model.add(Dense(32))
-    model.add(BatchNormalization())
-    model.add(PReLU())
-    model.add(Dropout(0.5))
-
-    model.add(Dense(16))
-    model.add(BatchNormalization())
-    model.add(PReLU())
-    model.add(Dense(labels.shape[1], activation='softmax'))
     
     
 # Compile model
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    lrate = 0.1
+    momentum = 0.9
+    num_epochs = 300
+    decay = lrate/num_epochs
+
+    sgd = SGD(lr=lrate, momentum=momentum, decay=decay, nesterov=True)
+
+    model.compile(loss=dice_coef_loss, optimizer="adam", metrics=[dice_coef])
     
     
     
@@ -136,11 +133,10 @@ def main():
     print('Training network!')
     model.fit(x_train,
                labels,
-                epochs=30,
+                epochs=num_epochs,
                 validation_data=(x_val, val_labels),
                 callbacks = [csv_logger],
-                class_weight = {0:1, 1:1000},
-                batch_size=int(x_train.shape[0]/25))
+                batch_size=int(x_train.shape[0]/3))
     
     
     model.save(model_directory + '/model.h5')
@@ -149,7 +145,7 @@ def main():
     seg_image = None
     for subdir in os.listdir(test_data_dir):
         for path in os.listdir(test_data_dir+ "/" + subdir):
-            if mode in path:
+            if mode + ".nii" in path:
                 image = nib.load(test_data_dir + "/" + subdir + "/" + path).get_data()
                 seg_image = nib.load(test_data_dir+ "/" + subdir + "/" + path.replace(mode, "seg")).get_data()
                 break

@@ -101,6 +101,8 @@ class DataHandler:
     def augmentData(self, data):
         """ data augumentation """
         foo = data
+        
+        foo = [np.squeeze(x) for x in foo]
 
         foo = tl.prepro.elastic_transform_multi(list(foo),
                                 alpha=720, sigma=24, is_random=True)
@@ -125,7 +127,7 @@ class DataHandler:
         foo = tl.prepro.shear_multi(foo, 0.05,
                                 is_random=True, fill_mode='constant')
 
-        foo = [np.squeeze(x) for x in foo]
+        foo = [np.squeeze(x[1]) for x in foo]
         
 
         return foo

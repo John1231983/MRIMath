@@ -78,5 +78,6 @@ def createSegNet(input_shape, n_labels, kernel=3, output_mode="sigmoid"):
 
     return segnet
 
-                                                                                                                           
+
+                                                                                                                     
                                                                                                                            
