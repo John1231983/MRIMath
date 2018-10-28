@@ -17,14 +17,16 @@ import sys
 import os
 from random import choice, sample, shuffle
 
-from CustomLosses import combinedDiceAndChamfer, dice_coef, chamfer_dist, combinedDiceAndChamferMultilabel
+from CustomLosses import combinedDiceAndChamfer, combinedHausdorffAndDiceMultilabel, combinedHausdorffAndDice, hausdorff_dist, hausdorff_dist_multilabel,dice_coef, chamfer_dist, combinedDiceAndChamferMultilabel, dice_coef_multilabel_loss
 
 from Utils.TimerModule import TimerModule
 
 from CustomLosses import dice_coef_loss, dice_and_iou, dice_coef_multilabel
 import shutil
 from createSegNetWithIndexPoolingInception import createInceptionSegNet
-from CustomImageAugmentationGenerator import CustomImageAugmentationGenerator
+from Generators.CustomImageAugmentationGenerator import CustomImageAugmentationGenerator
+from Generators.CustomImageGenerator import CustomImageGenerator
+
 from keras.utils import np_utils
 #from CustomLosses import chamfer_dist
 DATA_DIR = os.path.abspath("../")
@@ -37,10 +39,10 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 5
-    num_validation_patients = 2
+    num_training_patients = 30
+    num_validation_patients = 3
     
-    data_gen = CustomImageAugmentationGenerator()
+    data_gen = None
     modes = ["flair"]
     dataDirectory = "Data/BRATS_2018/HGG" 
     validationDataDirectory = "Data/BRATS_2018/HGG_Validation"
@@ -65,12 +67,8 @@ def main():
         
     dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", num_patients = num_training_patients, modes = modes)
     dataHandler.setMode("training")
-    timer = TimerModule()
-    timer.startTimer()
     dataHandler.loadData()
     dataHandler.preprocessForNetwork()
-    timer.stopTimer()
-    print("Took about " + str(timer.getElapsedTime()) + " to load the data")
     x_train = dataHandler.X
     x_seg_train = dataHandler.labels
     dataHandler.clear()
@@ -80,9 +78,11 @@ def main():
     dataHandler.setMode("validation")
     dataHandler.loadData()
     dataHandler.preprocessForNetwork()
-    x_val = np.array(dataHandler.X)
     
-    x_seg_val = [label.reshape(label.shape[0] * label.shape[1]) for label in dataHandler.labels]
+    x_val = dataHandler.X
+    
+    x_seg_val = dataHandler.labels
+    
     
     dataHandler.clear()
     
@@ -96,52 +96,49 @@ def main():
     
     n_labels = 1
     normalize = True
+    augmentations = True
     
     if n_labels > 1:
         output_mode = "softmax"
-        x_seg_val = np.array(x_seg_val)
-        x_seg_val = np_utils.to_categorical(x_seg_val)
     else:
         output_mode = "sigmoid"
-        for x in x_seg_val:
-            x[x > 0.5] = 1
-            x[x < 0.5] = 0
-        x_seg_val = np.array(x_seg_val)
 
-
-    
-    if normalize:
-        mu = np.mean(x_val)
-        sigma = np.std(x_val)
-        x_val -= mu
-        x_val /= sigma
+    if augmentations:
+        data_gen = CustomImageAugmentationGenerator()
+    else:
+        data_gen = CustomImageGenerator()
 
     
-    
-    
-    segnet = createSegNetWithIndexPooling(input_shape=input_shape,
-                                          n_labels = n_labels,
-                                          k = 16,
-                                          depth =1,
-                                          output_mode = output_mode)
-    
-    """
-    segnet = createSegNet(input_shape=input_shape, 
+    segnet = createInceptionSegNet(input_shape=input_shape, 
                                           n_labels=n_labels, 
-                                          output_mode=output_mode)
+                                        output_mode=output_mode)
     
     """
-    num_epochs = 100
-    lrate = 0.1
-    decay = lrate/num_epochs
-    adam = Adam(lr = 0.1)
-    sgd = SGD(lr = lrate, decay = decay,nesterov=True)
-    batch_size = 100
+    
+    segnet = createSegNet(input_shape, 
+                          n_labels = n_labels,
+                           kernel=3, 
+                           pool_size=(2, 2), 
+                           output_mode=output_mode)
+    """
+    """
+    segnet = createSegNetWithIndexPooling(input_shape, 
+                                 n_labels, 
+                                 32,
+                                 output_mode=output_mode, 
+                         depth = 1)
+    """
+    
+    num_epochs = 10
+    lrate = 1e-3
+    adam = Adam(lr = lrate)
+    batch_size = 15
+    validation_data_gen = CustomImageGenerator()
 
     if n_labels > 1:
-        segnet.compile(optimizer=sgd, loss=combinedDiceAndChamferMultilabel, metrics=[dice_coef_multilabel])
+        segnet.compile(optimizer=adam, loss=combinedHausdorffAndDiceMultilabel, metrics=[dice_coef_multilabel])
     else:
-        segnet.compile(optimizer=sgd, loss=dice_coef_loss, metrics=[dice_coef])
+        segnet.compile(optimizer=adam, loss=dice_coef_loss, metrics=[dice_coef])
 
 
     model_directory = "Models/segnet_" + date_string 
@@ -150,22 +147,7 @@ def main():
     log_info_filename = 'model_loss_log.csv'
     csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=',')
     
-    x_train = np.array(x_train)
-    mu = np.mean(x_train)
-    sigma = np.std(x_train)
-    x_train -= mu
-    x_train /= sigma
-    
-    x_seg_train = [label.reshape(label.shape[0] * label.shape[1]) for label in x_seg_train]
-    x_seg_train = np.array(x_seg_train)
-    segnet.fit(x_train,
-                x_seg_train, 
-                batch_size=batch_size,
-                epochs = num_epochs,
-                validation_data = (x_val, x_seg_val),
-                callbacks = [csv_logger],
-                shuffle=True)
-    """
+
     segnet.fit_generator(generator = data_gen.generate(x_train, 
                                                        x_seg_train, 
                                                        batch_size, 
@@ -176,8 +158,18 @@ def main():
                          callbacks = [csv_logger], 
                          use_multiprocessing = True, 
                          workers = 4,
-                         validation_data = (x_val, x_seg_val))
-    """
+                         shuffle=True,
+                         validation_steps= len(x_val) / batch_size,
+                         validation_data = validation_data_gen.generate(x_val, 
+                                                                        x_seg_val, 
+                                                                        batch_size, 
+                                                                        n_labels, 
+                                                                        normalize))
+    
+   
+
+    ## Log everything
+    ## Note: should be in a logging class
     model_info_filename = 'model_info.txt'
     model_info_file = open(model_directory + '/' + model_info_filename, "w") 
     model_info_file.write('Number of Patients (training): ' + str(num_training_patients) + '\n')

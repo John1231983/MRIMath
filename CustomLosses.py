@@ -31,6 +31,16 @@ def dice_coef(y_true, y_pred, smooth=1e-3):
 def dice_coef_loss(y_true, y_pred):
     return 1 - dice_coef(y_true, y_pred)
 
+def dice_coef_multilabel(y_true, y_pred, numLabels=4):
+    dice=0
+    for index in range(numLabels):
+        dice += dice_coef(y_true[:,:,index], y_pred[:,:,index])
+        
+    return dice/numLabels
+
+def dice_coef_multilabel_loss(y_true, y_pred):
+    return 1 - dice_coef_multilabel(y_true, y_pred)
+
 def iou(y_true, y_pred):
     y_true = K.flatten(y_true)
     y_pred = K.flatten(y_pred)
@@ -114,7 +124,8 @@ def hausdorff_dist(y_true, y_pred):
     
     y_true = K.reshape(y_true, [K.tf.shape(y_true)[0],128,128])
     y_pred = K.reshape(y_pred, [K.tf.shape(y_pred)[0],128,128])
-
+    y_true_shape = y_true.get_shape()
+    y_pred_shape = y_pred.get_shape()
     
     y_true = py_func(computeEDT, 
                 [y_true], 
@@ -122,32 +133,31 @@ def hausdorff_dist(y_true, y_pred):
                 name = "edt", 
                 grad=_EDTGrad)[0]
     
-    #y_true.set_shape(y_true_shape)
-    y_true.set_shape((None, 128, 128))
-    
     y_pred = py_func(computeContour, 
             [y_pred], 
             [tf.float32], 
             name = "contour", 
             grad=_ContourGrad)[0]
-    #y_pred.set_shape(y_pred_shape)
-    y_pred.set_shape((None, 128, 128))
+    
+    y_true.set_shape(y_true_shape)
+    y_pred.set_shape(y_pred_shape)
 
-    hausdorff = y_pred * y_true
-    print(hausdorff.get_shape())
-    hausdorff = tf.Print(hausdorff, [hausdorff], summarize=10)
+    hausdorffDistance = y_pred * y_true
+    hausdorffDistance = tf.map_fn(lambda x: 
+                                        K.max(x), 
+                                        hausdorffDistance, 
+                                        dtype=tf.float32)
 
-    hausdorff = tf.map_fn(lambda x: K.min(x), hausdorff, dtype=tf.float32)
-    print(hausdorff.get_shape())
-    hausdorff = tf.Print(hausdorff, [hausdorff], summarize=10)
+    #hausdorffDistance = tf.nn.l2_normalize(hausdorffDistance)
+    hausdorffDistance = K.mean(hausdorffDistance)
+    
+    return hausdorffDistance
 
-    hausdorff = K.max(hausdorff)
-    print(hausdorff.get_shape())
-    hausdorff = tf.Print(hausdorff, [hausdorff], summarize=10)
-
-
-    return hausdorff
-
+def hausdorff_dist_multilabel(y_true, y_pred, numLabels=4):
+    d_h=0
+    for index in range(numLabels):
+        d_h += hausdorff_dist(y_true[:,:,index], y_pred[:,:,index])
+    return d_h
 
         
 def chamfer_dist(y_true, y_pred):
@@ -162,17 +172,15 @@ def chamfer_dist(y_true, y_pred):
                 [tf.float32], 
                 name = "edt", 
                 grad=_EDTGrad)[0]
-    
-    y_true.set_shape(y_true_shape)
-    #y_true.set_shape((None, 128, 128))
 
     y_pred = py_func(computeContour, 
             [y_pred], 
             [tf.float32], 
             name = "contour", 
             grad=_ContourGrad)[0]
+            
+    y_true.set_shape(y_true_shape)
     y_pred.set_shape(y_pred_shape)
-    #y_pred.set_shape((None, 128, 128))
     
     finalChamferDistanceSum = y_pred * y_true
     finalChamferDistanceSum = tf.map_fn(lambda x: 
@@ -183,8 +191,7 @@ def chamfer_dist(y_true, y_pred):
 
     finalChamferDistanceSum = tf.nn.l2_normalize(finalChamferDistanceSum)
     finalChamferDistanceSum = K.mean(finalChamferDistanceSum)
-    #finalChamferDistanceSum /= K.max(finalChamferDistanceSum)
-    #finalChamferDistanceSum = tf.Print(finalChamferDistanceSum, [finalChamferDistanceSum], summarize=10)
+
     return finalChamferDistanceSum
 
 
@@ -195,11 +202,6 @@ def chamfer_dist_multilabel(y_true, y_pred, numLabels=4):
         d_cd += chamfer_dist(y_true[:,:,index], y_pred[:,:,index])
     return d_cd
 
-def dice_coef_multilabel(y_true, y_pred, numLabels=4):
-    dice=0
-    for index in range(numLabels):
-        dice -= dice_coef(y_true[:,:,index], y_pred[:,:,index])
-    return dice
 
 def chamfer_loss(y_true, y_pred):   
     return chamfer_dist(y_true, y_pred)
@@ -209,6 +211,13 @@ def combinedHausdorffAndDice(y_pred, y_true):
     beta = 1 - alpha
     dice = dice_coef_loss(y_true, y_pred)
     hd = hausdorff_dist(y_true, y_pred)
+    return alpha*dice + beta*hd
+
+def combinedHausdorffAndDiceMultilabel(y_pred, y_true):
+    alpha = 0.5
+    beta = 1 - alpha
+    dice = dice_coef_multilabel_loss(y_true, y_pred)
+    hd = hausdorff_dist_multilabel(y_true, y_pred)
     return alpha*dice + beta*hd
 
 def combinedDiceAndChamfer(y_pred, y_true):
@@ -222,6 +231,8 @@ def combinedDiceAndChamfer(y_pred, y_true):
 def combinedDiceAndChamferMultilabel(y_pred, y_true):
     alpha = 0.5
     beta = 1 - alpha
-    dice = dice_coef_multilabel(y_true, y_pred)
+    dice = dice_coef_multilabel_loss(y_true, y_pred)
     cd = chamfer_dist_multilabel(y_true, y_pred)
     return alpha*dice + beta*cd
+
+

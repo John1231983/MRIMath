@@ -10,10 +10,10 @@ Created on Oct 23, 2018
 import numpy as np
 import tensorlayer as tl
 from random import random, shuffle
-
+from Generators.CustomGenerator import CustomGenerator
 from keras.utils import np_utils
 
-class CustomImageAugmentationGenerator:
+class CustomImageAugmentationGenerator(CustomGenerator):
     
     alpha = None
     sigma = None
@@ -61,7 +61,13 @@ class CustomImageAugmentationGenerator:
     def generate(self, x_train, x_seg, batch_size, n_labels, normalize = True):
         
         mu = np.mean(np.array(x_train))
-        sigma = np.std(np.array(x_train))
+        sigma = np.std(np.array(x_train))    
+            
+        if n_labels == 1:
+            for x in x_seg:
+                x[x > 0.5] = 1
+                x[x < 0.5] = 0     
+                
         
         while True:
             data = list(zip(x_train, x_seg))
@@ -74,11 +80,19 @@ class CustomImageAugmentationGenerator:
                     aug_img = self.augmentData([x_train_shuffled[j], x_seg_shuffled[j]])
                     augmented_data.append(aug_img)
                 (aug_batch_imgs, aug_batch_labels) = zip(*augmented_data)
+                
                 aug_batch_labels = [label.reshape(label.shape[0] * label.shape[1]) for label in aug_batch_labels]
                 aug_batch_labels = np.array(aug_batch_labels)
                 aug_batch_imgs = np.array(aug_batch_imgs)
+                
+                ## convert to one hot encoding if there are several labels
+                
                 if n_labels > 1:
                     aug_batch_labels = np_utils.to_categorical(aug_batch_labels)
+                
+                ## Perform z-score normalization
+                ## Note: this can't be done prior because the augmentation functions
+                ## require grayscale images with pixel values > 0
                 if normalize:
                     aug_batch_imgs -= mu
                     aug_batch_imgs /= sigma

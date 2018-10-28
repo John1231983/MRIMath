@@ -78,7 +78,7 @@ class SegNetDataHandler(DataHandler):
         seg_img = cv2.resize(seg_img, 
                      dsize=(self.W, self.H), 
                      interpolation=cv2.INTER_LINEAR)
-        #seg_img[seg_img > 0] = 1
+
         return img, seg_img
                     
                         

@@ -9,6 +9,7 @@ Created on Jul 10, 2018
 import sys
 import os
 from keras.utils import np_utils
+from _codecs import decode
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from DataHandlers.SegNetDataHandler import SegNetDataHandler
 import numpy as np
@@ -16,7 +17,7 @@ import matplotlib.pyplot as plt
 from keras.models import load_model
 from Mylayers import MaxPoolingWithArgmax2D, MaxUnpooling2D
 import math
-from CustomLosses import dice_coef, dice_coef_multilabel, dice_coef_loss, combinedDiceAndChamfer
+from CustomLosses import dice_coef, dice_coef_multilabel, dice_coef_loss, combinedDiceAndChamfer, dice_coef_multilabel_loss, combinedHausdorffAndDice
 from dipy.segment.mask import clean_cc_mask
 
 DATA_DIR = os.path.abspath("../")
@@ -37,7 +38,7 @@ def computeDice(im1, im2):
 def main():
 
     
-    num_testing_patients = 1
+    num_testing_patients = 4
     n_labels = 1
     normalize = True
     modes = ["flair"]
@@ -50,12 +51,14 @@ def main():
     x_seg_test = dataHandler.labels
     dataHandler.clear()
 
-    segnet = load_model("Models/segnet_2018-10-25-23:27/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 
+    segnet = load_model("Models/segnet_2018-10-28-14:37/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 
                                                                                'MaxUnpooling2D':MaxUnpooling2D, 
-                                                                               'combinedDiceAndChamfer':combinedDiceAndChamfer, 
+                                                                               'combinedDiceAndChamfer':combinedDiceAndChamfer,
+                                                                               'combinedHausdorffAndDice':  combinedHausdorffAndDice,
                                                                                'dice_coef':dice_coef, 
                                                                                'dice_coef_loss':dice_coef_loss,
-                                                                           'dice_coef_multilabel' : dice_coef_multilabel})
+                                                                                'dice_coef_multilabel': dice_coef_multilabel,
+                                                                           'dice_coef_multilabel_loss' : dice_coef_multilabel_loss})
     
     
     
@@ -69,28 +72,32 @@ def main():
     if n_labels > 1:
         #x_seg_test = np_utils.to_categorical(x_seg_test)
         #x_seg_test = np.argmax(x_seg_test, axis=3)
-
-        decoded_imgs = np.argmax(decoded_imgs, axis=2)
-        print(x_seg_test.shape)
+        decoded_imgs = [np.argmax(x, axis = 1) for x in decoded_imgs]
     else:
         for x in x_seg_test:
             x[x > 0.5] = 1
             x[x < 0.5] = 0
+        for x in decoded_imgs:
+            x[x > 0.5] = 1
+            x[x < 0.5] = 0
         
 
-    
+    decoded_imgs = [x.reshape(dataHandler.W, dataHandler.W) for x in decoded_imgs]
 
 
-
-    avg_dice = 0
     N = len(decoded_imgs)
-    """
+
+    
+    
+    avg_dice = 0
+    
     for i in range(N):
-            decoded_imgs[i][decoded_imgs[i] < 0.5] = 0
-            dice = computeDice(x_seg_test[i], np.squeeze(decoded_imgs[i]))
+            foo = decoded_imgs[i].reshape(dataHandler.W, dataHandler.W)
+            dice = computeDice(x_seg_test[i], foo)
             avg_dice = avg_dice + dice
     print(str(avg_dice/N))
-    """
+    
+    
     for i in range(N):
         fig = plt.figure()
         plt.gray();   
@@ -106,7 +113,7 @@ def main():
         
         fig.add_subplot(1,3,3)
 
-        plt.imshow(decoded_imgs[i].reshape(dataHandler.W, dataHandler.W))
+        plt.imshow(decoded_imgs[i])
         plt.axis('off')
         plt.title('Predicted Segment')
 
