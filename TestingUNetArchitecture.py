@@ -62,8 +62,8 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 50
-    num_validation_patients = 5
+    num_training_patients = 1
+    num_validation_patients = 1
     
     data_gen = None
     modes = ["flair", "t1ce", "t2", "t1"]
@@ -119,7 +119,7 @@ def main():
     
     n_labels = 1
     normalize = True
-    augmentations = False
+    augmentations = True
     
     if n_labels > 1:
         output_mode = "softmax"
