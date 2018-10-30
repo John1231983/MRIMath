@@ -206,21 +206,21 @@ def chamfer_dist_multilabel(y_true, y_pred, numLabels=4):
 def chamfer_loss(y_true, y_pred):   
     return chamfer_dist(y_true, y_pred)
 
-def combinedHausdorffAndDice(y_pred, y_true):
+def combinedHausdorffAndDice(y_true,y_pred):
     alpha = 0.5
     beta = 1 - alpha
     dice = dice_coef_loss(y_true, y_pred)
     hd = hausdorff_dist(y_true, y_pred)
     return alpha*dice + beta*hd
 
-def combinedHausdorffAndDiceMultilabel(y_pred, y_true):
+def combinedHausdorffAndDiceMultilabel(y_true,y_pred):
     alpha = 0.5
     beta = 1 - alpha
     dice = dice_coef_multilabel_loss(y_true, y_pred)
     hd = hausdorff_dist_multilabel(y_true, y_pred)
     return alpha*dice + beta*hd
 
-def combinedDiceAndChamfer(y_pred, y_true):
+def combinedDiceAndChamfer(y_true,y_pred):
     alpha = 0.5
     beta = 1 - alpha
     dice = dice_coef_loss(y_true, y_pred)
@@ -228,7 +228,7 @@ def combinedDiceAndChamfer(y_pred, y_true):
     return alpha*dice + beta*cd
     
     
-def combinedDiceAndChamferMultilabel(y_pred, y_true):
+def combinedDiceAndChamferMultilabel(y_true,y_pred):
     alpha = 0.5
     beta = 1 - alpha
     dice = dice_coef_multilabel_loss(y_true, y_pred)

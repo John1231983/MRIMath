@@ -3,8 +3,9 @@ from keras.models import Model, Input
 from keras.layers import Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, concatenate
 
 
-def createUNet(input_shape = (240,240,1)):
+def createUNet(input_shape = (240,240,1), output_mode="sigmoid"):
     inputs = Input(input_shape)
+    
     conv1 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(inputs)
     conv1 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv1)
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
@@ -43,7 +44,7 @@ def createUNet(input_shape = (240,240,1)):
     conv9 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(merge9)
     conv9 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv9)
     conv9 = Conv2D(1, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv9)
-    conv10 = Conv2D(1, 1, activation = 'sigmoid')(conv9)
+    conv10 = Conv2D(1, 1, activation = output_mode)(conv9)
 
     model = Model(input = inputs, output = conv10)
 
