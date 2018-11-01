@@ -48,7 +48,8 @@ def createUNetInceptionIndexPooling(input_shape = (240,240,1), output_mode="sigm
     pool2, mask2 = MaxPoolingWithArgmax2D(pool_size)(conv2)
     
     conv3 = inceptionModule(pool2, 4*numFilters)
-    pool3, mask3 = MaxPoolingWithArgmax2D(pool_size)(conv3)
+    drop3 = Dropout(0.5)(conv3)
+    pool3, mask3 = MaxPoolingWithArgmax2D(pool_size)(drop3)
 
     conv4 = inceptionModule(pool3, 8*numFilters)
     drop4 = Dropout(0.5)(conv4)
