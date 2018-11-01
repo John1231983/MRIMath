@@ -1,55 +1,20 @@
-'''
-Created on Aug 29, 2018
 
-@author: daniel
-'''
-from DataHandlers.SegNetDataHandler import SegNetDataHandler
-'''
-Created on Jul 10, 2018
-
-@author: daniel
-'''
 
 #from multiprocessing import Process, Manager
 #from keras.utils import np_utils
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from DataHandlers.UNetDataHandler import UNetDataHandler
 from datetime import datetime
 import matplotlib.pyplot as plt
 from createUNet import createUNet
-from keras.optimizers import SGD
-from keras.callbacks import CSVLogger
-from CustomLosses import combinedDiceAndChamfer, combinedHausdorffAndDice
-from CustomLosses import dice_coef, dice_coef_loss, dice_coef_multilabel_loss, dice_coef_multilabel
-
-
-
-'''
-Created on Aug 29, 2018
-
-@author: daniel
-'''
+from createUNetInception import createUNetInception
+from createUNetInceptionIndexPooling import createUNetInceptionIndexPooling
 from DataHandlers.SegNetDataHandler import SegNetDataHandler
-'''
-Created on Jul 10, 2018
 
-@author: daniel
-'''
-
-#from multiprocessing import Process, Manager
-#from keras.utils import np_utils
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from DataHandlers.UNetDataHandler import UNetDataHandler
-from datetime import datetime
-import matplotlib.pyplot as plt
-from createUNet import createUNet
 from keras.optimizers import SGD
 from keras.callbacks import CSVLogger
-from CustomLosses import combinedDiceAndChamfer, combinedHausdorffAndDice
+from CustomLosses import combinedDiceAndChamfer, combinedHausdorffAndDice, dice_coef_loss, dice_coef_multilabel, dice_coef_multilabel_loss
 from CustomLosses import dice_coef
 from Generators.CustomImageAugmentationGenerator import CustomImageAugmentationGenerator
 from Generators.CustomImageGenerator import CustomImageGenerator
@@ -62,8 +27,8 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 1
-    num_validation_patients = 1
+    num_training_patients = 40
+    num_validation_patients = 4
     
     data_gen = None
     modes = ["flair", "t1ce", "t2", "t1"]
@@ -132,8 +97,8 @@ def main():
         data_gen = CustomImageGenerator()
 
     
-    unet = createUNet(input_shape, output_mode)
-   
+    #unet = createUNet(input_shape, output_mode)
+    unet = createUNetInceptionIndexPooling(input_shape, output_mode)
     
     num_epochs = 60
     lrate = 1e-3
