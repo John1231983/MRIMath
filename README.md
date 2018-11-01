@@ -1,5 +1,5 @@
 # MRIMath
-MRIMath is a project dedicated towards developing a robust, automated brain tumor segmentation system. This repository contains all of my M.S. research, which can be a lot...
+MRIMath is a project dedicated towards developing a robust, automated brain tumor segmentation system. This repository contains all of my M.S. research, which can be a lot. Due to the nature of research, this is quite messy. However, I intend on cleaning this up significantly once we start making serious progress in one direction. In the meantime, if you have any questions or concerns about the project, feel free to email me at danielenricocahall@gmail.com. I hope that some of what has been written is useful to others!
 
 ### Requirements
 * Python 3.x
