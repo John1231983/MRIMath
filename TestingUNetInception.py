@@ -35,7 +35,7 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 200
+    num_training_patients = 1
     num_validation_patients = 10
     num_testing_patients = 10
     
@@ -92,7 +92,7 @@ def main():
 
     input_shape = (dataHandler.W,dataHandler.H, len(modes))
     
-    n_labels = 1
+    n_labels = 4
     normalize = True
     augmentations = False
     
@@ -107,7 +107,7 @@ def main():
         data_gen = CustomImageGenerator()
 
     
-    unet = createUNetInception(input_shape, output_mode)
+    unet = createUNetInception(input_shape, output_mode, n_labels)
     
     num_epochs = 500
     #lrate = 1e-3
