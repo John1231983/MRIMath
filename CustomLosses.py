@@ -29,7 +29,11 @@ def dice_coef(y_true, y_pred, smooth=1e-3):
 
 
 def dice_coef_loss(y_true, y_pred):
+<<<<<<< HEAD
     return -tf.log(dice_coef(y_true, y_pred))
+=======
+    return 1 - dice_coef(y_true, y_pred)
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
 
 def dice_coef_multilabel(y_true, y_pred, numLabels=4):
     dice=0
@@ -206,21 +210,33 @@ def chamfer_dist_multilabel(y_true, y_pred, numLabels=4):
 def chamfer_loss(y_true, y_pred):   
     return chamfer_dist(y_true, y_pred)
 
+<<<<<<< HEAD
 def combinedHausdorffAndDice(y_true,y_pred):
+=======
+def combinedHausdorffAndDice(y_pred, y_true):
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
     alpha = 0.5
     beta = 1 - alpha
     dice = dice_coef_loss(y_true, y_pred)
     hd = hausdorff_dist(y_true, y_pred)
     return alpha*dice + beta*hd
 
+<<<<<<< HEAD
 def combinedHausdorffAndDiceMultilabel(y_true,y_pred):
+=======
+def combinedHausdorffAndDiceMultilabel(y_pred, y_true):
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
     alpha = 0.5
     beta = 1 - alpha
     dice = dice_coef_multilabel_loss(y_true, y_pred)
     hd = hausdorff_dist_multilabel(y_true, y_pred)
     return alpha*dice + beta*hd
 
+<<<<<<< HEAD
 def combinedDiceAndChamfer(y_true,y_pred):
+=======
+def combinedDiceAndChamfer(y_pred, y_true):
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
     alpha = 0.5
     beta = 1 - alpha
     dice = dice_coef_loss(y_true, y_pred)
@@ -228,7 +244,11 @@ def combinedDiceAndChamfer(y_true,y_pred):
     return alpha*dice + beta*cd
     
     
+<<<<<<< HEAD
 def combinedDiceAndChamferMultilabel(y_true,y_pred):
+=======
+def combinedDiceAndChamferMultilabel(y_pred, y_true):
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
     alpha = 0.5
     beta = 1 - alpha
     dice = dice_coef_multilabel_loss(y_true, y_pred)

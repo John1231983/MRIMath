@@ -32,18 +32,30 @@ from keras.utils import np_utils
 DATA_DIR = os.path.abspath("../")
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(DATA_DIR)
+<<<<<<< HEAD
 from tensorlayer.cost import dice_coe
+=======
+
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
 
      
 def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
+<<<<<<< HEAD
     num_training_patients = 50
     num_validation_patients = 5
     
     data_gen = None
     modes = ["flair", "t1ce", "t2", "t1"]
+=======
+    num_training_patients = 30
+    num_validation_patients = 3
+    
+    data_gen = None
+    modes = ["flair"]
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
     dataDirectory = "Data/BRATS_2018/HGG" 
     validationDataDirectory = "Data/BRATS_2018/HGG_Validation"
     testingDataDirectory = "Data/BRATS_2018/HGG_Testing"
@@ -68,7 +80,11 @@ def main():
     dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", num_patients = num_training_patients, modes = modes)
     dataHandler.setMode("training")
     dataHandler.loadData()
+<<<<<<< HEAD
     #dataHandler.preprocessForNetwork()
+=======
+    dataHandler.preprocessForNetwork()
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
     x_train = dataHandler.X
     x_seg_train = dataHandler.labels
     dataHandler.clear()
@@ -77,7 +93,11 @@ def main():
     dataHandler.setNumPatients(num_validation_patients)
     dataHandler.setMode("validation")
     dataHandler.loadData()
+<<<<<<< HEAD
     #dataHandler.preprocessForNetwork()
+=======
+    dataHandler.preprocessForNetwork()
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
     
     x_val = dataHandler.X
     
@@ -96,7 +116,11 @@ def main():
     
     n_labels = 1
     normalize = True
+<<<<<<< HEAD
     augmentations = False
+=======
+    augmentations = True
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
     
     if n_labels > 1:
         output_mode = "softmax"
@@ -122,7 +146,10 @@ def main():
                            output_mode=output_mode)
     """
     """
+<<<<<<< HEAD
     
+=======
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
     segnet = createSegNetWithIndexPooling(input_shape, 
                                  n_labels, 
                                  32,
@@ -130,14 +157,22 @@ def main():
                          depth = 1)
     """
     
+<<<<<<< HEAD
     num_epochs = 40
+=======
+    num_epochs = 10
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
     lrate = 1e-3
     adam = Adam(lr = lrate)
     batch_size = 15
     validation_data_gen = CustomImageGenerator()
 
     if n_labels > 1:
+<<<<<<< HEAD
         segnet.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
+=======
+        segnet.compile(optimizer=adam, loss=combinedHausdorffAndDiceMultilabel, metrics=[dice_coef_multilabel])
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
     else:
         segnet.compile(optimizer=adam, loss=dice_coef_loss, metrics=[dice_coef])
 

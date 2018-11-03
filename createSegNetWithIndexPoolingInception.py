@@ -19,6 +19,7 @@ from Mylayers import MaxPoolingWithArgmax2D, MaxUnpooling2D
 def inceptionModule(inputs, numFilters = 32):
     
     tower_0 = Convolution2D(numFilters, (1,1), padding='same')(inputs)
+<<<<<<< HEAD
     tower_0 = BatchNormalization()(tower_0)
     tower_0 = Activation("relu")(tower_0)
     
@@ -34,14 +35,33 @@ def inceptionModule(inputs, numFilters = 32):
     tower_2 = Activation("relu")(tower_2)
     tower_2 = Convolution2D(numFilters, (3,3), padding='same')(tower_2)
     tower_2 = BatchNormalization()(tower_2)
+=======
+    tower_0 = Activation("relu")(tower_0)
+    
+    tower_1 = Convolution2D(numFilters, (1,1), padding='same')(inputs)
+    tower_1 = Activation("relu")(tower_1)
+    tower_1 = Convolution2D(numFilters, (3,3), padding='same')(tower_1)
+    tower_1 = Activation("relu")(tower_1)
+    
+    tower_2 = Convolution2D(numFilters, (1,1), padding='same')(inputs)
+    tower_2 = Activation("relu")(tower_2)
+    tower_2 = Convolution2D(numFilters, (3,3), padding='same')(tower_2)
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
     tower_2 = Activation("relu")(tower_2)
     
     tower_3 = MaxPooling2D((3,3), strides=(1,1), padding='same')(inputs)
     tower_3 = Convolution2D(numFilters, (1,1), padding='same')(tower_3)
+<<<<<<< HEAD
     tower_3 = BatchNormalization()(tower_3)
     tower_3 = Activation("relu")(tower_3)
     
     inception_module = concatenate([tower_0, tower_1, tower_2, tower_3], axis = 3)
+=======
+    tower_3 = Activation("relu")(tower_3)
+    
+    inception_module = concatenate([tower_0, tower_1, tower_2, tower_3], axis = 3)
+    inception_module = BatchNormalization()(inception_module)
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
     
     return inception_module
 
@@ -60,14 +80,18 @@ def createInceptionSegNet(input_shape,
     conv_3 = inceptionModule(pool_1)
     conv_4 = inceptionModule(conv_3)
     pool_2, mask_2 = MaxPoolingWithArgmax2D(pool_size)(conv_4)
+<<<<<<< HEAD
     
     conv_5 = inceptionModule(pool_2)
     conv_6 = inceptionModule(conv_5)
     pool_3, mask_3 = MaxPoolingWithArgmax2D(pool_size)(conv_6)
+=======
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
 
 
     ## encoding done, decoding start
     
+<<<<<<< HEAD
         
     unpool_1 = MaxUnpooling2D(pool_size)([pool_3, mask_3])
     conv_7 = inceptionModule(unpool_1)
@@ -85,6 +109,21 @@ def createInceptionSegNet(input_shape,
     conv_13 = Convolution2D(n_labels, (1, 1), padding='valid')(conv_12)
     
     reshape = Reshape((n_labels, input_shape[0] * input_shape[1]))(conv_13)
+=======
+    
+    unpool_1 = MaxUnpooling2D(pool_size)([pool_2, mask_2])
+    conv_4 = inceptionModule(unpool_1)
+    conv_5 = inceptionModule(conv_4)
+    
+    
+    unpool_2 = MaxUnpooling2D(pool_size)([conv_5, mask_1])
+    conv_5 = inceptionModule(unpool_2)
+    conv_6 = inceptionModule(conv_5)
+    
+    conv_7 = Convolution2D(n_labels, (1, 1), padding='valid')(conv_6)
+    
+    reshape = Reshape((n_labels, input_shape[0] * input_shape[1]))(conv_7)
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
     permute = Permute((2, 1))(reshape)
     outputs = Activation(output_mode)(permute)
    

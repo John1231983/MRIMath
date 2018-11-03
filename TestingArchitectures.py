@@ -38,20 +38,35 @@ def computeDice(im1, im2):
 def main():
 
     
+<<<<<<< HEAD
     num_testing_patients = 5
     n_labels = 1
     normalize = True
     modes = ["flair", "t1ce", "t2", "t1"]
+=======
+    num_testing_patients = 4
+    n_labels = 1
+    normalize = True
+    modes = ["flair"]
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
     dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG_Testing", 
                                     num_patients = num_testing_patients, 
                                     modes = modes)
     dataHandler.loadData()
+<<<<<<< HEAD
     #dataHandler.preprocessForNetwork()
+=======
+    dataHandler.preprocessForNetwork()
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
     x_test = np.array(dataHandler.X)
     x_seg_test = dataHandler.labels
     dataHandler.clear()
 
+<<<<<<< HEAD
     segnet = load_model("Models/unet_2018-10-30-13:39/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 
+=======
+    segnet = load_model("Models/segnet_2018-10-28-14:37/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
                                                                                'MaxUnpooling2D':MaxUnpooling2D, 
                                                                                'combinedDiceAndChamfer':combinedDiceAndChamfer,
                                                                                'combinedHausdorffAndDice':  combinedHausdorffAndDice,

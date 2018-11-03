@@ -26,6 +26,7 @@ class CustomImageAugmentationGenerator(CustomGenerator):
     def augmentData(self, data):
         """ data augumentation """
         foo = data
+<<<<<<< HEAD
         num_modes = foo[0].shape[2]
         if num_modes > 1:
             # ensures that all modes are augmented...
@@ -34,6 +35,8 @@ class CustomImageAugmentationGenerator(CustomGenerator):
             foo = np.split(slices, indices_or_sections=num_modes, axis=2)
             foo.append(mask)
             
+=======
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
         
         foo = [np.squeeze(x) for x in foo]
 
@@ -62,12 +65,16 @@ class CustomImageAugmentationGenerator(CustomGenerator):
                                 is_random=True, fill_mode='constant')
         """
         #foo = [np.squeeze(x[1]) for x in foo]
+<<<<<<< HEAD
         if num_modes > 1:
             slices = foo[0:num_modes]
             slices = [np.squeeze(x) for x in slices]
             mask = foo[num_modes]
             foo = (np.stack(slices, axis=2), mask)
 
+=======
+        
+>>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
 
         return foo
     
