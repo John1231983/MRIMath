@@ -5,7 +5,7 @@ Created on Oct 30, 2018
 '''
 
 from keras.models import Model, Input
-from keras.layers import Convolution2D, Activation, BatchNormalization,MaxPooling2D, Convolution2DTranspose, Dropout, concatenate
+from keras.layers import Convolution2D, Reshape,Activation, BatchNormalization,MaxPooling2D, Convolution2DTranspose, Dropout, concatenate
 
 def inceptionModule(inputs, numFilters = 32):
     
@@ -23,7 +23,7 @@ def inceptionModule(inputs, numFilters = 32):
     tower_2 = Convolution2D(numFilters, (1,1), padding='same',kernel_initializer = 'he_normal')(inputs)
     tower_2 = BatchNormalization()(tower_2)
     tower_2 = Activation("relu")(tower_2)
-    tower_2 = Convolution2D(numFilters, (3,3), padding='same',kernel_initializer = 'he_normal')(tower_2)
+    tower_2 = Convolution2D(numFilters, (5,5), padding='same',kernel_initializer = 'he_normal')(tower_2)
     tower_2 = BatchNormalization()(tower_2)
     tower_2 = Activation("relu")(tower_2)
     
@@ -35,10 +35,10 @@ def inceptionModule(inputs, numFilters = 32):
     inception_module = concatenate([tower_0, tower_1, tower_2, tower_3], axis = 3)
     return inception_module
     
-def createUNetInception(input_shape = (240,240,1), output_mode="sigmoid"):
+def createUNetInception(input_shape = (240,240,1), output_mode="sigmoid", n_labels = 1):
     inputs = Input(input_shape)
     
-    numFilters = 16;
+    numFilters = 32;
     
     conv1 = inceptionModule(inputs, numFilters)
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
@@ -50,14 +50,12 @@ def createUNetInception(input_shape = (240,240,1), output_mode="sigmoid"):
     pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
     
     conv4 = inceptionModule(pool3, 8*numFilters)
-    drop4 = Dropout(0.5)(conv4)
-    pool4 = MaxPooling2D(pool_size=(2, 2))(drop4)
+    pool4 = MaxPooling2D(pool_size=(2, 2))(conv4)
 
     conv5 = inceptionModule(pool4,16*numFilters)
-    drop5 = Dropout(0.5)(conv5)
 
-    up6 = Convolution2DTranspose(8*numFilters, (2,2),strides=(2,2), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(drop5)
-    merge6 = concatenate([drop4,up6],axis=3)
+    up6 = Convolution2DTranspose(8*numFilters, (2,2),strides=(2,2), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv5)
+    merge6 = concatenate([conv4,up6],axis=3)
     conv6 = inceptionModule(merge6, 8*numFilters)
     
     up7 = Convolution2DTranspose(4*numFilters,(2,2),strides=(2,2), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv6)
@@ -73,13 +71,16 @@ def createUNetInception(input_shape = (240,240,1), output_mode="sigmoid"):
     conv9 = inceptionModule(merge9, numFilters)
     
     conv9 = Convolution2D(numFilters, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv9)
-    conv9 = Convolution2D(1, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv9)
-    conv10 = Convolution2D(1, 1, activation = output_mode)(conv9)
-
-    model = Model(input = inputs, output = conv10)
-
-    #model.compile(optimizer = Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy'])
+    conv9 = BatchNormalization()(conv9)
+    conv9 = Activation("relu")(conv9)
     
-    #model.summary()
+    conv10 = Convolution2D(n_labels, 1, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv9)
+    conv10 = BatchNormalization()(conv10)
+    conv10 = Reshape(
+            (input_shape[0] * input_shape[1], n_labels),
+            input_shape=(input_shape[0], input_shape[1], n_labels))(conv10)
+            
+    outputs = Activation(output_mode)(conv10)
+    model = Model(input = inputs, output = outputs)
 
     return model
