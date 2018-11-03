@@ -3,7 +3,7 @@ echo "Installing all necessary dependencies..."
     pip install nibabel
     pip install requests
     pip install multiprocessing
-    pip install tensorflow
+    pip install tensorflow-gpu
     pip install keras
     pip install opencv-python
     pip install matplotlib
@@ -15,6 +15,8 @@ echo "Installing all necessary dependencies..."
     pip install simpleitk
     pip install IPython
     pip install imgaug
+    pip install tensorlayer
+    pip install dipy
 echo "Done with installs!"
 echo "Pulling BRATS 2018 Data down, this may take a few minutes..."
 if command -v python3 &>/dev/null; then
@@ -23,7 +25,6 @@ else
   python Utils/getBraTS2018Data.py
 fi
 echo "Now to pull down the Mask R-CNN submodule..." 
-git submodule update --init --recursive --remote
 echo "Success! You should be good to go! :)" 
 
 

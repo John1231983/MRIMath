@@ -14,8 +14,7 @@ from createUNetInception import createUNetInception
 from DataHandlers.SegNetDataHandler import SegNetDataHandler
 
 from keras.callbacks import CSVLogger, LearningRateScheduler
-from CustomLosses import dice_coef_loss, dice_coef_multilabel, dice_coef_multilabel_loss
-from CustomLosses import dice_coef
+from CustomLosses import dice_coef, dice_coef_loss, dice_coef_multilabel, dice_coef_multilabel_loss
 from Generators.CustomImageAugmentationGenerator import CustomImageAugmentationGenerator
 from Generators.CustomImageGenerator import CustomImageGenerator
 from random import  shuffle
@@ -37,9 +36,9 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 200
-    num_validation_patients = 10
-    num_testing_patients = 10
+    num_training_patients = 1
+    num_validation_patients = 1
+    num_testing_patients = 1
     
     data_gen = None
     modes = ["flair", "t1ce", "t2", "t1"]
@@ -116,7 +115,7 @@ def main():
     num_epochs = 500
     #lrate = 1e-3
     adam = Adam()
-    batch_size = 20
+    batch_size = 10
     validation_data_gen = CustomImageGenerator()
 
     if n_labels > 1:

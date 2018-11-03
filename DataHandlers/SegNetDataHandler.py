@@ -96,13 +96,10 @@ class SegNetDataHandler(DataHandler):
         PVE = np.squeeze(PVE)
         white_matter = PVE[:,:,2:3]        
         csf = PVE[:,:,0:1]
-<<<<<<< HEAD
+
         #return img*white_matter
         return img*white_matter
-=======
-        return img*white_matter
         #return img*white_matter# + img*csf
->>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
     
         """
         fig = plt.figure()

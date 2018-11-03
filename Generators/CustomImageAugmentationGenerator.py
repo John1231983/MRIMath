@@ -26,7 +26,6 @@ class CustomImageAugmentationGenerator(CustomGenerator):
     def augmentData(self, data):
         """ data augumentation """
         foo = data
-<<<<<<< HEAD
         num_modes = foo[0].shape[2]
         if num_modes > 1:
             # ensures that all modes are augmented...
@@ -34,10 +33,7 @@ class CustomImageAugmentationGenerator(CustomGenerator):
             mask = foo.pop(0)
             foo = np.split(slices, indices_or_sections=num_modes, axis=2)
             foo.append(mask)
-            
-=======
->>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
-        
+                    
         foo = [np.squeeze(x) for x in foo]
 
         foo = tl.prepro.elastic_transform_multi(list(foo),
@@ -50,31 +46,18 @@ class CustomImageAugmentationGenerator(CustomGenerator):
         
         foo = tl.prepro.flip_axis_multi(list(foo),
                 axis=0, is_random=True) # up down
-        """
-        
-        foo = tl.prepro.brightness_multi(list(foo), 
-                                         0.8, 1, is_random=True)
-        """
+
         foo = tl.prepro.rotation_multi(list(foo), rg=20,
                                 is_random=True, fill_mode='constant') # nearest, constant
         
         foo = tl.prepro.shift_multi(list(foo), wrg=0.10,
                                 hrg=0.10, is_random=True, fill_mode='constant')
-        """
-        foo = tl.prepro.shear_multi(foo, 0.05,
-                                is_random=True, fill_mode='constant')
-        """
-        #foo = [np.squeeze(x[1]) for x in foo]
-<<<<<<< HEAD
         if num_modes > 1:
             slices = foo[0:num_modes]
             slices = [np.squeeze(x) for x in slices]
             mask = foo[num_modes]
             foo = (np.stack(slices, axis=2), mask)
 
-=======
-        
->>>>>>> 6b3a62423bab4f62be24a85c8a0cafb789d940ac
 
         return foo
     
