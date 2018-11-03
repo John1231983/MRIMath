@@ -10,7 +10,7 @@ from numpy import genfromtxt
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from datetime import datetime
 import matplotlib.pyplot as plt
-from createUNetInception import createUNetInception
+from UNetFactory.createUNetInception import createUNetInception
 from DataHandlers.SegNetDataHandler import SegNetDataHandler
 
 from keras.callbacks import CSVLogger, LearningRateScheduler

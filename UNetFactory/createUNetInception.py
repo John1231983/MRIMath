@@ -5,7 +5,7 @@ Created on Oct 30, 2018
 '''
 
 from keras.models import Model, Input
-from keras.layers import Convolution2D, Reshape,Activation, BatchNormalization,MaxPooling2D, Convolution2DTranspose, Dropout, concatenate
+from keras.layers import Convolution2D, Reshape,Activation, BatchNormalization,MaxPooling2D, Convolution2DTranspose, concatenate
 
 def inceptionModule(inputs, numFilters = 32):
     
