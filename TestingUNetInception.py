@@ -35,7 +35,7 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 1
+    num_training_patients = 200
     num_validation_patients = 10
     num_testing_patients = 10
     
