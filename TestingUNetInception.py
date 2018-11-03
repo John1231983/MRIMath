@@ -31,14 +31,13 @@ def step_decay(epoch):
            math.floor((1+epoch)/epochs_drop))
     return lrate
 
-lrate = LearningRateScheduler(step_decay)
 def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 1
-    num_validation_patients = 1
-    num_testing_patients = 1
+    num_training_patients = 200
+    num_validation_patients = 10
+    num_testing_patients = 10
     
     data_gen = None
     modes = ["flair", "t1ce", "t2", "t1"]
@@ -73,7 +72,6 @@ def main():
         
         
     dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", num_patients = num_training_patients, modes = modes)
-    dataHandler.setMode("training")
     dataHandler.loadData()
     x_train = dataHandler.X
     x_seg_train = dataHandler.labels
@@ -81,7 +79,6 @@ def main():
     
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
     dataHandler.setNumPatients(num_validation_patients)
-    dataHandler.setMode("validation")
     dataHandler.loadData()
     x_val = dataHandler.X
     x_seg_val = dataHandler.labels
@@ -115,7 +112,7 @@ def main():
     num_epochs = 500
     #lrate = 1e-3
     adam = Adam()
-    batch_size = 10
+    batch_size = 20
     validation_data_gen = CustomImageGenerator()
 
     if n_labels > 1:
