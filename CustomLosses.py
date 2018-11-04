@@ -101,7 +101,7 @@ def showContours(a):
 def computeEDT(y):
     for i in range(y.shape[0]):
         #print(y.shape)
-        y[i,:,:] = cv2.Canny(np.uint8(y[i,:,:]),0,1)
+        #y[i,:,:] = cv2.Canny(np.uint8(y[i,:,:]),0,1)
         y[i,:,:] = distance_transform_edt(np.logical_not(y[i,:,:]))
     return y
 

@@ -30,7 +30,7 @@ from keras.utils.training_utils import multi_gpu_model
 def step_decay(epoch):
     initial_lrate = 0.1
     drop = 0.5
-    epochs_drop = 50.0
+    epochs_drop = 10.0
     lrate = initial_lrate * math.pow(drop,  
            math.floor((1+epoch)/epochs_drop))
     return lrate
@@ -43,9 +43,9 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 200
-    num_validation_patients = 10
-    num_testing_patients = 10
+    num_training_patients = 50
+    num_validation_patients = 5
+    num_testing_patients = 5
     
     data_gen = None
     modes = ["flair", "t1ce", "t2", "t1"]
@@ -122,7 +122,7 @@ def main():
 
         
     
-    num_epochs = 500
+    num_epochs = 100
     #lrate = 1e-3
     adam = Adam()
     batch_size = 20
@@ -187,7 +187,7 @@ def main():
     message += "The network was trained on " + str(numGPUs) + " GPUs \n"
     message += "The network was saved to " + model_directory + '\n\n'
     emailHandler.prepareMessage(now.strftime('%Y-%m-%d') + " MRIMath Update: Network Training Finished!", message);
-    emailHandler.sendMessage(["Danny", "Dr.Rasool", "Dr.Bouaynaya"])
+    emailHandler.sendMessage(["Danny"])
     emailHandler.finish()
 
     
