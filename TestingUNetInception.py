@@ -29,10 +29,11 @@ from keras.utils.training_utils import multi_gpu_model
 
 def step_decay(epoch):
     initial_lrate = 0.1
-    drop = 0.5
-    epochs_drop = 10.0
-    lrate = initial_lrate * math.pow(drop,  
-           math.floor((1+epoch)/epochs_drop))
+    #drop = 0.5
+    epochs_drop = 20.0
+    lrate = initial_lrate * math.exp(-math.floor((1+epoch)/epochs_drop))
+    #lrate = initial_lrate * math.pow(drop,  
+    #       math.floor((1+epoch)/epochs_drop))
     return lrate
 
 def main():
@@ -43,9 +44,9 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 50
-    num_validation_patients = 5
-    num_testing_patients = 5
+    num_training_patients = 200
+    num_validation_patients = 10
+    num_testing_patients = 10
     
     data_gen = None
     modes = ["flair", "t1ce", "t2", "t1"]
@@ -102,7 +103,7 @@ def main():
     
     n_labels = 1
     normalize = True
-    augmentations = False
+    augmentations = True
     
     if n_labels > 1:
         output_mode = "softmax"
