@@ -122,6 +122,8 @@ def main():
         unet = createUNetInception(input_shape, output_mode, n_labels)
 
         
+    if numGPUs > 1:
+        unet = multi_gpu_model(unet, numGPUs)
     
     num_epochs = 100
     #lrate = 1e-3
@@ -153,9 +155,6 @@ def main():
     model_info_file.write('\n\n')
     unet.summary(print_fn=lambda x: model_info_file.write(x + '\n'))
     model_info_file.close();
-    
-    if numGPUs > 1:
-        unet = multi_gpu_model(unet, numGPUs)
     
     print("Training on " + str(numGPUs) + " GPUs")
     unet.fit_generator(generator = data_gen.generate(x_train, 
