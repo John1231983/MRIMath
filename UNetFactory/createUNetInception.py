@@ -68,9 +68,9 @@ def createUNetInception(input_shape = (240,240,1), output_mode="sigmoid", n_labe
     
     up9 = Convolution2DTranspose(numFilters,(2,2),strides=(2,2), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv8)
     merge9 =concatenate([conv1,up9],axis=3)
-    conv9 = inceptionModule(merge9, numFilters)
+    #conv9 = inceptionModule(merge9, numFilters)
     
-    conv9 = Convolution2D(numFilters, (3,3), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv9)
+    conv9 = Convolution2D(numFilters, (3,3), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(merge9)
     conv9 = BatchNormalization()(conv9)
     conv9 = Activation("relu")(conv9)
     

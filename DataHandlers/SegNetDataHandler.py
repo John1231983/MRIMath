@@ -78,7 +78,6 @@ class SegNetDataHandler(DataHandler):
         seg_img = cv2.resize(seg_img, 
                      dsize=(self.W, self.H), 
                      interpolation=cv2.INTER_LINEAR)
-
         return img, seg_img
                     
                         
@@ -156,22 +155,15 @@ class SegNetDataHandler(DataHandler):
         return self.labels[0].shape[1]
     
     def preprocessForNetwork(self):
-        
-        pool = Pool(processes=5)
-        self.X = pool.map(self.preprocessData, self.X)
-        pool.close()
-        pool.join()
-        """
         n_imgs = len(self.X)
-        #self.X = np.array(self.X)
-        
+        for label in self.labels:
+            label[label > 0] = 1
+        self.labels = [label.reshape(label.shape[0] * label.shape[1]) for label in self.labels]
+        self.X = np.array(self.X)
+        self.labels = np.array(self.labels)
         # z-score norm
         sigma = np.std(self.X)
         mu = np.mean(self.X)
         self.X = (self.X - mu)/sigma
-        
-        
         self.X = self.X.reshape(n_imgs,self.W, self.H,len(self.modes))
-        """
-        #self.labels = [label.reshape(label.shape[0] * label.shape[1]) for label in self.labels]
-        #self.labels = np.array( self.labels )
+ 

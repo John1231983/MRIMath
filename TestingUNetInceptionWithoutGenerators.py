@@ -21,33 +21,15 @@ from random import  shuffle
 import shutil
 import math
 from keras.optimizers import Adam
-from Utils.HardwareHandler import HardwareHandler
-from Utils.EmailHandler import EmailHandler
-import tensorflow as tf
-from keras.utils.training_utils import multi_gpu_model
-
-
-def step_decay(epoch):
-    initial_lrate = 0.1
-    drop = 0.5
-    epochs_drop = 50.0
-    lrate = initial_lrate * math.pow(drop,  
-           math.floor((1+epoch)/epochs_drop))
-    return lrate
 
 def main():
-    
-    hardwareHandler = HardwareHandler()
-    numGPUs = hardwareHandler.getAvailableGPUs() 
-    emailHandler = EmailHandler()
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 200
-    num_validation_patients = 10
-    num_testing_patients = 10
+    num_training_patients = 45
+    num_validation_patients = 5
+    num_testing_patients = 5
     
-    data_gen = None
     modes = ["flair", "t1ce", "t2", "t1"]
     dataDirectory = "Data/BRATS_2018/HGG" 
     validationDataDirectory = "Data/BRATS_2018/HGG_Validation"
@@ -81,6 +63,7 @@ def main():
         
     dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", num_patients = num_training_patients, modes = modes)
     dataHandler.loadData()
+    dataHandler.preprocessForNetwork()
     x_train = dataHandler.X
     x_seg_train = dataHandler.labels
     dataHandler.clear()
@@ -88,6 +71,7 @@ def main():
     dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
     dataHandler.setNumPatients(num_validation_patients)
     dataHandler.loadData()
+    dataHandler.preprocessForNetwork()
     x_val = dataHandler.X
     x_seg_val = dataHandler.labels
     dataHandler.clear()
@@ -101,32 +85,19 @@ def main():
     input_shape = (dataHandler.W,dataHandler.H, len(modes))
     
     n_labels = 1
-    normalize = True
-    augmentations = False
     
     if n_labels > 1:
         output_mode = "softmax"
     else:
         output_mode = "sigmoid"
 
-    if augmentations:
-        data_gen = CustomImageAugmentationGenerator()
-    else:
-        data_gen = CustomImageGenerator()
-
-    if numGPUs > 1:
-        with tf.device('/cpu:0'):
-            unet = createUNetInception(input_shape, output_mode, n_labels)
-    else:
-        unet = createUNetInception(input_shape, output_mode, n_labels)
-
-        
+    
+    unet = createUNetInception(input_shape, output_mode, n_labels)
     
     num_epochs = 500
-    #lrate = 1e-3
-    adam = Adam()
+    lrate = 1e-3
+    adam = Adam(lr = lrate)
     batch_size = 20
-    validation_data_gen = CustomImageGenerator()
 
     if n_labels > 1:
         unet.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
@@ -141,7 +112,6 @@ def main():
     log_info_filename = 'model_loss_log.csv'
     csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=',')
     
-    lrate_scheduler = LearningRateScheduler(step_decay)
 
     ## Log additional data about model
     ## Note: should be in a logging class
@@ -153,47 +123,21 @@ def main():
     unet.summary(print_fn=lambda x: model_info_file.write(x + '\n'))
     model_info_file.close();
     
-    if numGPUs > 1:
-        unet = multi_gpu_model(unet, numGPUs)
-    
-    print("Training on " + str(numGPUs) + " GPUs")
-    unet.fit_generator(generator = data_gen.generate(x_train, 
-                                                       x_seg_train, 
-                                                       batch_size, 
-                                                       n_labels,
-                                                       normalize), 
-                         epochs = num_epochs,
-                         steps_per_epoch = len(x_train) / batch_size, 
-                         callbacks = [csv_logger, lrate_scheduler], 
-                         use_multiprocessing = True, 
-                         workers = 4,
-                         shuffle=True,
-                         validation_steps= len(x_val) / batch_size,
-                         validation_data = validation_data_gen.generate(x_val, 
-                                                                        x_seg_val, 
-                                                                        batch_size, 
-                                                                        n_labels, 
-                                                                        normalize))
+    unet.fit(x_train, 
+             x_seg_train, 
+             batch_size = batch_size, 
+             epochs = num_epochs,
+             callbacks = [csv_logger], 
+             validation_data = (x_val, x_seg_val),
+             shuffle = True)
     
    
 
     unet.save(model_directory + '/model.h5')
     
-    emailHandler.connectToServer()
-    message = "Finished training network at " + str(datetime.now()) + '\n\n'
-    message += 'The network was trained on ' + str(num_training_patients) + ' patients \n\n'
-    message += 'The network was validated on ' + str(num_validation_patients) + ' patients \n\n'
-    message += "The network was trained for " + str(num_epochs) + " epochs with a batch size of " + str(batch_size) + '\n\n'
-    message += "The network was trained on " + str(numGPUs) + " GPUs \n"
-    message += "The network was saved to " + model_directory + '\n\n'
-    emailHandler.prepareMessage(now.strftime('%Y-%m-%d') + " MRIMath Update: Network Training Finished!", message);
-    emailHandler.sendMessage(["Danny", "Dr.Rasool", "Dr.Bouaynaya"])
-    emailHandler.finish()
-
-    
     
     # show results 
-    resultPlot = genfromtxt(model_directory + '/' + log_info_filename, delimiter=',')
+    resultPlot = genfromtxt(model_directory + '/' + log_info_filename)
     plt.plot(resultPlot[:,1], label = "Training")
     plt.plot(resultPlot[:,3], label = "Validation")
     plt.xlabel("Epochs")
