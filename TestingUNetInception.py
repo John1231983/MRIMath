@@ -125,7 +125,7 @@ def main():
     if numGPUs > 1:
         unet = multi_gpu_model(unet, numGPUs)
     
-    num_epochs = 100
+    num_epochs = 500
     #lrate = 1e-3
     adam = Adam()
     batch_size = 20
@@ -187,7 +187,7 @@ def main():
     message += "The network was trained on " + str(numGPUs) + " GPUs \n"
     message += "The network was saved to " + model_directory + '\n\n'
     emailHandler.prepareMessage(now.strftime('%Y-%m-%d') + " MRIMath Update: Network Training Finished!", message);
-    emailHandler.sendMessage(["Danny", "Dr.Rasool", "Dr.Bouaynaya"])
+    emailHandler.sendMessage(["Danny", "Dr.Rasool", "Dr.Bouaynaya", "Dr.Hassan"])
     emailHandler.finish()
 
     
