@@ -103,7 +103,7 @@ def main():
     
     n_labels = 1
     normalize = True
-    augmentations = True
+    augmentations = False
     
     if n_labels > 1:
         output_mode = "softmax"
