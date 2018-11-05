@@ -103,7 +103,7 @@ def main():
     
     n_labels = 1
     normalize = True
-    augmentations = False
+    augmentations = True
     
     if n_labels > 1:
         output_mode = "softmax"
@@ -125,7 +125,7 @@ def main():
     if numGPUs > 1:
         unet = multi_gpu_model(unet, numGPUs)
     
-    num_epochs = 500
+    num_epochs = 100
     #lrate = 1e-3
     adam = Adam()
     batch_size = 20
@@ -176,9 +176,10 @@ def main():
                                                                         normalize))
     
    
-
-    unet.save(model_directory + '/model.h5')
-    
+    unet_to_save = createUNetInception(input_shape, output_mode, n_labels)
+    unet_to_save.set_weights(unet.get_weights())
+    unet_to_save.save(model_directory + '/model.h5')
+    """
     emailHandler.connectToServer()
     message = "Finished training network at " + str(datetime.now()) + '\n\n'
     message += 'The network was trained on ' + str(num_training_patients) + ' patients \n\n'
@@ -201,6 +202,7 @@ def main():
     plt.title("Inception U-Net Dice Coefficient")
     plt.legend()
     plt.show()
+    """
     
     
 
