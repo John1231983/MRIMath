@@ -187,7 +187,7 @@ def main():
     message += "The network was trained on " + str(numGPUs) + " GPUs \n"
     message += "The network was saved to " + model_directory + '\n\n'
     emailHandler.prepareMessage(now.strftime('%Y-%m-%d') + " MRIMath Update: Network Training Finished!", message);
-    emailHandler.sendMessage(["Danny"])
+    emailHandler.sendMessage(["Danny", "Dr.Rasool", "Dr.Bouaynaya"])
     emailHandler.finish()
 
     
