@@ -44,9 +44,9 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 200
-    num_validation_patients = 10
-    num_testing_patients = 10
+    num_training_patients = 1
+    num_validation_patients = 1
+    num_testing_patients = 1
     
     data_gen = None
     modes = ["flair", "t1ce", "t2", "t1"]
@@ -114,27 +114,32 @@ def main():
         data_gen = CustomImageAugmentationGenerator()
     else:
         data_gen = CustomImageGenerator()
-
+        
+    num_epochs = 1
+    #lrate = 1e-3
+    adam = Adam()
+    batch_size = 32
+    validation_data_gen = CustomImageGenerator()
+    
     if numGPUs > 1:
         with tf.device('/cpu:0'):
-            unet = createUNetInception(input_shape, output_mode, n_labels)
+            unet_to_save = createUNetInception(input_shape, output_mode, n_labels)
+        unet = multi_gpu_model(unet_to_save, numGPUs)
     else:
         unet = createUNetInception(input_shape, output_mode, n_labels)
 
         
-    if numGPUs > 1:
-        unet = multi_gpu_model(unet, numGPUs)
-    
-    num_epochs = 100
-    #lrate = 1e-3
-    adam = Adam()
-    batch_size = 20
-    validation_data_gen = CustomImageGenerator()
 
     if n_labels > 1:
         unet.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
+        if numGPUs > 1:
+            unet_to_save.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
+
     else:
         unet.compile(optimizer=adam, loss=dice_coef_loss, metrics=[dice_coef])
+        if numGPUs > 1:
+            unet_to_save.compile(optimizer=adam, loss=dice_coef_loss, metrics=[dice_coef])
+
 
 
     model_directory = "Models/unet_" + date_string 
@@ -175,10 +180,12 @@ def main():
                                                                         n_labels, 
                                                                         normalize))
     
-   
-    unet_to_save = createUNetInception(input_shape, output_mode, n_labels)
-    unet_to_save.set_weights(unet.get_weights())
-    unet_to_save.save(model_directory + '/model.h5')
+    
+    if numGPUs > 1:
+        unet_to_save.save(model_directory + '/model.h5')
+    else:
+        unet.save(model_directory + '/model.h5')
+
     """
     emailHandler.connectToServer()
     message = "Finished training network at " + str(datetime.now()) + '\n\n'
