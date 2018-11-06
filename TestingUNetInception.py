@@ -40,13 +40,12 @@ def main():
     
     hardwareHandler = HardwareHandler()
     numGPUs = hardwareHandler.getAvailableGPUs() 
-    emailHandler = EmailHandler()
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 1
-    num_validation_patients = 1
-    num_testing_patients = 1
+    num_training_patients = 200
+    num_validation_patients = 10
+    num_testing_patients = 10
     
     data_gen = None
     modes = ["flair", "t1ce", "t2", "t1"]
@@ -83,6 +82,7 @@ def main():
     dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", num_patients = num_training_patients, modes = modes)
     dataHandler.loadData()
     x_train = dataHandler.X
+    x_train = [dataHandler.windowIntensity(x) for x in x_train]
     x_seg_train = dataHandler.labels
     dataHandler.clear()
     
@@ -90,6 +90,7 @@ def main():
     dataHandler.setNumPatients(num_validation_patients)
     dataHandler.loadData()
     x_val = dataHandler.X
+    x_val = [dataHandler.windowIntensity(x) for x in x_val]
     x_seg_val = dataHandler.labels
     dataHandler.clear()
     """
@@ -101,9 +102,9 @@ def main():
 
     input_shape = (dataHandler.W,dataHandler.H, len(modes))
     
-    n_labels = 1
+    n_labels = 4
     normalize = True
-    augmentations = True
+    augmentations = False
     
     if n_labels > 1:
         output_mode = "softmax"
@@ -115,10 +116,11 @@ def main():
     else:
         data_gen = CustomImageGenerator()
         
-    num_epochs = 1
-    #lrate = 1e-3
+    num_epochs = 50
+    #lrate = 1e-2
     adam = Adam()
-    batch_size = 32
+    batch_size = 64
+    
     validation_data_gen = CustomImageGenerator()
     
     if numGPUs > 1:

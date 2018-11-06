@@ -40,7 +40,7 @@ def main():
     n_labels = 4
     normalize = True
     modes = ["flair", "t1ce", "t2", "t1"]
-    dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", 
+    dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG_Testing", 
                                     num_patients = num_testing_patients, 
                                     modes = modes)
     dataHandler.loadData()
@@ -49,7 +49,7 @@ def main():
     x_seg_test = dataHandler.labels
     dataHandler.clear()
 
-    unet = load_model("Models/unet_2018-11-05-19:26/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 
+    unet = load_model("Models/unet_2018-11-05-21:06/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 
                                                                                'MaxUnpooling2D':MaxUnpooling2D, 
                                                                                'combinedDiceAndChamfer':combinedDiceAndChamfer,
                                                                                'combinedHausdorffAndDice':  combinedHausdorffAndDice,
