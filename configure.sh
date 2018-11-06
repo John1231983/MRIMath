@@ -24,7 +24,6 @@ if command -v python3 &>/dev/null; then
 else
   python Utils/getBraTS2018Data.py
 fi
-echo "Now to pull down the Mask R-CNN submodule..." 
 echo "Success! You should be good to go! :)" 
 
 
