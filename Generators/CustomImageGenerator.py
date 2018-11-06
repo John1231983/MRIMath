@@ -22,6 +22,10 @@ class CustomImageGenerator(CustomGenerator):
             for x in x_seg:
                 x[x > 0.5] = 1
                 x[x < 0.5] = 0
+        else:
+            ## convert because of the weird labeling scheme
+            for x in x_seg:
+                x[x == 4] = 3
                     
         if normalize:
             x_train = [(x-mu)/sigma for x in x_train]   
@@ -35,7 +39,6 @@ class CustomImageGenerator(CustomGenerator):
                 batch_imgs, batch_labels = zip(*[(x_train_shuffled[j], x_seg_shuffled[j]) for j in range(i*batch_size, (i+1)*batch_size)])
                 batch_imgs = np.array(batch_imgs)
                 batch_labels = np.array(batch_labels)
-                
                 if n_labels > 1:
                     batch_labels = np_utils.to_categorical(batch_labels)
 

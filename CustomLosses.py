@@ -39,7 +39,7 @@ def dice_coef_multilabel(y_true, y_pred, numLabels=4):
     return dice/numLabels
 
 def dice_coef_multilabel_loss(y_true, y_pred):
-    return 1 - dice_coef_multilabel(y_true, y_pred)
+    return -tf.log(dice_coef_multilabel(y_true, y_pred))
 
 def iou(y_true, y_pred):
     y_true = K.flatten(y_true)
