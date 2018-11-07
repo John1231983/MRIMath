@@ -48,7 +48,7 @@ def main():
     num_testing_patients = 10
     
     data_gen = None
-    modes = ["flair", "t1ce", "t2"]
+    modes = ["flair", "t1ce"]
     dataDirectory = "Data/BRATS_2018/HGG" 
     validationDataDirectory = "Data/BRATS_2018/HGG_Validation"
     testingDataDirectory = "Data/BRATS_2018/HGG_Testing"
@@ -104,7 +104,7 @@ def main():
     
     n_labels = 4
     normalize = True
-    augmentations = False
+    augmentations = True
     
     if n_labels > 1:
         output_mode = "softmax"
