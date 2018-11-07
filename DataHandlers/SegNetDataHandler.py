@@ -73,6 +73,7 @@ class SegNetDataHandler(DataHandler):
         for j,mode in enumerate(self.modes):
             #current_img = self.windowIntensity(foo[mode][:,:,i])
             img[:,:,j], rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
+
                 
         
         seg_img = seg_image[:,:,i]
