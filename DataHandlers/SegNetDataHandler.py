@@ -71,7 +71,9 @@ class SegNetDataHandler(DataHandler):
     def resizeImages(self, foo, seg_image, i):
         img = np.zeros((self.W, self.H, len(self.modes)))
         for j,mode in enumerate(self.modes):
-            img[:,:,j], rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
+            current_img = self.windowIntensity(foo[mode][:,:,i])
+            img[:,:,j], rmin, rmax, cmin, cmax = self.processImage(current_img)
+                
         
         seg_img = seg_image[:,:,i]
         seg_img = seg_img[rmin:rmax, cmin:cmax]

@@ -48,7 +48,7 @@ def main():
     num_testing_patients = 10
     
     data_gen = None
-    modes = ["flair", "t1ce", "t2", "t1"]
+    modes = ["flair", "t1ce", "t2"]
     dataDirectory = "Data/BRATS_2018/HGG" 
     validationDataDirectory = "Data/BRATS_2018/HGG_Validation"
     testingDataDirectory = "Data/BRATS_2018/HGG_Testing"
@@ -82,7 +82,6 @@ def main():
     dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", num_patients = num_training_patients, modes = modes)
     dataHandler.loadData()
     x_train = dataHandler.X
-    x_train = [dataHandler.windowIntensity(x) for x in x_train]
     x_seg_train = dataHandler.labels
     dataHandler.clear()
     
@@ -90,7 +89,6 @@ def main():
     dataHandler.setNumPatients(num_validation_patients)
     dataHandler.loadData()
     x_val = dataHandler.X
-    x_val = [dataHandler.windowIntensity(x) for x in x_val]
     x_seg_val = dataHandler.labels
     dataHandler.clear()
     """
