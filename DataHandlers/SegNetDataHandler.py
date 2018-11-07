@@ -72,9 +72,8 @@ class SegNetDataHandler(DataHandler):
         img = np.zeros((self.W, self.H, len(self.modes)))
         for j,mode in enumerate(self.modes):
             #current_img = self.windowIntensity(foo[mode][:,:,i])
-            if mode is "flair":
-                foo[mode][:,:,i] = self.windowIntensity(foo[mode][:,:,i])
             img[:,:,j], rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
+
                 
         
         seg_img = seg_image[:,:,i]

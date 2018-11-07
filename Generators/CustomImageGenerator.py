@@ -14,8 +14,9 @@ class CustomImageGenerator(CustomGenerator):
     
     def generate(self, x_train, x_seg, batch_size, n_labels, normalize = True):
         
-        mu = np.mean(np.array(x_train))
-        sigma = np.std(np.array(x_train))   
+        
+        mu = [np.mean(np.array(x_train), axis = i) for i in x_train.shape[3]]
+        sigma = [np.std(np.array(x_train), axis = i) for i in x_train.shape[3]]   
         x_seg = [label.reshape(label.shape[0] * label.shape[1]) for label in x_seg]
             
         if n_labels == 1:
@@ -29,7 +30,10 @@ class CustomImageGenerator(CustomGenerator):
                 x[x == 4] = 3
                     
         if normalize:
-            x_train = [(x-mu)/sigma for x in x_train]   
+            for i in x_train.shape[3]:
+                x_train[:,:,:,i] -= mu[i];
+                x_train[:,:,:,i] /= sigma[i]
+            #x_train = [(x-mu)/sigma for x in x_train]   
             
         
         while True:
