@@ -82,6 +82,7 @@ def main():
     dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", num_patients = num_training_patients, modes = modes)
     dataHandler.loadData()
     x_train = dataHandler.X
+    x_train = [dataHandler.windowIntensity(x) for x in x_train]
     x_seg_train = dataHandler.labels
     dataHandler.clear()
     
@@ -89,6 +90,7 @@ def main():
     dataHandler.setNumPatients(num_validation_patients)
     dataHandler.loadData()
     x_val = dataHandler.X
+    x_val = [dataHandler.windowIntensity(x) for x in x_val]
     x_seg_val = dataHandler.labels
     dataHandler.clear()
     """
