@@ -25,6 +25,7 @@ class CustomImageGenerator(CustomGenerator):
         else:
             ## convert because of the weird labeling scheme
             for x in x_seg:
+                x = np.rint(x)
                 x[x == 4] = 3
                     
         if normalize:
