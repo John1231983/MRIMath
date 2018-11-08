@@ -71,7 +71,6 @@ class SegNetDataHandler(DataHandler):
     def resizeImages(self, foo, seg_image, i):
         img = np.zeros((self.W, self.H, len(self.modes)))
         for j,mode in enumerate(self.modes):
-            #current_img = self.windowIntensity(foo[mode][:,:,i])
             img[:,:,j], rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
 
                 
@@ -92,59 +91,7 @@ class SegNetDataHandler(DataHandler):
         resized_image = cv2.resize(image, dsize=(self.W, self.H), interpolation=cv2.INTER_LINEAR)
         return resized_image, rmin, rmax, cmin, cmax
     
-    def applyHMRF(self, img):
-        hmrf = TissueClassifierHMRF(verbose=False)
-        _, _, PVE = hmrf.classify(img, nclasses=3, beta=0.1)
-        PVE = np.squeeze(PVE)
-        white_matter = PVE[:,:,2:3]        
-        csf = PVE[:,:,0:1]
 
-        #return img*white_matter
-        return img*white_matter
-        #return img*white_matter# + img*csf
-    
-        """
-        fig = plt.figure()
-        
-        a = fig.add_subplot(2, 3, 1)
-        plt.imshow(np.squeeze(img), cmap="gray")
-        a.set_title('Original')
-        plt.axis('off')
-        
-        a = fig.add_subplot(2, 3, 2)
-        plt.imshow(np.squeeze(med_img), cmap="gray")
-        a.set_title('Median Otsu')
-        plt.axis('off')
-
-        PVE = np.squeeze(PVE)
-        a = fig.add_subplot(2, 3, 4)
-        plt.imshow(PVE[:,:,0], cmap="gray")
-        a.set_title('CSF')
-        plt.axis('off')
-
-        a = fig.add_subplot(2, 3, 5)
-        plt.imshow(PVE[:,:,1], cmap="gray")
-        a.set_title('Gray Matter')
-        plt.axis('off')
-        
-        a = fig.add_subplot(2, 3, 6)
-        plt.imshow(white_matter,cmap="gray")
-        a.set_title('White Matter')
-        plt.axis('off')
-        
-        plt.show()
-        
-        """
-        
-        
-        
-        #return np.squeeze(PVE)
-
-    def preprocessData(self, img):
-        ### preprocessing HMRF
-        img = self.windowIntensity(img)
-        #img = self.applyHMRF(img)
-        return img
 
     
     def setMode(self, mode):

@@ -13,11 +13,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import directed_hausdorff
 import random
-
+from sklearn.utils.extmath import cartesian
+import math
 
 sess = tf.Session()
 K.set_session(sess)
 g = K.get_session().graph
+W = 128
+H = 128
+all_img_locations = tf.convert_to_tensor(cartesian([np.arange(W), np.arange(H)]), dtype=tf.float32)
+n_pixels = W *H
+eps = 1e-6
+alpha = 4
+max_dist = math.sqrt(W**2 + H**2)
 
 def dice_coef(y_true, y_pred, smooth=1e-3):        
     y_true_f = K.flatten(y_true)
@@ -155,7 +163,7 @@ def hausdorff_dist(y_true, y_pred):
 def hausdorff_dist_multilabel(y_true, y_pred, numLabels=4):
     d_h=0
     for index in range(numLabels):
-        d_h += hausdorff_dist(y_true[:,:,index], y_pred[:,:,index])
+        d_h += computeHausdorffDistance(y_true[:,:,index], y_pred[:,:,index])
     return d_h
 
         
@@ -208,14 +216,14 @@ def combinedHausdorffAndDice(y_true,y_pred):
     alpha = 0.5
     beta = 1 - alpha
     dice = dice_coef_loss(y_true, y_pred)
-    hd = hausdorff_dist(y_true, y_pred)
+    hd = computeHausdorffianLoss(y_true, y_pred)
     return alpha*dice + beta*hd
 
 def combinedHausdorffAndDiceMultilabel(y_true, y_pred):
     alpha = 0.5
     beta = 1 - alpha
     dice = dice_coef_multilabel_loss(y_true, y_pred)
-    hd = hausdorff_dist_multilabel(y_true, y_pred)
+    hd = computeHausdorffianLossMultilabel(y_true, y_pred)
     return alpha*dice + beta*hd
 
 def combinedDiceAndChamfer(y_true, y_pred):
@@ -232,5 +240,55 @@ def combinedDiceAndChamferMultilabel(y_true, y_pred):
     dice = dice_coef_multilabel_loss(y_true, y_pred)
     cd = chamfer_dist_multilabel(y_true, y_pred)
     return alpha*dice + beta*cd
+
+def cdist (A, B):  
+
+    # squared norms of each row in A and B
+    na = tf.reduce_sum(tf.square(A), 1)
+    nb = tf.reduce_sum(tf.square(B), 1)
+    
+    # na as a row and nb as a co"lumn vectors
+    na = tf.reshape(na, [-1, 1])
+    nb = tf.reshape(nb, [1, -1])
+    
+    # return pairwise euclidead difference matrix
+    D = tf.sqrt(tf.maximum(na - 2*tf.matmul(A, B, False, True) + nb, 0.0))
+    return D
+      
+
+
+def computeHausdorffianLoss(y_true, y_pred):
+    batched_losses = tf.map_fn(lambda x: 
+                computeHausdorffDistance(x[0], x[1]), 
+                (y_true, y_pred), 
+                dtype=tf.float32)
+    return K.mean(tf.stack(batched_losses))
+    
+def computeHausdorffDistance(y_true, y_pred):
+        y_true = K.reshape(y_true, [W,H])
+        gt_points = K.cast(tf.where(y_true > 0.5), dtype = tf.float32)
+        num_gt_points = gt_points.shape[0]
+        print(num_gt_points)
+        
+        p = tf.transpose(y_pred)
+        p_replicated = 1
+        
+        d_matrix = cdist(all_img_locations, gt_points)
+        num_est_pts = tf.reduce_sum(p)
+        term_1 = (1 / (num_est_pts + eps)) * K.sum(p * K.min(d_matrix, 1))
+        
+
+        
+        d_div_p = K.min((d_matrix + eps) / (p_replicated + (eps / max_dist)), 0)
+        d_div_p = K.clip(d_div_p, 0, max_dist)
+        term_2 = K.mean(d_div_p, axis=0)  
+        
+        return term_1 + term_2
+    
+def computeHausdorffianLossMultilabel(y_true, y_pred, numLabels=4):
+    d_h=0
+    for index in range(numLabels):
+        d_h += computeHausdorffDistance(y_true[:,:,index], y_pred[:,:,index])
+    return d_h
 
 

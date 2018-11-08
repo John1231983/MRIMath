@@ -14,7 +14,7 @@ from UNetFactory.createUNetInception import createUNetInception
 from DataHandlers.SegNetDataHandler import SegNetDataHandler
 
 from keras.callbacks import CSVLogger, LearningRateScheduler
-from CustomLosses import dice_coef, dice_coef_loss, dice_coef_multilabel, dice_coef_multilabel_loss
+from CustomLosses import dice_coef, dice_coef_loss, dice_coef_multilabel, dice_coef_multilabel_loss, combinedHausdorffAndDiceMultilabel,combinedHausdorffAndDice,computeHausdorffianLoss
 from Generators.CustomImageAugmentationGenerator import CustomImageAugmentationGenerator
 from Generators.CustomImageGenerator import CustomImageGenerator
 from random import  shuffle
@@ -48,7 +48,8 @@ def main():
     num_testing_patients = 10
     
     data_gen = None
-    modes = ["flair", "t1ce"]
+    modes = ["flair", "t1ce", "t2"]
+    
     dataDirectory = "Data/BRATS_2018/HGG" 
     validationDataDirectory = "Data/BRATS_2018/HGG_Validation"
     testingDataDirectory = "Data/BRATS_2018/HGG_Testing"
@@ -82,7 +83,6 @@ def main():
     dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", num_patients = num_training_patients, modes = modes)
     dataHandler.loadData()
     x_train = dataHandler.X
-    x_train = [dataHandler.windowIntensity(x) for x in x_train]
     x_seg_train = dataHandler.labels
     dataHandler.clear()
     
@@ -90,7 +90,6 @@ def main():
     dataHandler.setNumPatients(num_validation_patients)
     dataHandler.loadData()
     x_val = dataHandler.X
-    x_val = [dataHandler.windowIntensity(x) for x in x_val]
     x_seg_val = dataHandler.labels
     dataHandler.clear()
     """
@@ -102,7 +101,7 @@ def main():
 
     input_shape = (dataHandler.W,dataHandler.H, len(modes))
     
-    n_labels = 4
+    n_labels = 1
     normalize = True
     augmentations = False
     
@@ -119,7 +118,7 @@ def main():
     num_epochs = 100
     #lrate = 1e-2
     adam = Adam()
-    batch_size = 128
+    batch_size = 64
     
     validation_data_gen = CustomImageGenerator()
     
@@ -133,14 +132,14 @@ def main():
         
 
     if n_labels > 1:
-        unet.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
+        unet.compile(optimizer=adam, loss=combinedHausdorffAndDiceMultilabel, metrics=[dice_coef_multilabel])
         if numGPUs > 1:
-            unet_to_save.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
+            unet_to_save.compile(optimizer=adam, loss=combinedHausdorffAndDiceMultilabel, metrics=[dice_coef_multilabel])
 
     else:
-        unet.compile(optimizer=adam, loss=dice_coef_loss, metrics=[dice_coef])
+        unet.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef])
         if numGPUs > 1:
-            unet_to_save.compile(optimizer=adam, loss=dice_coef_loss, metrics=[dice_coef])
+            unet_to_save.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef])
 
 
 
