@@ -12,7 +12,7 @@ from UNetFactory.createUNetInception import createUNetInception
 from DataHandlers.SegNetDataHandler import SegNetDataHandler
 
 from keras.callbacks import CSVLogger, LearningRateScheduler
-from CustomLosses import dice_coef, dice_coef_loss, dice_coef_multilabel, dice_coef_multilabel_loss
+from CustomLosses import dice_coef, dice_coef_loss, dice_coef_multilabel, dice_coef_multilabel_loss, combinedHausdorffAndDice
 from Generators.CustomImageAugmentationGenerator import CustomImageAugmentationGenerator
 from Generators.CustomImageGenerator import CustomImageGenerator
 from random import  shuffle
@@ -41,9 +41,9 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 1
-    num_validation_patients = 1
-    num_testing_patients = 1
+    num_training_patients = 200
+    num_validation_patients = 10
+    num_testing_patients = 0
     
     data_gen = None
     modes = ["flair", "t1ce", "t2"]
@@ -135,9 +135,9 @@ def main():
             unet_to_save.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
 
     else:
-        unet.compile(optimizer=adam, loss=dice_coef_loss, metrics=[dice_coef])
+        unet.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef])
         if numGPUs > 1:
-            unet_to_save.compile(optimizer=adam, loss=dice_coef_loss, metrics=[dice_coef])
+            unet_to_save.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef])
 
 
 
@@ -168,7 +168,7 @@ def main():
                                                        normalize), 
                          epochs = num_epochs,
                          steps_per_epoch = len(x_train) / batch_size, 
-                         callbacks = [csv_logger, lrate_scheduler], 
+                         callbacks = [csv_logger], 
                          use_multiprocessing = True, 
                          workers = 4,
                          shuffle=True,
