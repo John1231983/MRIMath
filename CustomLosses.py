@@ -24,7 +24,7 @@ H = 128
 all_img_locations = tf.convert_to_tensor(cartesian([np.arange(W), np.arange(H)]), dtype=tf.float32)
 n_pixels = W *H
 eps = 1e-6
-alpha = 4
+alpha = 2
 max_dist = math.sqrt(W**2 + H**2)
 
 def dice_coef(y_true, y_pred, smooth=1e-3):        
@@ -128,45 +128,7 @@ def _EDTGrad(op, grad):
 def _ContourGrad(op, grad):
     return 0*op.inputs[0]   
 
-def hausdorff_dist(y_true, y_pred):
-    
-    y_true = K.reshape(y_true, [K.tf.shape(y_true)[0],128,128])
-    y_pred = K.reshape(y_pred, [K.tf.shape(y_pred)[0],128,128])
-    y_true_shape = y_true.get_shape()
-    y_pred_shape = y_pred.get_shape()
-    
-    y_true = py_func(computeEDT, 
-                [y_true], 
-                [tf.float32], 
-                name = "edt", 
-                grad=_EDTGrad)[0]
-    
-    y_pred = py_func(computeContour, 
-            [y_pred], 
-            [tf.float32], 
-            name = "contour", 
-            grad=_ContourGrad)[0]
-    
-    y_true.set_shape(y_true_shape)
-    y_pred.set_shape(y_pred_shape)
 
-    hausdorffDistance = y_pred * y_true
-    hausdorffDistance = tf.map_fn(lambda x: 
-                                        K.max(x), 
-                                        hausdorffDistance, 
-                                        dtype=tf.float32)
-
-    hausdorffDistance = K.mean(hausdorffDistance)
-    
-    return hausdorffDistance
-
-def hausdorff_dist_multilabel(y_true, y_pred, numLabels=4):
-    d_h=0
-    for index in range(numLabels):
-        d_h += computeHausdorffDistance(y_true[:,:,index], y_pred[:,:,index])
-    return d_h
-
-        
 def chamfer_dist(y_true, y_pred):
     
     y_true = K.reshape(y_true, [K.tf.shape(y_true)[0],128,128])
@@ -244,14 +206,14 @@ def cdist (A, B):
       
 
 
-def computeHausdorffianLoss(y_true, y_pred):
+def hausdorff_dist_loss(y_true, y_pred):
     batched_losses = tf.map_fn(lambda x: 
-                computeHausdorffDistance(x[0], x[1]), 
+                hausdorff_dist(x[0], x[1]), 
                 (y_true, y_pred), 
                 dtype=tf.float32)
     return K.mean(tf.log(tf.stack(batched_losses)))
     
-def computeHausdorffDistance(y_true, y_pred):
+def hausdorff_dist(y_true, y_pred):
         
     y_true = K.reshape(y_true, [W,H])
     gt_points = K.cast(tf.where(y_true > 0.5), dtype = tf.float32)
@@ -277,5 +239,5 @@ def combinedHausdorffAndDice(y_true,y_pred):
     alpha = 0.5
     beta = 1 - alpha
     dice = dice_coef_loss(y_true, y_pred)
-    hd = computeHausdorffianLoss(y_true, y_pred)
+    hd = hausdorff_dist_loss(y_true, y_pred)
     return alpha*dice + beta*hd
