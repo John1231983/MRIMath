@@ -86,7 +86,7 @@ class CustomImageAugmentationGenerator(CustomGenerator):
                     augmented_data.append(aug_img)
                 (aug_batch_imgs, aug_batch_labels) = zip(*augmented_data)
                 
-                aug_batch_labels = [label.reshape(label.shape[0] * label.shape[1]) for label in aug_batch_labels]
+                #aug_batch_labels = [label.reshape(label.shape[0] * label.shape[1]) for label in aug_batch_labels]
                 aug_batch_labels = np.array(aug_batch_labels)
                 aug_batch_imgs = np.array(aug_batch_imgs)
                 

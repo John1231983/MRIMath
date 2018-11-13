@@ -39,7 +39,7 @@ def dice_coef(y_true, y_pred, smooth=1e-3):
 def dice_coef_loss(y_true, y_pred):
     return -tf.log(dice_coef(y_true, y_pred))
 
-def dice_coef_multilabel(y_true, y_pred, numLabels=4):
+def dice_coef_multilabel(y_true, y_pred, numLabels=5):
     dice=0
     for index in range(numLabels):
         dice += dice_coef(y_true[:,:,index], y_pred[:,:,index])

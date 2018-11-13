@@ -99,7 +99,7 @@ def main():
 
     input_shape = (dataHandler.W,dataHandler.H, len(modes))
     
-    n_labels = 1
+    n_labels = 4
     normalize = True
     augmentations = False
     
@@ -113,7 +113,7 @@ def main():
     else:
         data_gen = CustomImageGenerator()
         
-    num_epochs = 100
+    num_epochs = 10
     #lrate = 1e-2
     adam = Adam()
     batch_size = 16

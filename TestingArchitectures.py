@@ -37,10 +37,10 @@ def main():
 
     
     num_testing_patients = 10
-    n_labels = 4
+    n_labels = 5
     normalize = True
-    modes = ["flair", "t1ce", "t2", "t1"]
-    dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG_Testing", 
+    modes = ["flair", "t1ce", "t2"]
+    dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", 
                                     num_patients = num_testing_patients, 
                                     modes = modes)
     dataHandler.loadData()
@@ -49,7 +49,7 @@ def main():
     x_seg_test = dataHandler.labels
     dataHandler.clear()
 
-    unet = load_model("Models/unet_2018-11-05-21:06/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 
+    unet = load_model("Models/unet_2018-11-12-19:51/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 
                                                                                'MaxUnpooling2D':MaxUnpooling2D, 
                                                                                'combinedDiceAndChamfer':combinedDiceAndChamfer,
                                                                                'combinedHausdorffAndDice':  combinedHausdorffAndDice,
@@ -70,7 +70,7 @@ def main():
     if n_labels > 1:
         for x in x_seg_test:
             x[x == 4] = 3
-        decoded_imgs = [np.argmax(x, axis = 1) for x in decoded_imgs]
+        decoded_imgs = [np.argmax(x, axis = 2) for x in decoded_imgs]
     else:
         for x in x_seg_test:
             x[x > 0.5] = 1
@@ -80,7 +80,7 @@ def main():
             x[x < 0.5] = 0
         
 
-    decoded_imgs = [x.reshape(dataHandler.W, dataHandler.W) for x in decoded_imgs]
+    #decoded_imgs = [x.reshape(dataHandler.W, dataHandler.W) for x in decoded_imgs]
 
 
     N = len(decoded_imgs)
@@ -88,13 +88,13 @@ def main():
     
     
     avg_dice = 0
-    
+    """
     for i in range(N):
             foo = decoded_imgs[i].reshape(dataHandler.W, dataHandler.W)
             dice = computeDice(x_seg_test[i], foo)
             avg_dice = avg_dice + dice
     print(str(avg_dice/N))
-    
+    """
     
     for i in range(N):
         fig = plt.figure()
