@@ -76,9 +76,6 @@ def createUNetInception(input_shape = (240,240,1), output_mode="sigmoid", n_labe
     
     conv10 = Convolution2D(n_labels, 1, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv9)
     conv10 = BatchNormalization()(conv10)
-    conv10 = Reshape(
-            (input_shape[0] * input_shape[1], n_labels),
-            input_shape=(input_shape[0], input_shape[1], n_labels))(conv10)
             
     outputs = Activation(output_mode)(conv10)
     model = Model(input = inputs, output = outputs)

@@ -41,9 +41,9 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 200
-    num_validation_patients = 10
-    num_testing_patients = 10
+    num_training_patients = 1
+    num_validation_patients = 1
+    num_testing_patients = 1
     
     data_gen = None
     modes = ["flair", "t1ce", "t2"]
@@ -116,7 +116,7 @@ def main():
     num_epochs = 100
     #lrate = 1e-2
     adam = Adam()
-    batch_size = 64
+    batch_size = 16
     
     validation_data_gen = CustomImageGenerator()
     
