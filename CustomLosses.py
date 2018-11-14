@@ -210,28 +210,28 @@ def hausdorff_dist_loss(y_true, y_pred):
                 hausdorff_dist(x[0], x[1]), 
                 (y_true, y_pred), 
                 dtype=tf.float32)
-    return K.mean(tf.log(batched_losses))
+    return K.mean(tf.log(tf.stack(batched_losses)))
     
 def hausdorff_dist(y_true, y_pred):
         
-    y_true = K.reshape(y_true, [W,H])
-    gt_points = K.cast(tf.where(y_true > 0.5), dtype = tf.float32)
-    num_gt_points = tf.shape(gt_points)[0]
-    
-    y_pred = K.flatten(y_pred)
-    p = y_pred
-    p_replicated = tf.squeeze(K.repeat(tf.expand_dims(p,axis=-1), num_gt_points))
-    
-    d_matrix = cdist(all_img_locations, gt_points)
-    num_est_pts = tf.reduce_sum(p)
-    term_1 = (1 / (num_est_pts + eps)) * K.sum(p * K.min(d_matrix, 1))
-    
-    
-    d_div_p = K.min((d_matrix + eps) / (p_replicated**alpha + (eps / max_dist)), 0)
-    d_div_p = K.clip(d_div_p, 0, max_dist)
-    term_2 = K.mean(d_div_p, axis=0) 
-    
-    return term_1 + term_2
+        y_true = K.reshape(y_true, [W,H])
+        gt_points = K.cast(tf.where(y_true > 0.5), dtype = tf.float32)
+        num_gt_points = tf.shape(gt_points)[0]
+        
+        y_pred = K.flatten(y_pred)
+        p = y_pred
+        p_replicated = tf.squeeze(K.repeat(tf.expand_dims(p,axis=-1), num_gt_points))
+        
+        d_matrix = cdist(all_img_locations, gt_points)
+        num_est_pts = tf.reduce_sum(p)
+        term_1 = (1 / (num_est_pts + eps)) * K.sum(p * K.min(d_matrix, 1))
+        
+        
+        d_div_p = K.min((d_matrix + eps) / (p_replicated**alpha + (eps / max_dist)), 0)
+        d_div_p = K.clip(d_div_p, 0, max_dist)
+        term_2 = K.mean(d_div_p, axis=0) 
+        
+        return term_1 + term_2
 
 
 def combinedHausdorffAndDice(y_true,y_pred):

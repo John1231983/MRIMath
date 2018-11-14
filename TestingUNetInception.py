@@ -12,7 +12,7 @@ from UNetFactory.createUNetInception import createUNetInception
 from DataHandlers.SegNetDataHandler import SegNetDataHandler
 
 from keras.callbacks import CSVLogger, LearningRateScheduler
-from CustomLosses import dice_coef, dice_coef_loss, dice_coef_multilabel, dice_coef_multilabel_loss, hausdorff_dist,combinedHausdorffAndDice
+from CustomLosses import dice_coef, dice_coef_loss, dice_coef_multilabel, dice_coef_multilabel_loss, hausdorff_dist,hausdorff_dist_loss,combinedHausdorffAndDice
 from Generators.CustomImageAugmentationGenerator import CustomImageAugmentationGenerator
 from Generators.CustomImageGenerator import CustomImageGenerator
 from random import  shuffle
@@ -130,14 +130,14 @@ def main():
         
 
     if n_labels > 1:
-        unet.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
+        unet.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel,hausdorff_dist_loss])
         if numGPUs > 1:
-            unet_to_save.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
+            unet_to_save.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel, hausdorff_dist_loss])
 
     else:
-        unet.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef, hausdorff_dist])
+        unet.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef])
         if numGPUs > 1:
-            unet_to_save.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef, hausdorff_dist])
+            unet_to_save.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef])
 
 
 
