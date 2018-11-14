@@ -130,14 +130,14 @@ def main():
         
 
     if n_labels > 1:
-        unet.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel,hausdorff_dist_loss])
+        unet.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
         if numGPUs > 1:
-            unet_to_save.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel, hausdorff_dist_loss])
+            unet_to_save.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
 
     else:
-        unet.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef])
+        unet.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef, hausdorff_dist_loss])
         if numGPUs > 1:
-            unet_to_save.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef])
+            unet_to_save.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef, hausdorff_dist_loss])
 
 
 
