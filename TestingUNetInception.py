@@ -99,7 +99,7 @@ def main():
 
     input_shape = (dataHandler.W,dataHandler.H, len(modes))
     
-    n_labels = 4
+    n_labels = 1
     normalize = True
     augmentations = False
     
