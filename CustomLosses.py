@@ -35,7 +35,6 @@ def dice_coef(y_true, y_pred, smooth=1e-3):
     return dice
     
 
-
 def dice_coef_loss(y_true, y_pred):
     return -tf.log(dice_coef(y_true, y_pred))
 
@@ -211,7 +210,7 @@ def hausdorff_dist_loss(y_true, y_pred):
                 hausdorff_dist(x[0], x[1]), 
                 (y_true, y_pred), 
                 dtype=tf.float32)
-    return K.mean(tf.log(tf.stack(batched_losses)))
+    return K.mean(tf.log(batched_losses))
     
 def hausdorff_dist(y_true, y_pred):
         

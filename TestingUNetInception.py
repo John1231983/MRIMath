@@ -116,7 +116,7 @@ def main():
     num_epochs = 100
     #lrate = 1e-2
     adam = Adam()
-    batch_size = 32
+    batch_size = 2
     
     validation_data_gen = CustomImageGenerator()
     
