@@ -12,7 +12,7 @@ from UNetFactory.createUNetInception import createUNetInception
 from DataHandlers.SegNetDataHandler import SegNetDataHandler
 
 from keras.callbacks import CSVLogger, LearningRateScheduler
-from CustomLosses import dice_coef, dice_coef_loss, dice_coef_multilabel, dice_coef_multilabel_loss, hausdorff_dist,hausdorff_dist_loss,combinedHausdorffAndDice
+from CustomLosses import dice_coef, dice_coef_loss, dice_coef_multilabel, dice_coef_multilabel_loss,avg_hausdorff_distance,combinedHausdorffAndDice
 from Generators.CustomImageAugmentationGenerator import CustomImageAugmentationGenerator
 from Generators.CustomImageGenerator import CustomImageGenerator
 from random import  shuffle
@@ -116,7 +116,7 @@ def main():
     num_epochs = 100
     #lrate = 1e-2
     adam = Adam()
-    batch_size = 32
+    batch_size = 16
     
     validation_data_gen = CustomImageGenerator()
     
@@ -135,9 +135,9 @@ def main():
             unet_to_save.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
 
     else:
-        unet.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef, hausdorff_dist_loss])
+        unet.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef,avg_hausdorff_distance])
         if numGPUs > 1:
-            unet_to_save.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef, hausdorff_dist_loss])
+            unet_to_save.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef,avg_hausdorff_distance])
 
 
 

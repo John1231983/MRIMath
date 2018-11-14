@@ -233,7 +233,13 @@ def hausdorff_dist(y_true, y_pred):
         
         return term_1 + term_2
 
-
+def avg_hausdorff_distance(y_true, y_pred):
+    batched_losses = tf.map_fn(lambda x: 
+            hausdorff_dist(x[0], x[1]), 
+            (y_true, y_pred), 
+            dtype=tf.float32)
+    return K.mean(tf.stack(batched_losses))
+    
 def combinedHausdorffAndDice(y_true,y_pred):
     alpha = 0.5
     beta = 1 - alpha
