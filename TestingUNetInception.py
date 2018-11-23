@@ -113,10 +113,10 @@ def main():
     else:
         data_gen = CustomImageGenerator()
         
-    num_epochs = 100
+    num_epochs = 25
     #lrate = 1e-2
     adam = Adam()
-    batch_size = 16
+    batch_size = 64
     
     validation_data_gen = CustomImageGenerator()
     
@@ -135,9 +135,9 @@ def main():
             unet_to_save.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
 
     else:
-        unet.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef,avg_hausdorff_distance])
+        unet.compile(optimizer=adam, loss=dice_coef_loss, metrics=dice_coef)
         if numGPUs > 1:
-            unet_to_save.compile(optimizer=adam, loss=combinedHausdorffAndDice, metrics=[dice_coef,avg_hausdorff_distance])
+            unet_to_save.compile(optimizer=adam, loss=dice_coef_loss, metrics=dice_coef)
 
 
 

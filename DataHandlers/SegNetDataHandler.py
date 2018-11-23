@@ -74,7 +74,7 @@ class SegNetDataHandler(DataHandler):
             img[:,:,j], rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
 
                 
-        
+        img = self.windowIntensity(img)
         seg_img = seg_image[:,:,i]
         seg_img = seg_img[rmin:rmax, cmin:cmax]
         seg_img = cv2.resize(seg_img, 
