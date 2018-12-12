@@ -15,7 +15,7 @@ class BasicNMFComputer(NMFComputer):
 
     num_iterations = 0
     
-    def __init__(self, block_dim = 20, num_hist_bins = 256, num_components = 8, num_iterations = 50):
+    def __init__(self, block_dim = 8, num_hist_bins = 256, num_components = 8, num_iterations = 50):
         super().__init__(block_dim, num_hist_bins, num_components)
         self.num_iterations = num_iterations
         
