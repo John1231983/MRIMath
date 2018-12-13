@@ -84,7 +84,7 @@ def main():
     validation_data_gen = CustomImageGenerator()
     
     kfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=0)
-    splitted_indices=kfold.split(np.zeros(X.shape[0], Y))
+    splitted_indices=kfold.split(np.zeros(np.array(X).shape[0], Y))
 
 
     for train, test in splitted_indices:
