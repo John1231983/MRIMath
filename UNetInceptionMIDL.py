@@ -30,7 +30,7 @@ import tensorflow as tf
 from keras.utils.training_utils import multi_gpu_model
 from sklearn.model_selection import StratifiedKFold
 import numpy as np
-
+from sklearn.model_selection import KFold
 def step_decay(epoch):
     initial_lrate = 0.1
     #drop = 0.5
@@ -47,7 +47,7 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 210
+    num_training_patients = 1
     
     data_gen = None
     modes = ["flair", "t1ce", "t2"]
@@ -83,11 +83,17 @@ def main():
     
     validation_data_gen = CustomImageGenerator()
     
-    kfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=0)
-    splitted_indices=kfold.split(np.zeros(np.array(X).shape[0], Y))
-
+    kfold = KFold(n_splits=10, shuffle=True, random_state=0)
+    
+    splitted_indices=kfold.split(np.array(X), np.array(Y))
 
     for train, test in splitted_indices:
+        print(train)
+        print(test)
+        x_train = [X[i] for i in train]
+        x_test = [X[i] for i in test]
+        y_train = [Y[i] for i in train]
+        y_test = [Y[i] for i in test]
     
         if numGPUs > 1:
             with tf.device('/cpu:0'):
@@ -129,20 +135,20 @@ def main():
         model_info_file.close();
         
         print("Training on " + str(numGPUs) + " GPUs")
-        unet.fit_generator(generator = data_gen.generate(X[train], 
-                                                           Y[train], 
+        unet.fit_generator(generator = data_gen.generate(x_train, 
+                                                           y_train, 
                                                            batch_size, 
                                                            n_labels,
                                                            normalize), 
                              epochs = num_epochs,
-                             steps_per_epoch = len(X[train]) / batch_size, 
+                             steps_per_epoch = len(x_train) / batch_size, 
                              callbacks = [csv_logger, lrate_scheduler], 
                              use_multiprocessing = True, 
                              workers = 4,
                              shuffle=True,
-                             validation_steps= len(X[test]) / batch_size,
-                             validation_data = validation_data_gen.generate(X[test], 
-                                                                            Y[test], 
+                             validation_steps= len(x_test) / batch_size,
+                             validation_data = validation_data_gen.generate(x_test, 
+                                                                            y_test, 
                                                                             batch_size, 
                                                                             n_labels, 
                                                                             normalize))
