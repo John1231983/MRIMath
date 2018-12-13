@@ -6,15 +6,9 @@ Created on Aug 1, 2018
 from DataHandlers.DataHandler import DataHandler
 import numpy as np
 import cv2
-from keras.utils import np_utils
 import os
 import nibabel as nib
-import matplotlib.pyplot as plt
-from skimage.transform import resize
 import SimpleITK as sitk
-from dipy.segment.tissue import TissueClassifierHMRF
-from multiprocessing import Pool
-from dipy.segment.mask import multi_median, median_otsu
 class SegNetDataHandler(DataHandler):
     modes = None
     mode = None # training, testing, or validation
@@ -65,8 +59,6 @@ class SegNetDataHandler(DataHandler):
             self.labels.extend(labels)
 
 
-                
-                
     
     def resizeImages(self, foo, seg_image, i):
         img = np.zeros((self.W, self.H, len(self.modes)))
@@ -74,7 +66,6 @@ class SegNetDataHandler(DataHandler):
             img[:,:,j], rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
 
                 
-        img = self.windowIntensity(img)
         seg_img = seg_image[:,:,i]
         seg_img = seg_img[rmin:rmax, cmin:cmax]
         seg_img = cv2.resize(seg_img, 

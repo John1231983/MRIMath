@@ -12,7 +12,7 @@ from UNetFactory.createUNetInception import createUNetInception
 from DataHandlers.SegNetDataHandler import SegNetDataHandler
 
 from keras.callbacks import CSVLogger, LearningRateScheduler
-from CustomLosses import dice_coef, dice_coef_loss, dice_coef_multilabel, dice_coef_multilabel_loss,avg_hausdorff_distance,combinedHausdorffAndDice
+from CustomLosses import dice_coef, dice_coef_loss, dice_coef_multilabel, dice_coef_multilabel_loss
 from Generators.CustomImageAugmentationGenerator import CustomImageAugmentationGenerator
 from Generators.CustomImageGenerator import CustomImageGenerator
 from random import  shuffle
@@ -20,7 +20,6 @@ import shutil
 import math
 from keras.optimizers import Adam
 from Utils.HardwareHandler import HardwareHandler
-from Utils.EmailHandler import EmailHandler
 import tensorflow as tf
 from keras.utils.training_utils import multi_gpu_model
 
@@ -35,180 +34,170 @@ def step_decay(epoch):
     return lrate
 
 def main():
-    
-    hardwareHandler = HardwareHandler()
-    numGPUs = hardwareHandler.getAvailableGPUs() 
-    now = datetime.now()
-    date_string = now.strftime('%Y-%m-%d-%H:%M')
-    
-    num_training_patients = 200
-    num_validation_patients = 10
-    num_testing_patients = 0
-    
-    data_gen = None
-    modes = ["flair", "t1ce", "t2"]
-    
-    dataDirectory = "Data/BRATS_2018/HGG" 
-    validationDataDirectory = "Data/BRATS_2018/HGG_Validation"
-    testingDataDirectory = "Data/BRATS_2018/HGG_Testing"
-    modelDirectory = "Models"
-    
-    ## create testing, validation, and model directories
-    if not os.path.exists(validationDataDirectory):
-        os.makedirs(validationDataDirectory)
-    if not os.path.exists(testingDataDirectory):
-        os.makedirs(testingDataDirectory)
-    if not os.path.exists(modelDirectory):
-        os.makedirs(modelDirectory)
-
-    ### Move a random subset of files into validation directory
-    if len(os.listdir(validationDataDirectory)) <= 0:
-        listOfDirs = os.listdir(dataDirectory)
-        shuffle(listOfDirs)
-        validation_data = listOfDirs[0:num_validation_patients]
-        for datum in validation_data:
-            shutil.move(dataDirectory + "/" + datum, validationDataDirectory)
-    
-    ### Move a random subset of files into testing directory
-    if len(os.listdir(testingDataDirectory)) <= 0:
-        listOfDirs = os.listdir(dataDirectory)
-        shuffle(listOfDirs)
-        testing_data = listOfDirs[0:num_testing_patients]
-        for datum in testing_data:
-            shutil.move(dataDirectory + "/" + datum, testingDataDirectory)
+    min_percent = 0
+    max_percent = 100
+    for i in range(1, 51):
         
+        if i % 10 == 0:
+            min_percent = min_percent + 1
+            max_percent = max_percent - 1
+            
+        hardwareHandler = HardwareHandler()
+        numGPUs = hardwareHandler.getAvailableGPUs() 
+        now = datetime.now()
+        date_string = now.strftime('%Y-%m-%d-%H:%M')
         
-    dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", num_patients = num_training_patients, modes = modes)
-    dataHandler.loadData()
-    x_train = dataHandler.X
-    x_seg_train = dataHandler.labels
-    dataHandler.clear()
-    
-    dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
-    dataHandler.setNumPatients(num_validation_patients)
-    dataHandler.loadData()
-    x_val = dataHandler.X
-    x_seg_val = dataHandler.labels
-    dataHandler.clear()
-    """
-    ### Move validation data back to original data directory
-    listOfValidationDirs = os.listdir(validationDataDirectory)
-    for datum in listOfValidationDirs:
-        shutil.move(validationDataDirectory + "/" + datum, dataDirectory)
-    """
-
-    input_shape = (dataHandler.W,dataHandler.H, len(modes))
-    
-    n_labels = 1
-    normalize = True
-    augmentations = False
-    
-    if n_labels > 1:
-        output_mode = "softmax"
-    else:
-        output_mode = "sigmoid"
-
-    if augmentations:
-        data_gen = CustomImageAugmentationGenerator()
-    else:
-        data_gen = CustomImageGenerator()
+        num_training_patients = 200
+        num_validation_patients = 10
+        num_testing_patients = 0
         
-    num_epochs = 25
-    #lrate = 1e-2
-    adam = Adam()
-    batch_size = 64
-    
-    validation_data_gen = CustomImageGenerator()
-    
-    if numGPUs > 1:
-        with tf.device('/cpu:0'):
-            unet_to_save = createUNetInception(input_shape, output_mode, n_labels)
-        unet = multi_gpu_model(unet_to_save, numGPUs)
-    else:
-        unet = createUNetInception(input_shape, output_mode, n_labels)
-
+        data_gen = None
+        modes = ["flair", "t1ce", "t2"]
         
+        dataDirectory = "Data/BRATS_2018/HGG" 
+        validationDataDirectory = "Data/BRATS_2018/HGG_Validation"
+        testingDataDirectory = "Data/BRATS_2018/HGG_Testing"
+        modelDirectory = "Models"
+        
+        ## create testing, validation, and model directories
+        if not os.path.exists(validationDataDirectory):
+            os.makedirs(validationDataDirectory)
+        if not os.path.exists(testingDataDirectory):
+            os.makedirs(testingDataDirectory)
+        if not os.path.exists(modelDirectory):
+            os.makedirs(modelDirectory)
+    
+        ### Move a random subset of files into validation directory
+        if len(os.listdir(validationDataDirectory)) <= 0:
+            listOfDirs = os.listdir(dataDirectory)
+            shuffle(listOfDirs)
+            validation_data = listOfDirs[0:num_validation_patients]
+            for datum in validation_data:
+                shutil.move(dataDirectory + "/" + datum, validationDataDirectory)
+        
+        ### Move a random subset of files into testing directory
+        if len(os.listdir(testingDataDirectory)) <= 0:
+            listOfDirs = os.listdir(dataDirectory)
+            shuffle(listOfDirs)
+            testing_data = listOfDirs[0:num_testing_patients]
+            for datum in testing_data:
+                shutil.move(dataDirectory + "/" + datum, testingDataDirectory)
+            
+            
+        dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", num_patients = num_training_patients, modes = modes)
+        dataHandler.loadData()
+        x_train = dataHandler.X
+        x_seg_train = dataHandler.labels
+        dataHandler.clear()
+        
+        dataHandler.setDataDirectory("Data/BRATS_2018/HGG_Validation")
+        dataHandler.setNumPatients(num_validation_patients)
+        dataHandler.loadData()
+        x_val = dataHandler.X
+        x_seg_val = dataHandler.labels
+        dataHandler.clear()
+        
+        if min_percent > 0 and max_percent < 100:
+            x_train = [dataHandler.windowIntensity(x, min_percent, max_percent) for x in x_train]
+            x_val = [dataHandler.windowIntensity(x, min_percent, max_percent) for x in x_val]
 
-    if n_labels > 1:
-        unet.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
+
+        """
+        ### Move validation data back to original data directory
+        listOfValidationDirs = os.listdir(validationDataDirectory)
+        for datum in listOfValidationDirs:
+            shutil.move(validationDataDirectory + "/" + datum, dataDirectory)
+        """
+    
+        input_shape = (dataHandler.W,dataHandler.H, len(modes))
+        
+        n_labels = 1
+        normalize = True
+        augmentations = False
+        
+        if n_labels > 1:
+            output_mode = "softmax"
+        else:
+            output_mode = "sigmoid"
+    
+        if augmentations:
+            data_gen = CustomImageAugmentationGenerator()
+        else:
+            data_gen = CustomImageGenerator()
+            
+        num_epochs = 25
+        #lrate = 1e-2
+        adam = Adam()
+        batch_size = 64
+        
+        validation_data_gen = CustomImageGenerator()
+        
         if numGPUs > 1:
-            unet_to_save.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
-
-    else:
-        unet.compile(optimizer=adam, loss=dice_coef_loss, metrics=[dice_coef])
-        if numGPUs > 1:
-            unet_to_save.compile(optimizer=adam, loss=dice_coef_loss, metrics=[dice_coef])
-
-
-
-    model_directory = "Models/unet_" + date_string 
-    if not os.path.exists(model_directory):
-        os.makedirs(model_directory)
+            with tf.device('/cpu:0'):
+                unet_to_save = createUNetInception(input_shape, output_mode, n_labels)
+            unet = multi_gpu_model(unet_to_save, numGPUs)
+        else:
+            unet = createUNetInception(input_shape, output_mode, n_labels)
+    
+            
+    
+        if n_labels > 1:
+            unet.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
+            if numGPUs > 1:
+                unet_to_save.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
+    
+        else:
+            unet.compile(optimizer=adam, loss=dice_coef_loss, metrics=[dice_coef])
+            if numGPUs > 1:
+                unet_to_save.compile(optimizer=adam, loss=dice_coef_loss, metrics=[dice_coef])
+    
+    
+    
+        model_directory = "Models/unet_" + date_string 
+        if not os.path.exists(model_directory):
+            os.makedirs(model_directory)
+            
+        log_info_filename = 'model_loss_log.csv'
+        csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=',')
         
-    log_info_filename = 'model_loss_log.csv'
-    csv_logger = CSVLogger(model_directory + '/' + log_info_filename, append=True, separator=',')
-    
-    lrate_scheduler = LearningRateScheduler(step_decay)
+        ## Log additional data about model
+        ## Note: should be in a logging class
+        model_info_filename = 'model_info.txt'
+        model_info_file = open(model_directory + '/' + model_info_filename, "w") 
+        model_info_file.write('Number of Patients (training): ' + str(num_training_patients) + '\n')
+        model_info_file.write('Number of Patients (validation): ' + str(num_validation_patients) + '\n')
+        model_info_file.write('Min Percent: ' + str(min_percent) + '\n')
+        model_info_file.write('Max Percent: ' + str(max_percent) + '\n')
 
-    ## Log additional data about model
-    ## Note: should be in a logging class
-    model_info_filename = 'model_info.txt'
-    model_info_file = open(model_directory + '/' + model_info_filename, "w") 
-    model_info_file.write('Number of Patients (training): ' + str(num_training_patients) + '\n')
-    model_info_file.write('Number of Patients (validation): ' + str(num_validation_patients) + '\n')
-    model_info_file.write('\n\n')
-    unet.summary(print_fn=lambda x: model_info_file.write(x + '\n'))
-    model_info_file.close();
-    
-    print("Training on " + str(numGPUs) + " GPUs")
-    unet.fit_generator(generator = data_gen.generate(x_train, 
-                                                       x_seg_train, 
-                                                       batch_size, 
-                                                       n_labels,
-                                                       normalize), 
-                         epochs = num_epochs,
-                         steps_per_epoch = len(x_train) / batch_size, 
-                         callbacks = [csv_logger], 
-                         use_multiprocessing = True, 
-                         workers = 4,
-                         shuffle=True,
-                         validation_steps= len(x_val) / batch_size,
-                         validation_data = validation_data_gen.generate(x_val, 
-                                                                        x_seg_val, 
-                                                                        batch_size, 
-                                                                        n_labels, 
-                                                                        normalize))
-    
-    
-    if numGPUs > 1:
-        unet_to_save.save(model_directory + '/model.h5')
-    else:
-        unet.save(model_directory + '/model.h5')
+        model_info_file.write('\n\n')
+        unet.summary(print_fn=lambda x: model_info_file.write(x + '\n'))
+        model_info_file.close();
+        
+        print("Training on " + str(numGPUs) + " GPUs")
+        unet.fit_generator(generator = data_gen.generate(x_train, 
+                                                           x_seg_train, 
+                                                           batch_size, 
+                                                           n_labels,
+                                                           normalize), 
+                             epochs = num_epochs,
+                             steps_per_epoch = len(x_train) / batch_size, 
+                             callbacks = [csv_logger], 
+                             use_multiprocessing = True, 
+                             workers = 4,
+                             shuffle=True,
+                             validation_steps= len(x_val) / batch_size,
+                             validation_data = validation_data_gen.generate(x_val, 
+                                                                            x_seg_val, 
+                                                                            batch_size, 
+                                                                            n_labels, 
+                                                                            normalize))
+        
+        
+        if numGPUs > 1:
+            unet_to_save.save(model_directory + '/model.h5')
+        else:
+            unet.save(model_directory + '/model.h5')
 
-    """
-    emailHandler.connectToServer()
-    message = "Finished training network at " + str(datetime.now()) + '\n\n'
-    message += 'The network was trained on ' + str(num_training_patients) + ' patients \n\n'
-    message += 'The network was validated on ' + str(num_validation_patients) + ' patients \n\n'
-    message += "The network was trained for " + str(num_epochs) + " epochs with a batch size of " + str(batch_size) + '\n\n'
-    message += "The network was trained on " + str(numGPUs) + " GPUs \n"
-    message += "The network was saved to " + model_directory + '\n\n'
-    emailHandler.prepareMessage(now.strftime('%Y-%m-%d') + " MRIMath Update: Network Training Finished!", message);
-    emailHandler.sendMessage(["Danny", "Dr.Rasool", "Dr.Bouaynaya", "Dr.Hassan"])
-    emailHandler.finish()
-
-    
-    
-    # show results 
-    resultPlot = genfromtxt(model_directory + '/' + log_info_filename, delimiter=',')
-    plt.plot(resultPlot[:,1], label = "Training")
-    plt.plot(resultPlot[:,3], label = "Validation")
-    plt.xlabel("Epochs")
-    plt.ylabel("Dice Coefficient")
-    plt.title("Inception U-Net Dice Coefficient")
-    plt.legend()
-    plt.show()
-    """
     
     
 
