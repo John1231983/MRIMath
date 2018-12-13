@@ -29,7 +29,7 @@ from Utils.EmailHandler import EmailHandler
 import tensorflow as tf
 from keras.utils.training_utils import multi_gpu_model
 from sklearn.model_selection import StratifiedKFold
-
+import numpy as np
 
 def step_decay(epoch):
     initial_lrate = 0.1
@@ -47,7 +47,7 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 200
+    num_training_patients = 210
     
     data_gen = None
     modes = ["flair", "t1ce", "t2"]
@@ -84,9 +84,10 @@ def main():
     validation_data_gen = CustomImageGenerator()
     
     kfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=0)
+    splitted_indices=kfold.split(np.zeros(X.shape[0], Y))
 
 
-    for train, test in kfold.split(X, Y):
+    for train, test in splitted_indices:
     
         if numGPUs > 1:
             with tf.device('/cpu:0'):
