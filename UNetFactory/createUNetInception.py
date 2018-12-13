@@ -38,7 +38,7 @@ def inceptionModule(inputs, numFilters = 32):
 def createUNetInception(input_shape = (240,240,1), output_mode="sigmoid", n_labels = 1):
     inputs = Input(input_shape)
     
-    numFilters = 32;
+    numFilters = 64;
 
     conv1 = inceptionModule(inputs, numFilters)
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)

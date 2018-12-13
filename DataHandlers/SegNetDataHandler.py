@@ -11,7 +11,6 @@ import nibabel as nib
 import SimpleITK as sitk
 class SegNetDataHandler(DataHandler):
     modes = None
-    mode = None # training, testing, or validation
     num_augments = 1
 
     def __init__(self,dataDirectory, 
@@ -65,7 +64,7 @@ class SegNetDataHandler(DataHandler):
         for j,mode in enumerate(self.modes):
             img[:,:,j], rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
 
-                
+        img = self.windowIntensity(img)    
         seg_img = seg_image[:,:,i]
         seg_img = seg_img[rmin:rmax, cmin:cmax]
         seg_img = cv2.resize(seg_img, 
