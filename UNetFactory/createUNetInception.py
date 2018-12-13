@@ -54,22 +54,23 @@ def createUNetInception(input_shape = (240,240,1), output_mode="sigmoid", n_labe
 
     conv5 = inceptionModule(pool4,16*numFilters)
 
-    up6 = Convolution2DTranspose(8*numFilters, (2,2),strides=(2,2), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv5)
+    up6 = Convolution2DTranspose(8*numFilters, (3,3),strides=(2,2), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv5)
     merge6 = concatenate([conv4,up6],axis=3)
     conv6 = inceptionModule(merge6, 8*numFilters)
     
-    up7 = Convolution2DTranspose(4*numFilters,(2,2),strides=(2,2), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv6)
+    up7 = Convolution2DTranspose(4*numFilters,(3,3),strides=(2,2), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv6)
     merge7 =concatenate([conv3,up7],axis=3)
     conv7 = inceptionModule(merge7, 4*numFilters)
     
-    up8 = Convolution2DTranspose(2*numFilters,(2,2),strides=(2,2), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv7)
+    up8 = Convolution2DTranspose(2*numFilters,(3,3),strides=(2,2), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv7)
     merge8 =concatenate([conv2,up8],axis=3)
     conv8 = inceptionModule(merge8,2*numFilters)
     
-    up9 = Convolution2DTranspose(numFilters,(2,2),strides=(2,2), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv8)
+    up9 = Convolution2DTranspose(numFilters,(3,3),strides=(2,2), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv8)
     merge9 =concatenate([conv1,up9],axis=3)
     
-    conv9 = Convolution2D(numFilters, (3,3), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(merge9)
+    conv9 = inceptionModule(merge9, numFilters)
+    #conv9 = Convolution2D(numFilters, (3,3), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(merge9)
     conv9 = BatchNormalization()(conv9)
     conv9 = Activation("relu")(conv9)
     
