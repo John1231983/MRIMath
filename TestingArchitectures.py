@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from keras.models import load_model
 from Mylayers import MaxPoolingWithArgmax2D, MaxUnpooling2D
 import math
-from CustomLosses import dice_coef, dice_coef_multilabel, dice_coef_loss, combinedDiceAndChamfer, dice_coef_multilabel_loss, combinedHausdorffAndDice
+from CustomLosses import dice_coef, dice_coef_loss, dice_coef_multilabel, dice_coef_multilabel_loss,dice_coef_bg, dice_coef_net, dice_coef_ed,dice_coef_et
 from dipy.segment.mask import clean_cc_mask
 
 DATA_DIR = os.path.abspath("../")
@@ -36,8 +36,8 @@ def computeDice(im1, im2):
 def main():
 
     
-    num_testing_patients = 10
-    n_labels = 5
+    num_testing_patients = 1
+    n_labels = 4
     normalize = True
     modes = ["flair", "t1ce", "t2"]
     dataHandler = SegNetDataHandler("Data/BRATS_2018/HGG", 
@@ -49,10 +49,13 @@ def main():
     x_seg_test = dataHandler.labels
     dataHandler.clear()
 
-    unet = load_model("Models/unet_2018-11-12-19:51/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 
+    unet = load_model("Models/unet_2018-12-14-00:26/model.h5", custom_objects={'MaxPoolingWithArgmax2D': MaxPoolingWithArgmax2D, 
                                                                                'MaxUnpooling2D':MaxUnpooling2D, 
-                                                                               'combinedDiceAndChamfer':combinedDiceAndChamfer,
-                                                                               'combinedHausdorffAndDice':  combinedHausdorffAndDice,
+                                                                               'dice_coef_et':dice_coef_et, 
+                                                                               'dice_coef_ed':dice_coef_ed,
+                                                                                'dice_coef_net': dice_coef_net,
+                                                                                'dice_coef_bg': dice_coef_bg,
+
                                                                                'dice_coef':dice_coef, 
                                                                                'dice_coef_loss':dice_coef_loss,
                                                                                 'dice_coef_multilabel': dice_coef_multilabel,

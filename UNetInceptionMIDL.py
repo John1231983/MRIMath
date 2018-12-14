@@ -40,10 +40,9 @@ def main():
     
     hardwareHandler = HardwareHandler()
     numGPUs = hardwareHandler.getAvailableGPUs() 
-    now = datetime.now()
-    date_string = now.strftime('%Y-%m-%d-%H:%M')
+
     
-    num_training_patients = 210
+    num_training_patients = 2
     
     data_gen = None
     modes = ["flair", "t1ce", "t2"]
@@ -72,10 +71,10 @@ def main():
     else:
         data_gen = CustomImageGenerator()
         
-    num_epochs = 100
+    num_epochs = 2
     #lrate = 1e-2
     adam = Adam()
-    batch_size = 128
+    batch_size = 10
     
     validation_data_gen = CustomImageGenerator()
     
@@ -84,6 +83,8 @@ def main():
     splitted_indices=kfold.split(np.array(X), np.array(Y))
 
     for train, test in splitted_indices:
+        now = datetime.now()
+        date_string = now.strftime('%Y-%m-%d-%H:%M')
         x_train = [X[i] for i in train]
         x_test = [X[i] for i in test]
         y_train = [Y[i] for i in train]

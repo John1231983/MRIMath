@@ -16,7 +16,7 @@ class CustomImageGenerator(CustomGenerator):
         
         mu = np.mean(np.array(x_train))
         sigma = np.std(np.array(x_train))   
-        #x_seg = [label.reshape(label.shape[0] * label.shape[1]) for label in x_seg]
+        x_seg = [label.reshape(label.shape[0] * label.shape[1]) for label in x_seg]
             
         if n_labels == 1:
             for x in x_seg:
@@ -26,7 +26,7 @@ class CustomImageGenerator(CustomGenerator):
             ## convert because of the weird labeling scheme
             for x in x_seg:
                 x = np.rint(x)
-                x[x == 4] = 3
+                x[x > 3] = 3
         
         
                     
@@ -44,7 +44,6 @@ class CustomImageGenerator(CustomGenerator):
                 batch_labels = np.array(batch_labels)
                 if n_labels > 1:
                     batch_labels = np_utils.to_categorical(batch_labels)
-                    batch_labels = batch_labels[:,:,:,0:n_labels]
 
                 
                 yield (batch_imgs, batch_labels)
