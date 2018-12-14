@@ -71,10 +71,10 @@ def main():
     else:
         data_gen = CustomImageGenerator()
         
-    num_epochs = 2
+    num_epochs = 100
     #lrate = 1e-2
     adam = Adam()
-    batch_size = 10
+    batch_size = 128
     
     validation_data_gen = CustomImageGenerator()
     
