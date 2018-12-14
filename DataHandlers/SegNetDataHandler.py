@@ -89,24 +89,6 @@ class SegNetDataHandler(DataHandler):
                      dsize=(self.W, self.H), 
                      interpolation=cv2.INTER_LINEAR)
         
-        fig = plt.figure()
-        plt.gray();   
-        fig.add_subplot(1,3,1)
-        plt.imshow(img[:,:,0])
-        plt.axis('off')
-        plt.title('Original')
-        
-        fig.add_subplot(1,3,2)
-        plt.imshow(seg_img)
-        plt.axis('off')
-        plt.title('GT Segment')
-        
-        fig.add_subplot(1,3,3)
-        plt.imshow(seg_true)
-        plt.axis('off')
-        plt.title('GT Segment (orig)')
-        
-        plt.show()
 
         return img, seg_img
                     
