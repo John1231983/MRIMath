@@ -45,7 +45,6 @@ class CustomImageGenerator(CustomGenerator):
                 if n_labels > 1:
                     batch_labels = np_utils.to_categorical(batch_labels)
                     batch_labels = batch_labels[:,:,:,0:n_labels]
-                    print(batch_labels.shape)
 
                 
                 yield (batch_imgs, batch_labels)
