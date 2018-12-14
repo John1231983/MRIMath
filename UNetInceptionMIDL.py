@@ -42,7 +42,7 @@ def main():
     numGPUs = hardwareHandler.getAvailableGPUs() 
 
     
-    num_training_patients = 2
+    num_training_patients = 210
     
     data_gen = None
     modes = ["flair", "t1ce", "t2"]
@@ -57,7 +57,7 @@ def main():
 
     input_shape = (dataHandler.W,dataHandler.H, len(modes))
     
-    n_labels = 4
+    n_labels = 1
     normalize = True
     augmentations = False
     

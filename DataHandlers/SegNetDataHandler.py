@@ -9,6 +9,8 @@ import cv2
 import os
 import nibabel as nib
 import SimpleITK as sitk
+import matplotlib.pyplot as plt
+
 class SegNetDataHandler(DataHandler):
     modes = None
     num_augments = 1
@@ -17,9 +19,11 @@ class SegNetDataHandler(DataHandler):
                  W = 128, 
                  H = 128, 
                  num_patients = 3, 
-                 modes = ["flair", "t1ce", "t1", "t2"]):
+                 modes = ["flair", "t1ce", "t1", "t2"],
+                 region=1):
         super().__init__(dataDirectory, W, H, num_patients)
         self.modes = modes
+        self.region = region
         
     def windowIntensity(self, image, min_percent=1, max_percent=99):
         sitk_image = sitk.GetImageFromArray(image)
@@ -64,12 +68,46 @@ class SegNetDataHandler(DataHandler):
         for j,mode in enumerate(self.modes):
             img[:,:,j], rmin, rmax, cmin, cmax = self.processImage(foo[mode][:,:,i])
 
-        img = self.windowIntensity(img)    
         seg_img = seg_image[:,:,i]
+        seg_true = seg_image[:,:,i]
         seg_img = seg_img[rmin:rmax, cmin:cmax]
+        
+        # 1 U 2 U 4
+        if self.region == 1:
+            seg_img[seg_img > 0] = 1
+        # 1 U 4
+        elif self.region == 2:
+            seg_img[seg_img==2] = 0
+            seg_img[seg_img > 0] = 1
+        # 4
+        elif self.region == 3:
+            seg_img[seg_img!=4] = 0
+            seg_img[seg_img > 0] = 1
+        
+
         seg_img = cv2.resize(seg_img, 
                      dsize=(self.W, self.H), 
                      interpolation=cv2.INTER_LINEAR)
+        
+        fig = plt.figure()
+        plt.gray();   
+        fig.add_subplot(1,3,1)
+        plt.imshow(img[:,:,0])
+        plt.axis('off')
+        plt.title('Original')
+        
+        fig.add_subplot(1,3,2)
+        plt.imshow(seg_img)
+        plt.axis('off')
+        plt.title('GT Segment')
+        
+        fig.add_subplot(1,3,3)
+        plt.imshow(seg_true)
+        plt.axis('off')
+        plt.title('GT Segment (orig)')
+        
+        plt.show()
+
         return img, seg_img
                     
                         
