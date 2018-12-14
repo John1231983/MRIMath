@@ -23,7 +23,8 @@ def inceptionModule(inputs, numFilters = 32):
     tower_2 = Convolution2D(numFilters, (1,1), padding='same',kernel_initializer = 'he_normal')(inputs)
     tower_2 = BatchNormalization()(tower_2)
     tower_2 = Activation("relu")(tower_2)
-    tower_2 = Convolution2D(numFilters, (5,5), padding='same',kernel_initializer = 'he_normal')(tower_2)
+    tower_2 = Convolution2D(numFilters, (3,3), padding='same',kernel_initializer = 'he_normal')(tower_2)
+    tower_2 = Convolution2D(numFilters, (3,3), padding='same',kernel_initializer = 'he_normal')(tower_2)
     tower_2 = BatchNormalization()(tower_2)
     tower_2 = Activation("relu")(tower_2)
     
@@ -38,7 +39,7 @@ def inceptionModule(inputs, numFilters = 32):
 def createUNetInception(input_shape = (240,240,1), output_mode="sigmoid", n_labels = 1):
     inputs = Input(input_shape)
     
-    numFilters = 64;
+    numFilters = 32;
 
     conv1 = inceptionModule(inputs, numFilters)
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
@@ -69,19 +70,18 @@ def createUNetInception(input_shape = (240,240,1), output_mode="sigmoid", n_labe
     up9 = Convolution2DTranspose(numFilters,(3,3),strides=(2,2), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv8)
     merge9 =concatenate([conv1,up9],axis=3)
     
-    conv9 = inceptionModule(merge9, numFilters)
-    #conv9 = Convolution2D(numFilters, (3,3), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(merge9)
+    #conv9 = inceptionModule(merge9, numFilters)
+    conv9 = Convolution2D(numFilters, (3,3), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(merge9)
     conv9 = BatchNormalization()(conv9)
     conv9 = Activation("relu")(conv9)
     
     conv10 = Convolution2D(n_labels, 1, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv9)
     conv10 = BatchNormalization()(conv10)
-    
-    
+    """
     conv10 = Reshape(
              (input_shape[0] * input_shape[1], n_labels),
              input_shape=(input_shape[0], input_shape[1], n_labels))(conv10)
-             
+    """
     outputs = Activation(output_mode)(conv10)
     model = Model(input = inputs, output = outputs)
  

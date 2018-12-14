@@ -42,8 +42,27 @@ def dice_coef_multilabel(y_true, y_pred, numLabels=4):
     dice=0
     for index in range(numLabels):
         dice += dice_coef(y_true[:,:,index], y_pred[:,:,index])
-        
     return dice/numLabels
+
+
+def dice_coef_bg(y_true, y_pred):
+    dice = dice_coef(y_true[:,:,0], y_pred[:,:,0])
+    return dice
+
+
+def dice_coef_net(y_true, y_pred):
+    dice = dice_coef(y_true[:,:,1], y_pred[:,:,1])
+    return dice
+
+
+def dice_coef_ed(y_true, y_pred):
+    dice = dice_coef(y_true[:,:,2], y_pred[:,:,2])
+    return dice
+
+def dice_coef_et(y_true, y_pred):
+    dice = dice_coef(y_true[:,:,3], y_pred[:,:,3])
+    return dice
+
 
 def dice_coef_multilabel_loss(y_true, y_pred):
     return -tf.log(dice_coef_multilabel(y_true, y_pred))

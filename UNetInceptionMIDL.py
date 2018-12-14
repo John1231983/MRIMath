@@ -17,18 +17,14 @@ from UNetFactory.createUNetInception import createUNetInception
 from DataHandlers.SegNetDataHandler import SegNetDataHandler
 
 from keras.callbacks import CSVLogger, LearningRateScheduler
-from CustomLosses import dice_coef, dice_coef_loss, dice_coef_multilabel, dice_coef_multilabel_loss,avg_hausdorff_distance,combinedHausdorffAndDice
+from CustomLosses import dice_coef, dice_coef_loss, dice_coef_multilabel, dice_coef_multilabel_loss,dice_coef_bg, dice_coef_net, dice_coef_ed,dice_coef_et
 from Generators.CustomImageAugmentationGenerator import CustomImageAugmentationGenerator
 from Generators.CustomImageGenerator import CustomImageGenerator
-from random import  shuffle
-import shutil
 import math
 from keras.optimizers import Adam
 from Utils.HardwareHandler import HardwareHandler
-from Utils.EmailHandler import EmailHandler
 import tensorflow as tf
 from keras.utils.training_utils import multi_gpu_model
-from sklearn.model_selection import StratifiedKFold
 import numpy as np
 from sklearn.model_selection import KFold
 def step_decay(epoch):
@@ -47,7 +43,7 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 1
+    num_training_patients = 210
     
     data_gen = None
     modes = ["flair", "t1ce", "t2"]
@@ -88,8 +84,6 @@ def main():
     splitted_indices=kfold.split(np.array(X), np.array(Y))
 
     for train, test in splitted_indices:
-        print(train)
-        print(test)
         x_train = [X[i] for i in train]
         x_test = [X[i] for i in test]
         y_train = [Y[i] for i in train]
@@ -105,9 +99,9 @@ def main():
             
     
         if n_labels > 1:
-            unet.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
+            unet.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel,dice_coef_bg,dice_coef_net,dice_coef_ed,dice_coef_et])
             if numGPUs > 1:
-                unet_to_save.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel])
+                unet_to_save.compile(optimizer=adam, loss=dice_coef_multilabel_loss, metrics=[dice_coef_multilabel,dice_coef_bg,dice_coef_net,dice_coef_ed,dice_coef_et])
     
         else:
             unet.compile(optimizer=adam, loss=dice_coef_loss, metrics=[dice_coef])
