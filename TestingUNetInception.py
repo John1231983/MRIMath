@@ -40,9 +40,8 @@ def main():
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d-%H:%M')
     
-    num_training_patients = 10
-    num_validation_patients = 1
-    num_testing_patients = 0
+    num_training_patients = 200
+    num_validation_patients = 0
     n_labels = 1
 
     data_gen = None
@@ -69,13 +68,7 @@ def main():
         for datum in validation_data:
             shutil.move(dataDirectory + "/" + datum, validationDataDirectory)
     
-    ### Move a random subset of files into testing directory
-    if len(os.listdir(testingDataDirectory)) <= 0:
-        listOfDirs = os.listdir(dataDirectory)
-        shuffle(listOfDirs)
-        testing_data = listOfDirs[0:num_testing_patients]
-        for datum in testing_data:
-            shutil.move(dataDirectory + "/" + datum, testingDataDirectory)
+
         
         
     dataHandler = UNetDataHandler("Data/BRATS_2018/HGG", 
@@ -111,7 +104,7 @@ def main():
         
     num_epochs = 25
     adam = Adam(lr = 0.1)
-    batch_size = 8
+    batch_size = 64
     
     validation_data_gen = CustomImageGenerator2()
     
