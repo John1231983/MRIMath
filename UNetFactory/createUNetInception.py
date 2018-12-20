@@ -6,7 +6,7 @@ Created on Oct 30, 2018
 
 from keras.models import Model, Input
 from keras.layers import Convolution2D, Reshape,Activation, BatchNormalization,MaxPooling2D, Convolution2DTranspose, concatenate
-
+from CustomLosses import custom_sigmoid
 def inceptionModule(inputs, numFilters = 32):
     
     tower_0 = Convolution2D(numFilters, (1,1), padding='same', kernel_initializer = 'he_normal')(inputs)
@@ -75,12 +75,13 @@ def createUNetInception(input_shape = (240,240,1), output_mode="sigmoid", n_labe
     conv9 = BatchNormalization()(conv9)
     conv9 = Activation("relu")(conv9)
     
-    conv10 = Convolution2D(n_labels, 1, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv9)
-    conv10 = BatchNormalization()(conv10)
+    conv10 = Convolution2D(n_labels, (1,1), activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv9)
+    #conv10 = BatchNormalization()(conv10)
+    """
     conv10 = Reshape(
              (input_shape[0] * input_shape[1], n_labels),
              input_shape=(input_shape[0], input_shape[1], n_labels))(conv10)
-    
+    """
     outputs = Activation(output_mode)(conv10)
     model = Model(input = inputs, output = outputs)
  

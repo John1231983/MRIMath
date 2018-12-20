@@ -36,10 +36,6 @@ class CustomImageAugmentationGenerator(CustomGenerator):
                     
         foo = [np.squeeze(x) for x in foo]
         
-        """
-        foo = tl.prepro.elastic_transform_multi(list(foo),
-                                alpha=720, sigma=24, is_random=True)
-        """
         
         foo = [np.expand_dims(x, axis=-1) for x in foo]
         

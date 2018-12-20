@@ -16,6 +16,7 @@ import random
 from sklearn.utils.extmath import cartesian
 import math
 
+
 sess = tf.Session()
 K.set_session(sess)
 g = K.get_session().graph
@@ -38,29 +39,26 @@ def dice_coef(y_true, y_pred, smooth=1e-3):
 def dice_coef_loss(y_true, y_pred):
     return -tf.log(dice_coef(y_true, y_pred))
 
-def dice_coef_multilabel(y_true, y_pred, numLabels=4):
+def dice_coef_multilabel(y_true, y_pred, numLabels=3):
     dice=0
     for index in range(numLabels):
         dice += dice_coef(y_true[:,:,index], y_pred[:,:,index])
     return dice/numLabels
 
 
-def dice_coef_bg(y_true, y_pred):
+
+
+def dice_coef_reg_1(y_true, y_pred):
     dice = dice_coef(y_true[:,:,0], y_pred[:,:,0])
     return dice
 
 
-def dice_coef_net(y_true, y_pred):
+def dice_coef_reg_2(y_true, y_pred):
     dice = dice_coef(y_true[:,:,1], y_pred[:,:,1])
     return dice
 
-
-def dice_coef_ed(y_true, y_pred):
+def dice_coef_reg_3(y_true, y_pred):
     dice = dice_coef(y_true[:,:,2], y_pred[:,:,2])
-    return dice
-
-def dice_coef_et(y_true, y_pred):
-    dice = dice_coef(y_true[:,:,3], y_pred[:,:,3])
     return dice
 
 
@@ -146,68 +144,6 @@ def _EDTGrad(op, grad):
 def _ContourGrad(op, grad):
     return 0*op.inputs[0]   
 
-
-def chamfer_dist(y_true, y_pred):
-    
-    y_true = K.reshape(y_true, [K.tf.shape(y_true)[0],128,128])
-    y_pred = K.reshape(y_pred, [K.tf.shape(y_pred)[0],128,128])
-    y_true_shape = y_true.get_shape()
-    y_pred_shape = y_pred.get_shape()
-    
-    y_true = py_func(computeEDT, 
-                [y_true], 
-                [tf.float32], 
-                name = "edt", 
-                grad=_EDTGrad)[0]
-
-    y_pred = py_func(computeContour, 
-            [y_pred], 
-            [tf.float32], 
-            name = "contour", 
-            grad=_ContourGrad)[0]
-            
-    y_true.set_shape(y_true_shape)
-    y_pred.set_shape(y_pred_shape)
-    
-    finalChamferDistanceSum = y_pred * y_true
-    finalChamferDistanceSum = tf.map_fn(lambda x: 
-                                        K.sum(x), 
-                                        finalChamferDistanceSum, 
-                                        dtype=tf.float32)
-
-    finalChamferDistanceSum = tf.nn.l2_normalize(finalChamferDistanceSum)
-    finalChamferDistanceSum = K.mean(finalChamferDistanceSum)
-
-    return finalChamferDistanceSum
-
-
-
-def chamfer_dist_multilabel(y_true, y_pred, numLabels=4):
-    d_cd=0
-    for index in range(numLabels):
-        d_cd += chamfer_dist(y_true[:,:,index], y_pred[:,:,index])
-    return d_cd
-
-
-def chamfer_loss(y_true, y_pred):   
-    return chamfer_dist(y_true, y_pred)
-
-
-def combinedDiceAndChamfer(y_true, y_pred):
-    alpha = 0.5
-    beta = 1 - alpha
-    dice = dice_coef_loss(y_true, y_pred)
-    cd = chamfer_dist(y_true, y_pred)
-    return alpha*dice + beta*cd
-    
-    
-def combinedDiceAndChamferMultilabel(y_true, y_pred):
-    alpha = 0.5
-    beta = 1 - alpha
-    dice = dice_coef_multilabel_loss(y_true, y_pred)
-    cd = chamfer_dist_multilabel(y_true, y_pred)
-    return alpha*dice + beta*cd
-
 def cdist (A, B):  
 
     # squared norms of each row in A and B
@@ -265,3 +201,10 @@ def combinedHausdorffAndDice(y_true,y_pred):
     dice = dice_coef_loss(y_true, y_pred)
     hd = hausdorff_dist_loss(y_true, y_pred)
     return alpha*dice + beta*hd
+
+def custom_sigmoid(t, n_labels = 3):
+    foo = tf.unstack(t, axis=3)
+    result = []
+    for i in range(n_labels):
+        result.append(K.sigmoid(foo[i]))
+    return K.concatenate(result, axis=0)
